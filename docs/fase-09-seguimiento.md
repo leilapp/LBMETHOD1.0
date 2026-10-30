@@ -114,7 +114,7 @@ Todas se ejecutaron contra **SQL Server 2022 real**.
 | Pruebas del servidor (integración) | **90 de 90 correctas** (84 anteriores + 6 nuevas) |
 | Pruebas de pantallas (componentes) | **47 de 47 correctas** (41 anteriores + 6 nuevas) |
 | Navegador real, seguimiento completo (`e2e/seguimiento.cjs`) | **47 de 47 verificaciones correctas** |
-| Navegador real, regresión: portal / rutinas / biblioteca / clientes / flujo general | ver informe (sin regresiones) |
+| Navegador real, regresión: portal / rutinas / biblioteca / clientes / flujo general | **36/36, 26/26, 24/24, 21/21 y 17/17** (sin regresiones) |
 | Compilación y revisión de código (oxlint) | Sin errores ni advertencias |
 
 **Las 6 pruebas nuevas del servidor cubren:**
