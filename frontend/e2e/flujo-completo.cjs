@@ -68,8 +68,8 @@ async function login(page, email, password) {
   await page.getByRole('dialog').getByRole('button', { name: 'Cancelar' }).click()
   await shot(page, '07-clientes-lista')
 
-  await page.getByRole('link', { name: /Rutinas/ }).click()
-  await page.getByText('Pendiente · Fase 6').waitFor()
+  await page.getByRole('link', { name: /Calendario/ }).click()
+  await page.getByText('Pendiente · Fase 9').waitFor()
   check('módulo futuro se marca como pendiente', true)
   await shot(page, '08-modulo-pendiente')
 
@@ -107,8 +107,10 @@ async function login(page, email, password) {
   await shot(page, '12-portal-menu-celular')
   await page.getByRole('link', { name: 'Mi perfil' }).click()
   await page.getByText('Mis datos').waitFor()
-  await page.getByText(email).first().waitFor()
-  check('el perfil muestra los datos reales del cliente', await page.getByText('Mariana Prueba E2E').isVisible())
+  // Se busca dentro del contenido: el menú del celular también muestra el nombre y el correo mientras se cierra.
+  await page.locator('#contenido').getByText(email).waitFor()
+  check('el perfil muestra los datos reales del cliente', await page.locator('#contenido').getByText('Mariana Prueba E2E').isVisible())
+  await page.waitForTimeout(400)
   await shot(page, '13-portal-perfil-celular')
 
   await page.goto(`${BASE}/entrenadora/clientes`)

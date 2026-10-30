@@ -91,13 +91,14 @@ describe('experiencias separadas por rol', () => {
       'GET /api/auth/me': () => ({ status: 200, body: trainerSession }),
       'GET /api/trainer/clients': () => ({ status: 200, body: [] }),
     })
-    renderApp('/entrenadora/rutinas')
+    renderApp('/entrenadora/calendario')
     const nav = await screen.findByRole('navigation', { name: 'Navegación principal' })
     for (const label of ['Inicio', 'Clientes', 'Biblioteca', 'Rutinas', 'Plantillas', 'Calendario', 'Seguimiento', 'Configuración'])
       expect(within(nav).getByRole('link', { name: new RegExp(label) })).toBeInTheDocument()
-    expect(screen.getByText('Pendiente · Fase 6')).toBeInTheDocument()
-    // La biblioteca ya está disponible: su enlace no lleva la marca de fase pendiente.
-    expect(within(nav).getByRole('link', { name: /Biblioteca/ })).not.toHaveTextContent(/Fase/)
+    expect(screen.getByText('Pendiente · Fase 9')).toBeInTheDocument()
+    // Los módulos ya disponibles no llevan la marca de fase pendiente.
+    for (const label of ['Biblioteca', 'Rutinas', 'Plantillas'])
+      expect(within(nav).getByRole('link', { name: new RegExp(label) })).not.toHaveTextContent(/Fase/)
   })
 
   it('el inicio de la entrenadora usa datos reales y no inventa indicadores', async () => {

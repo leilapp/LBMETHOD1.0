@@ -10,6 +10,8 @@ import { LibraryPage } from '../features/library/LibraryPage'
 import { EditExercisePage, NewExercisePage } from '../features/library/ExerciseFormPage'
 import { ExerciseDetailPage } from '../features/library/ExerciseDetailPage'
 import { ImportExportPage } from '../features/library/ImportExportPage'
+import { RoutineListPage, RoutinePage } from '../features/routines/RoutinesPages'
+import { RoutineBuilderPage } from '../features/routines/RoutineBuilderPage'
 import { RedirectHome, RequireRole } from './guards'
 import { createQueryClient } from './queryClient'
 
@@ -17,8 +19,8 @@ const trainerNav: NavItem[] = [
   { to: '/entrenadora', label: 'Inicio', end: true },
   { to: '/entrenadora/clientes', label: 'Clientes' },
   { to: '/entrenadora/biblioteca', label: 'Biblioteca' },
-  { to: '/entrenadora/rutinas', label: 'Rutinas', pendingPhase: 6 },
-  { to: '/entrenadora/plantillas', label: 'Plantillas', pendingPhase: 6 },
+  { to: '/entrenadora/rutinas', label: 'Rutinas' },
+  { to: '/entrenadora/plantillas', label: 'Plantillas' },
   { to: '/entrenadora/calendario', label: 'Calendario', pendingPhase: 9 },
   { to: '/entrenadora/seguimiento', label: 'Seguimiento', pendingPhase: 9 },
   { to: '/entrenadora/configuracion', label: 'Configuración' },
@@ -49,8 +51,12 @@ export function AppRoutes() {
           <Route path="biblioteca/importar" element={<ImportExportPage />} />
           <Route path="biblioteca/ejercicios/:id" element={<ExerciseDetailPage />} />
           <Route path="biblioteca/ejercicios/:id/editar" element={<EditExercisePage />} />
-          <Route path="rutinas" element={<PendingModule title="Rutinas" phase={6} description="Constructor manual de rutinas por días, con series, repeticiones, descansos, tempo, RIR/RPE y versiones." />} />
-          <Route path="plantillas" element={<PendingModule title="Plantillas" phase={6} description="Rutinas reutilizables como punto de partida para nuevos programas." />} />
+          <Route path="rutinas" element={<RoutineListPage section="rutinas" />} />
+          <Route path="rutinas/:id" element={<RoutinePage section="rutinas" />} />
+          <Route path="rutinas/:id/editar" element={<RoutineBuilderPage section="rutinas" />} />
+          <Route path="plantillas" element={<RoutineListPage section="plantillas" />} />
+          <Route path="plantillas/:id" element={<RoutinePage section="plantillas" />} />
+          <Route path="plantillas/:id/editar" element={<RoutineBuilderPage section="plantillas" />} />
           <Route path="calendario" element={<PendingModule title="Calendario" phase={9} description="Vista mensual y semanal de entrenamientos, descansos y evaluaciones." />} />
           <Route path="seguimiento" element={<PendingModule title="Seguimiento" phase={9} description="Medidas, evaluaciones, fotos privadas y evolución de cargas de tus clientes." />} />
           <Route path="configuracion" element={<TrainerSettingsPage />} />
