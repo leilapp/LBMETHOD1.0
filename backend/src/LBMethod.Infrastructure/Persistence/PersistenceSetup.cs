@@ -12,10 +12,10 @@ public static class PersistenceSetup
     /// <summary>Variable de entorno equivalente, útil para herramientas y pruebas.</summary>
     public const string ConnectionStringEnvVar = "ConnectionStrings__LBMethod";
 
-    public static DbContextOptionsBuilder<LBMethodDbContext> Configure(
-        DbContextOptionsBuilder<LBMethodDbContext> options, string connectionString, TimeProvider? clock = null)
+    public static TBuilder Configure<TBuilder>(TBuilder options, string connectionString, TimeProvider? clock = null)
+        where TBuilder : DbContextOptionsBuilder
     {
-        return options
+        options
             .UseSqlServer(connectionString, sql =>
             {
                 sql.MigrationsAssembly(typeof(LBMethodDbContext).Assembly.FullName);
@@ -24,6 +24,7 @@ public static class PersistenceSetup
             .AddInterceptors(
                 new AuditTimestampsInterceptor(clock ?? TimeProvider.System),
                 new PublishedVersionGuardInterceptor());
+        return options;
     }
 }
 

@@ -1,3 +1,4 @@
+using LBMethod.Application.Abstractions;
 using LBMethod.Domain.Audit;
 using LBMethod.Domain.Calendar;
 using LBMethod.Domain.Clients;
@@ -15,7 +16,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LBMethod.Infrastructure.Persistence;
 
 public class LBMethodDbContext(DbContextOptions<LBMethodDbContext> options)
-    : IdentityDbContext<AppUser, AppRole, int>(options)
+    : IdentityDbContext<AppUser, AppRole, int>(options), IAppDbContext
 {
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<ClientNote> ClientNotes => Set<ClientNote>();

@@ -7,6 +7,10 @@ public class AppUser : IdentityUser<int>
 {
     public string DisplayName { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
+
+    /// <summary>Verdadero mientras la cuenta use una contraseña temporal asignada por la entrenadora.</summary>
+    public bool MustChangePassword { get; set; }
+    public DateTime? LastLoginAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

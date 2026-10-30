@@ -1,5 +1,7 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/LBMethod.Api/LBMethod.Api.csproj" />
+    <Project Path="src/LBMethod.Application/LBMethod.Application.csproj" />
     <Project Path="src/LBMethod.Domain/LBMethod.Domain.csproj" />
     <Project Path="src/LBMethod.Infrastructure/LBMethod.Infrastructure.csproj" />
   </Folder>

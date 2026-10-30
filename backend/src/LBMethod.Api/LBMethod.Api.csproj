@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\LBMethod.Application\LBMethod.Application.csproj" />
+    <ProjectReference Include="..\LBMethod.Infrastructure\LBMethod.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>5b26ab59-ddf9-4318-ba58-e86a858e5e2b</UserSecretsId>
+  </PropertyGroup>
+
+</Project>

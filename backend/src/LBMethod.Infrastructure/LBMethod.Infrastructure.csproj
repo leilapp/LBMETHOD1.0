@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LBMethod.Domain\LBMethod.Domain.csproj" />
+    <ProjectReference Include="..\LBMethod.Application\LBMethod.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

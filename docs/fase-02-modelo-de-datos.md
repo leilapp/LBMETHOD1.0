@@ -168,7 +168,7 @@ La cadena de conexión solo vive en esa ventana de PowerShell; no se guarda en n
 
 ### Paso 2 (opción B, con SQL Server Management Studio)
 1. Crea una base vacía llamada `LBMethod_Dev`.
-2. Abre `docs/sql/LBMethod_InitialCreate_idempotent.sql` y ejecútalo sobre esa base. Se puede ejecutar más de una vez sin duplicar nada.
+2. Abre `docs/sql/LBMethod_idempotent.sql` y ejecútalo sobre esa base. Se puede ejecutar más de una vez sin duplicar nada.
    Si lo ejecutas con `sqlcmd`, agrega la opción `-I` (los índices filtrados lo necesitan; SSMS ya lo hace por defecto).
 
 ### Paso 3: ejecutar las pruebas en tu equipo (opcional)
@@ -193,7 +193,7 @@ sqlcmd -S localhost\SQLEXPRESS -E -Q "RESTORE DATABASE [LBMethod_Dev] FROM DISK 
 ```
 .gitignore
 docs/fase-02-modelo-de-datos.md
-docs/sql/LBMethod_InitialCreate_idempotent.sql
+docs/sql/LBMethod_idempotent.sql
 backend/LBMethod.slnx
 backend/dotnet-tools.json                              (herramienta dotnet-ef 10.0.14)
 backend/src/LBMethod.Domain/
