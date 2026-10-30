@@ -1,0 +1,24 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+
+# Node / Vite
+node_modules/
+dist/
+
+# Configuración local y secretos (nunca versionar contraseñas ni cadenas de conexión reales)
+appsettings.*.local.json
+*.env
+.env*
+!.env.example
+
+# Archivos privados subidos en desarrollo
+storage/
+
+# Sistema
+.DS_Store
+Thumbs.db

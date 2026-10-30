@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LBMethod.Domain/LBMethod.Domain.csproj" />
+    <Project Path="src/LBMethod.Infrastructure/LBMethod.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LBMethod.IntegrationTests/LBMethod.IntegrationTests.csproj" />
+  </Folder>
+</Solution>
