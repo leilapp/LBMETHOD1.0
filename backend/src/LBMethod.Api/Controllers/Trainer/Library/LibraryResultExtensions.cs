@@ -12,6 +12,8 @@ internal static class LibraryResultExtensions
         LibraryError.NotFound => controller.NotFound(),
         LibraryError.Duplicate => controller.Conflict(new ValidationProblemDetails(Errors(result))
             { Status = 409, Title = "Registro duplicado", Detail = Errors(result).Values.SelectMany(v => v).FirstOrDefault() }),
+        LibraryError.Conflict => controller.Conflict(new ProblemDetails
+            { Status = 409, Title = "Conflicto", Detail = Errors(result).Values.SelectMany(v => v).FirstOrDefault() }),
         _ => controller.ValidationProblem(new ValidationProblemDetails(Errors(result)))
     };
 

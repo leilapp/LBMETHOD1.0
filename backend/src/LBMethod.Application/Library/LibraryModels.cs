@@ -9,7 +9,9 @@ public enum LibraryError
     None = 0,
     NotFound,
     Duplicate,
-    Invalid
+    Invalid,
+    /// <summary>El estado cambió mientras se editaba (por ejemplo, el borrador ya se publicó).</summary>
+    Conflict
 }
 
 /// <summary>Resultado de una operación de la biblioteca, con errores por campo cuando aplica.</summary>
@@ -20,6 +22,7 @@ public record LibraryResult(LibraryError Error, int Id = 0, IReadOnlyDictionary<
     public static LibraryResult NotFound() => new(LibraryError.NotFound);
     public static LibraryResult Duplicate(string field, string message) => new(LibraryError.Duplicate, Errors: One(field, message));
     public static LibraryResult Invalid(string field, string message) => new(LibraryError.Invalid, Errors: One(field, message));
+    public static LibraryResult Conflict(string message) => new(LibraryError.Conflict, Errors: One("", message));
     public static LibraryResult Invalid(Dictionary<string, List<string>> errors) =>
         new(LibraryError.Invalid, Errors: errors.ToDictionary(e => e.Key, e => e.Value.ToArray()));
 

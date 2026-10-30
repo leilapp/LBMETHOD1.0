@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<LBMethodDbContext>());
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<ClientAccess>();
+        services.AddScoped<Application.Routines.RoutineService>();
         return services;
     }
 
