@@ -1,0 +1,211 @@
+// Uso: con la API y 'npm run dev' en marcha →
+//   node e2e/biblioteca.cjs <carpeta-capturas> <imagen.png> <archivo-importacion.xlsx>
+// Biblioteca de ejercicios en navegador real: frontend (Vite) + API real + SQL Server real.
+// El archivo de importación debe contener los nombres que usa este script (ver docs/fase-05-biblioteca.md).
+const { chromium } = require('playwright')
+const path = require('path')
+const fs = require('fs')
+
+const BASE = 'http://localhost:5173'
+const [OUT = require('os').tmpdir(), IMAGE, IMPORT_FILE] = process.argv.slice(2)
+const TAG = process.env.LBMETHOD_E2E_TAG
+const TRAINER = { email: process.env.LBMETHOD_E2E_EMAIL, password: process.env.LBMETHOD_E2E_PASSWORD }
+if (!TRAINER.email || !TRAINER.password || !TAG || !IMAGE || !IMPORT_FILE) {
+  console.error('Define LBMETHOD_E2E_EMAIL, LBMETHOD_E2E_PASSWORD, LBMETHOD_E2E_TAG y pasa la imagen y el Excel de importación.')
+  process.exit(1)
+}
+const results = []
+const check = (name, ok) => { results.push(`${ok ? 'OK  ' : 'FAIL'} ${name}`); if (!ok) process.exitCode = 1 }
+const shot = (page, name) => page.screenshot({ path: path.join(OUT, `${name}.png`), fullPage: true })
+
+;(async () => {
+  const browser = await chromium.launch()
+  const errors = []
+  const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 }, acceptDownloads: true })
+  const page = await ctx.newPage()
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+
+  await page.goto(`${BASE}/iniciar-sesion`)
+  await page.getByLabel('Correo electrónico').fill(TRAINER.email)
+  await page.getByLabel('Contraseña', { exact: false }).fill(TRAINER.password)
+  await page.getByRole('button', { name: 'Entrar' }).click()
+  await page.getByText('Clientes activos').waitFor()
+
+  // ---------- Catálogos ----------
+  await page.getByRole('link', { name: 'Biblioteca' }).click()
+  await page.getByRole('heading', { name: 'Biblioteca' }).waitFor()
+  check('la biblioteca ya no aparece como pendiente', !(await page.getByText('Pendiente · Fase 5').count()))
+  await page.getByRole('tab', { name: 'Grupos musculares' }).click()
+  await page.getByRole('list', { name: /grupo muscular/ }).waitFor()
+  check('los 12 grupos musculares iniciales están cargados', (await page.getByRole('list', { name: /grupo muscular/ }).getByRole('listitem').count()) >= 12)
+  await shot(page, '01-grupos-musculares')
+
+  await page.getByRole('tab', { name: 'Equipamiento' }).click()
+  await page.getByRole('button', { name: 'Agregar equipamiento' }).click()
+  let dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Nombre en español').fill(`Barra ${TAG}`)
+  await dialog.getByLabel('Nombre en inglés').fill(`Barbell ${TAG}`)
+  await dialog.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByText(`Se guardó «Barra ${TAG}»`).waitFor()
+  check('la entrenadora agrega equipamiento', true)
+
+  await page.getByRole('tab', { name: 'Patrones de movimiento' }).click()
+  await page.getByRole('button', { name: 'Agregar patrón' }).click()
+  dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Nombre en español').fill(`Bisagra ${TAG}`)
+  await dialog.getByLabel('Nombre en inglés').fill(`Hinge ${TAG}`)
+  await dialog.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByText(`Se guardó «Bisagra ${TAG}»`).waitFor()
+  await page.getByRole('button', { name: 'Agregar patrón' }).click()
+  dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Nombre en español').fill(`BISAGRA ${TAG}`)
+  await dialog.getByLabel('Nombre en inglés').fill(`Otro ${TAG}`)
+  await dialog.getByRole('button', { name: 'Guardar' }).click()
+  await dialog.getByText('Ya existe un elemento con ese nombre en español.').waitFor()
+  check('no permite patrones duplicados', true)
+  await shot(page, '02-patron-duplicado')
+  await dialog.getByRole('button', { name: 'Cancelar' }).click()
+
+  // ---------- Alta de ejercicio ----------
+  await page.getByRole('link', { name: 'Nuevo ejercicio' }).first().click()
+  await page.getByRole('button', { name: 'Crear ejercicio' }).click()
+  check('el formulario marca los campos obligatorios', await page.getByText('Escribe el nombre en español.').isVisible())
+  await page.getByLabel(/Nombre en español/).fill(`Hip thrust con barra ${TAG}`)
+  await page.getByLabel(/Nombre en inglés/).fill(`Barbell hip thrust ${TAG}`)
+  await page.getByLabel(/^Tipo/).selectOption({ label: 'Fuerza' })
+  await page.getByLabel('Dificultad').selectOption({ label: 'Intermedio' })
+  await page.getByLabel('Patrón de movimiento').selectOption({ label: `Bisagra ${TAG}` })
+  await page.getByLabel(/Grupo muscular principal/).selectOption({ label: 'Glúteos' })
+  await page.getByRole('checkbox', { name: 'Femoral' }).check()
+  await page.getByRole('checkbox', { name: `Barra ${TAG}` }).check()
+  await page.getByLabel('Instrucciones de ejecución').fill('Apoya la espalda alta en el banco.\nEmpuja con los talones y aprieta el glúteo arriba.')
+  await page.getByLabel('Errores frecuentes').fill('Arquear la zona lumbar.')
+  await shot(page, '03-formulario-ejercicio')
+  await page.getByRole('button', { name: 'Crear ejercicio' }).click()
+  await page.getByText('Ejercicio creado.').waitFor()
+  const exerciseUrl = page.url()
+  check('el ejercicio se crea y abre su ficha', /\/biblioteca\/ejercicios\/\d+$/.test(exerciseUrl))
+
+  // ---------- Medios ----------
+  await page.getByRole('button', { name: 'Subir archivo' }).click()
+  dialog = page.getByRole('dialog')
+  await dialog.getByLabel(/Archivo/).setInputFiles(IMAGE)
+  await dialog.getByLabel('Título').fill('Posición final')
+  await dialog.getByRole('button', { name: 'Subir' }).click()
+  await page.getByText('Archivo subido.').waitFor()
+  const img = page.getByRole('img', { name: 'Posición final' })
+  await img.waitFor()
+  await page.waitForFunction(() => [...document.images].some((i) => i.alt === 'Posición final' && i.naturalWidth > 0))
+  check('la imagen subida se ve en la ficha', true)
+  const src = await img.getAttribute('src')
+  check('la imagen se sirve desde un endpoint protegido', src.startsWith('/api/trainer/library/media/'))
+
+  await page.getByRole('button', { name: 'Agregar enlace' }).click()
+  dialog = page.getByRole('dialog')
+  await dialog.getByLabel(/Enlace/).fill('http://inseguro.com/video')
+  await dialog.getByRole('button', { name: 'Agregar' }).click()
+  check('rechaza enlaces sin https', await dialog.getByText(/empiece con https/).isVisible())
+  await dialog.getByLabel(/Enlace/).fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+  await dialog.getByLabel('Título').fill('Demostración')
+  await dialog.getByRole('button', { name: 'Agregar' }).click()
+  await page.getByText('Enlace agregado.').waitFor()
+  await shot(page, '04-ficha-con-medios')
+
+  // ---------- Importación ----------
+  await page.goto(`${BASE}/entrenadora/biblioteca/importar`)
+  const [template] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Descargar plantilla' }).click()])
+  const templatePath = path.join(OUT, template.suggestedFilename())
+  await template.saveAs(templatePath)
+  check('se descarga la plantilla de Excel', template.suggestedFilename().endsWith('.xlsx') && fs.statSync(templatePath).size > 0)
+
+  await page.getByLabel(/Archivo de Excel/).setInputFiles(IMPORT_FILE)
+  await page.getByRole('button', { name: 'Revisar archivo' }).click()
+  const table = page.getByRole('table', { name: 'Vista previa por fila' })
+  await table.waitFor()
+  check('la vista previa marca la fila duplicada', await table.getByText('Duplicada').first().isVisible())
+  check('la vista previa marca la fila con errores', await table.getByText('Con errores').first().isVisible())
+  await shot(page, '05-importacion-vista-previa')
+  await page.getByRole('button', { name: /Importar \d+ ejercicio/ }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Importar' }).click()
+  await page.getByText(/Se importaron 2 ejercicios\./).waitFor()
+  check('importa solo las filas válidas y reporta las rechazadas', await page.getByRole('table', { name: 'Filas rechazadas' }).isVisible())
+  await shot(page, '06-importacion-reporte')
+
+  // ---------- Búsqueda, variantes y favoritos ----------
+  await page.goto(`${BASE}/entrenadora/biblioteca`)
+  await page.getByLabel('Buscar').fill(`puente de GLUTEO ${TAG}`)
+  await page.getByRole('button', { name: 'Buscar' }).click()
+  await page.getByText('1 ejercicio', { exact: true }).waitFor()
+  check('la búsqueda ignora mayúsculas y acentos', await page.getByRole('link', { name: `Puente de glúteo ${TAG}` }).isVisible())
+  await page.getByLabel('Buscar').fill(`glute bridge ${TAG}`)
+  await page.getByRole('button', { name: 'Buscar' }).click()
+  await page.getByText(`Glute bridge ${TAG}`).waitFor()
+  check('la búsqueda funciona en inglés', true)
+
+  await page.goto(exerciseUrl)
+  await page.getByRole('button', { name: 'Vincular variante' }).click()
+  dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Buscar ejercicio').fill(`Hip thrust unilateral ${TAG}`)
+  await dialog.getByRole('button', { name: 'Buscar' }).click()
+  await dialog.getByRole('radio', { name: new RegExp(`Hip thrust unilateral ${TAG}`) }).check()
+  await dialog.getByLabel('Nota').fill('Una pierna')
+  await dialog.getByRole('button', { name: 'Vincular' }).click()
+  await page.getByRole('list', { name: 'Variantes' }).getByRole('link', { name: `Hip thrust unilateral ${TAG}` }).waitFor()
+  check('se vincula una variante con identidad propia', true)
+  await page.getByRole('button', { name: '☆ Marcar favorito' }).click()
+  await page.getByRole('button', { name: '★ Favorito' }).waitFor()
+  check('se marca como favorito', true)
+  await shot(page, '07-ficha-variante-favorito')
+
+  await page.getByRole('list', { name: 'Variantes' }).getByRole('link', { name: `Hip thrust unilateral ${TAG}` }).click()
+  await page.getByRole('list', { name: 'Variantes' }).getByRole('link', { name: `Hip thrust con barra ${TAG}` }).waitFor()
+  check('la variante muestra el vínculo en ambos sentidos', true)
+
+  // ---------- Desactivar ----------
+  await page.goto(exerciseUrl)
+  await page.getByRole('button', { name: 'Desactivar' }).click()
+  dialog = page.getByRole('dialog', { name: 'Desactivar ejercicio' })
+  await shot(page, '08-confirmar-desactivar')
+  await dialog.getByRole('button', { name: 'Desactivar' }).click()
+  await page.getByText(/Ejercicio desactivado/).waitFor()
+  await page.goto(`${BASE}/entrenadora/biblioteca`)
+  await page.getByLabel('Buscar').fill(TAG)
+  await page.getByRole('button', { name: 'Buscar' }).click()
+  await page.getByText(/\d+ ejercicios?/).first().waitFor()
+  check('desactivado ya no aparece entre los activos', !(await page.getByRole('link', { name: `Hip thrust con barra ${TAG}` }).count()))
+  await page.getByLabel('Estado').selectOption('inactive')
+  await page.getByRole('link', { name: `Hip thrust con barra ${TAG}` }).waitFor()
+  check('desactivado aparece en el filtro de desactivados', true)
+  await page.getByLabel('Estado').selectOption('all')
+  await page.getByRole('link', { name: `Hip thrust con barra ${TAG}` }).waitFor()
+  await shot(page, '09-lista-todos')
+
+  // ---------- Exportar ----------
+  await page.goto(`${BASE}/entrenadora/biblioteca/importar`)
+  const [exported] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Descargar Excel' }).click()])
+  const exportPath = path.join(OUT, exported.suggestedFilename())
+  await exported.saveAs(exportPath)
+  check('se descarga la exportación del catálogo', /^biblioteca-lbmethod-\d{4}-\d{2}-\d{2}\.xlsx$/.test(exported.suggestedFilename()))
+
+  // ---------- Móvil ----------
+  const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, storageState: await ctx.storageState() })
+  const m = await mobile.newPage()
+  await m.goto(`${BASE}/entrenadora/biblioteca`)
+  await m.getByRole('list', { name: 'Ejercicios' }).waitFor()
+  check('en móvil no hay desplazamiento horizontal', await m.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+  await shot(m, '10-biblioteca-movil')
+  await m.goto(exerciseUrl)
+  await m.getByRole('heading', { name: `Hip thrust con barra ${TAG}` }).waitFor()
+  check('la ficha en móvil no se desborda', await m.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+  await shot(m, '11-ficha-movil')
+
+  // Esperados: 401 antes de iniciar sesión y 409 del duplicado provocado a propósito.
+  check('sin errores inesperados en la consola del navegador', errors.filter((e) => !/401|409|Unauthorized|Conflict/.test(e)).length === 0)
+  if (errors.length) console.log(errors.join('\n'))
+  console.log(results.join('\n'))
+  await browser.close()
+})().catch((e) => {
+  console.error(e)
+  console.log(results.join('\n'))
+  process.exit(1)
+})

@@ -62,8 +62,10 @@ async function toError(res: Response): Promise<ApiError> {
 
 async function send<T>(method: string, path: string, body?: unknown, retry = true): Promise<T> {
   const headers: Record<string, string> = { Accept: 'application/json' }
+  const isForm = body instanceof FormData
   if (method !== 'GET') {
-    headers['Content-Type'] = 'application/json'
+    // Con FormData el navegador define el Content-Type (multipart con su separador).
+    if (!isForm) headers['Content-Type'] = 'application/json'
     headers['X-CSRF-TOKEN'] = await getCsrfToken()
   }
 
@@ -73,7 +75,7 @@ async function send<T>(method: string, path: string, body?: unknown, retry = tru
       method,
       headers,
       credentials: 'same-origin',
-      body: method === 'GET' ? undefined : JSON.stringify(body ?? {}),
+      body: method === 'GET' ? undefined : isForm ? body : JSON.stringify(body ?? {}),
     })
   } catch {
     throw new ApiError(0, 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.')
@@ -94,7 +96,31 @@ async function send<T>(method: string, path: string, body?: unknown, retry = tru
   return (await res.json()) as T
 }
 
+/** Descarga un archivo protegido (Excel) con la sesión actual y lo guarda en el equipo. */
+async function download(path: string, fallbackName: string): Promise<void> {
+  let res: Response
+  try {
+    res = await fetch(path, { credentials: 'same-origin' })
+  } catch {
+    throw new ApiError(0, 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.')
+  }
+  if (!res.ok) throw await toError(res)
+  const disposition = res.headers.get('Content-Disposition') ?? ''
+  const name = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1] ?? /filename="?([^";]+)"?/i.exec(disposition)?.[1]
+  const url = URL.createObjectURL(await res.blob())
+  const link = document.createElement('a')
+  link.href = url
+  link.download = name ? decodeURIComponent(name) : fallbackName
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
 export const api = {
   get: <T>(path: string) => send<T>('GET', path),
   post: <T>(path: string, body?: unknown) => send<T>('POST', path, body),
+  put: <T>(path: string, body?: unknown) => send<T>('PUT', path, body),
+  del: <T>(path: string) => send<T>('DELETE', path),
+  download,
 }

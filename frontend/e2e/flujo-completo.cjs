@@ -68,8 +68,8 @@ async function login(page, email, password) {
   await page.getByRole('dialog').getByRole('button', { name: 'Cancelar' }).click()
   await shot(page, '07-clientes-lista')
 
-  await page.getByRole('link', { name: /Biblioteca/ }).click()
-  await page.getByText('Pendiente · Fase 5').waitFor()
+  await page.getByRole('link', { name: /Rutinas/ }).click()
+  await page.getByText('Pendiente · Fase 6').waitFor()
   check('módulo futuro se marca como pendiente', true)
   await shot(page, '08-modulo-pendiente')
 

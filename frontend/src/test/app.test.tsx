@@ -31,7 +31,7 @@ describe('cliente HTTP', () => {
     const calls = mockApi({
       'POST /api/x': (init) => {
         attempts++
-        const token = (init?.headers as Record<string, string>)['X-CSRF-TOKEN']
+        const token = (init!.headers as Record<string, string>)['X-CSRF-TOKEN']
         return attempts === 1
           ? { status: 400, body: { detail: 'Falta o no es válido el token de seguridad (CSRF).' } }
           : { status: 200, body: { ok: token } }
@@ -91,11 +91,13 @@ describe('experiencias separadas por rol', () => {
       'GET /api/auth/me': () => ({ status: 200, body: trainerSession }),
       'GET /api/trainer/clients': () => ({ status: 200, body: [] }),
     })
-    renderApp('/entrenadora/biblioteca')
+    renderApp('/entrenadora/rutinas')
     const nav = await screen.findByRole('navigation', { name: 'Navegación principal' })
     for (const label of ['Inicio', 'Clientes', 'Biblioteca', 'Rutinas', 'Plantillas', 'Calendario', 'Seguimiento', 'Configuración'])
       expect(within(nav).getByRole('link', { name: new RegExp(label) })).toBeInTheDocument()
-    expect(screen.getByText('Pendiente · Fase 5')).toBeInTheDocument()
+    expect(screen.getByText('Pendiente · Fase 6')).toBeInTheDocument()
+    // La biblioteca ya está disponible: su enlace no lleva la marca de fase pendiente.
+    expect(within(nav).getByRole('link', { name: /Biblioteca/ })).not.toHaveTextContent(/Fase/)
   })
 
   it('el inicio de la entrenadora usa datos reales y no inventa indicadores', async () => {

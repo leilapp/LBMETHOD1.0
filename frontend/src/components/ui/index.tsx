@@ -1,4 +1,13 @@
-import { useEffect, useId, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react'
 
 /* ---------- Marca ---------- */
 export function Logo({ size = 'md' }: { size?: 'md' | 'lg' }) {
@@ -68,6 +77,83 @@ export function TextField({
         </span>
       )}
     </div>
+  )
+}
+
+/** Etiqueta, ayuda y error comunes a los campos que no son de texto simple. */
+function FieldFrame({
+  id,
+  label,
+  required,
+  hint,
+  error,
+  children,
+}: {
+  id: string
+  label: string
+  required?: boolean
+  hint?: string
+  error?: string
+  children: ReactNode
+}) {
+  return (
+    <div className="field">
+      <label className="field__label" htmlFor={id}>
+        {label}
+        {required && <span aria-hidden="true"> *</span>}
+      </label>
+      {children}
+      {hint && (
+        <span id={`${id}-hint`} className="field__hint">
+          {hint}
+        </span>
+      )}
+      {error && (
+        <span id={`${id}-error`} className="field__error" role="alert">
+          {error}
+        </span>
+      )}
+    </div>
+  )
+}
+
+export function SelectField({
+  label,
+  hint,
+  error,
+  children,
+  ...select
+}: SelectHTMLAttributes<HTMLSelectElement> & { label: string; hint?: string; error?: string }) {
+  const id = useId()
+  const describedBy = [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(' ') || undefined
+  return (
+    <FieldFrame id={id} label={label} required={select.required} hint={hint} error={error}>
+      <select id={id} className="input" aria-invalid={error ? true : undefined} aria-describedby={describedBy} {...select}>
+        {children}
+      </select>
+    </FieldFrame>
+  )
+}
+
+export function TextAreaField({
+  label,
+  hint,
+  error,
+  ...textarea
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; hint?: string; error?: string }) {
+  const id = useId()
+  const describedBy = [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(' ') || undefined
+  return (
+    <FieldFrame id={id} label={label} required={textarea.required} hint={hint} error={error}>
+      <textarea
+        id={id}
+        className="input input--area"
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+        rows={4}
+        {...textarea}
+      />
+    </FieldFrame>
   )
 }
 
