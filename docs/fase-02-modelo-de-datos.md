@@ -10,7 +10,7 @@
 |---|---|
 | `backend/src/LBMethod.Domain` | Entidades C# del negocio, sin dependencias de frameworks. |
 | `backend/src/LBMethod.Infrastructure` | `LBMethodDbContext` (incluye las tablas de ASP.NET Core Identity), configuraciones Fluent API, interceptores, catálogos iniciales y migración `InitialCreate`. |
-| `backend/tests/LBMethod.IntegrationTests` | 22 pruebas automáticas contra un SQL Server real. |
+| `backend/tests/LBMethod.IntegrationTests` | 24 pruebas automáticas (22 contra un SQL Server real y 2 de zona horaria). |
 
 Los proyectos `LBMethod.Application` y `LBMethod.Api` de la arquitectura aprobada se crearán en la Fase 3, cuando haya casos de uso y endpoints que poner en ellos.
 
@@ -78,7 +78,7 @@ Además: `AuditLog` (bitácora, sin relaciones), y las tablas estándar de Ident
 | Nada de programas en JSON | Rutinas, días, ejercicios y series son tablas relacionadas. |
 | `decimal` para peso y medidas | `decimal(7,2)` cargas, `decimal(8,2)` medidas, `decimal(3,1)` RIR/RPE. Probado (72.35 y 62.5 sin pérdida). |
 | Unidades consistentes | Cada peso se guarda **junto con su unidad** (kg/lb). Cada medida guarda su unidad. La base de datos rechaza un peso sin unidad. Peso corporal (`MeasurementKind.BodyWeight`) y carga de ejercicio están en tablas distintas. |
-| Fechas y zona horaria | Fechas con hora en **UTC** (`datetime2`), leídas siempre como UTC. Fechas de calendario (nacimiento, inicio/fin, medición) como `date`, sin zona horaria. Probado. |
+| Fechas y zona horaria | Fechas con hora en **UTC** (`datetime2`), leídas siempre como UTC. Fechas de calendario (nacimiento, inicio/fin, medición) como `date`, sin zona horaria. La zona del negocio es **centro de México (Guanajuato), `America/Mexico_City`**, UTC-6 todo el año: `BusinessTime` convierte a hora local y decide a qué día pertenece un entrenamiento (p. ej. uno a las 20:30 cuenta para ese día, aunque en UTC ya sea el siguiente). Probado. |
 | `CreatedAt` / `UpdatedAt` | Automáticos en todas las entidades. Probado que `CreatedAt` no cambia al editar. |
 | Eliminación lógica | Ejercicios, grupos, equipamiento, tipos de medida: `IsActive`. Clientes: `Status` + `DeactivatedAt`. Rutinas: `Status = Archived`. Archivos: `DeletedAt`. |
 | No destruir historial | Ninguna relación borra en cascada salvo las partes internas de un borrador o de una sesión. La base de datos **rechaza borrar** un ejercicio usado en rutinas o un cliente con historial (probado con borrado directo en SQL). |
@@ -113,7 +113,7 @@ No se cargó ningún ejercicio, cliente ni rutina: los agregarás tú.
 
 Entorno: SQL Server 2022 Developer (contenedor) en mi entorno en la nube, .NET SDK 10.0.114, EF Core 10.0.14. Cada ejecución crea una base de datos temporal, aplica la migración y la borra al terminar.
 
-**Resultado: 22 de 22 pruebas aprobadas.**
+**Resultado: 24 de 24 pruebas aprobadas.**
 
 | Prueba | Resultado |
 |---|---|
@@ -131,6 +131,8 @@ Entorno: SQL Server 2022 Developer (contenedor) en mi entorno en la nube, .NET S
 | Correo de cliente único sin distinguir mayúsculas | ✅ |
 | Desactivar un cliente conserva su historial; no se puede borrar con datos | ✅ |
 | Fechas en UTC, decimales exactos y marcas de tiempo automáticas | ✅ |
+| Conversión a hora del centro de México (sin horario de verano) | ✅ |
+| Un entrenamiento nocturno pertenece al día local correcto | ✅ |
 
 Pruebas adicionales manuales:
 - Migración aplicada a la base `LBMethod_Dev` de la nube: 35 tablas creadas, acentos guardados correctamente.
@@ -195,7 +197,7 @@ docs/sql/LBMethod_InitialCreate_idempotent.sql
 backend/LBMethod.slnx
 backend/dotnet-tools.json                              (herramienta dotnet-ef 10.0.14)
 backend/src/LBMethod.Domain/
-  Common/Entity.cs, Common/Enums.cs
+  Common/Entity.cs, Common/Enums.cs, Common/BusinessTime.cs
   Clients/Client.cs
   Exercises/Exercise.cs
   Routines/Routine.cs
@@ -214,7 +216,7 @@ backend/src/LBMethod.Infrastructure/
   Persistence/Seed/ReferenceData.cs
   Persistence/Migrations/20261030170517_InitialCreate*.cs
 backend/tests/LBMethod.IntegrationTests/
-  SqlServerFixture.cs, TestData.cs, DataModelTests.cs
+  SqlServerFixture.cs, TestData.cs, DataModelTests.cs, BusinessTimeTests.cs
 ```
 
 Nota de seguridad: `Microsoft.Data.SqlClient` traía una versión de `System.Security.Cryptography.Pkcs` con vulnerabilidades conocidas; se fijó la versión corregida 10.0.14. La compilación queda sin advertencias.
@@ -223,9 +225,9 @@ Nota de seguridad: `Microsoft.Data.SqlClient` traía una versión de `System.Sec
 
 ## 8. Pendientes y decisiones abiertas
 
-- **D5 Zona horaria y unidades:** el modelo ya guarda la unidad con cada valor, así que no bloquea. Falta saber tu zona horaria (para mostrar fechas) y si prefieres kg/cm por defecto.
+- **D5 Zona horaria:** ✅ resuelta, centro de México (`America/Mexico_City`). Unidades: el modelo guarda la unidad con cada valor; por defecto kg y cm (avísame si prefieres lb/in).
 - **D3 / D7 Archivos y videos:** el modelo admite disco local o nube y archivo o enlace; la implementación de subida es de la Fase 5.
-- **D4 Correo** para invitaciones y recuperación de contraseña: necesario en la Fase 3.
+- **D4 Correo:** ✅ por ahora **sin envío de correos**. Consecuencia para la Fase 3: tú crearás la cuenta de cada cliente con una contraseña temporal que le compartirás directamente, y el cliente deberá cambiarla al entrar por primera vez. Si alguien olvida su contraseña, tú se la restableces desde tu panel. El correo se puede agregar más adelante sin cambiar el modelo.
 - **D8 Una o varias entrenadoras:** el modelo ya registra `TrainerId`; confirma que por ahora solo serás tú.
 - Revisión de las decisiones de diseño de la sección 4.
 - Aplicar la migración en tu SQL Server de Windows (sección 6) cuando quieras; no es requisito para la Fase 3.
