@@ -1,8 +1,10 @@
 using LBMethod.Domain.Audit;
+using LBMethod.Domain.Calendar;
 using LBMethod.Domain.Clients;
 using LBMethod.Domain.Exercises;
 using LBMethod.Domain.Files;
 using LBMethod.Domain.Routines;
+using LBMethod.Domain.Tracking;
 using LBMethod.Domain.Training;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,6 +34,12 @@ public interface IAppDbContext
     DbSet<RoutineAssignment> RoutineAssignments { get; }
 
     DbSet<TrainingLog> TrainingLogs { get; }
+
+    DbSet<MeasurementType> MeasurementTypes { get; }
+    DbSet<Evaluation> Evaluations { get; }
+    DbSet<Measurement> Measurements { get; }
+    DbSet<ProgressPhoto> ProgressPhotos { get; }
+    DbSet<CalendarEvent> CalendarEvents { get; }
 
     DbSet<StoredFile> StoredFiles { get; }
     DbSet<AuditLog> AuditLogs { get; }

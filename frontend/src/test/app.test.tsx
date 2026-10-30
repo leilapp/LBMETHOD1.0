@@ -86,7 +86,7 @@ describe('experiencias separadas por rol', () => {
     expect(within(nav).queryByRole('link', { name: /Clientes/ })).not.toBeInTheDocument()
   })
 
-  it('la entrenadora ve su menú completo y los módulos futuros marcados como pendientes', async () => {
+  it('la entrenadora ve su menú completo, ya sin módulos pendientes', async () => {
     mockApi({
       'GET /api/auth/me': () => ({ status: 200, body: trainerSession }),
       'GET /api/trainer/clients': () => ({ status: 200, body: [] }),
@@ -95,10 +95,10 @@ describe('experiencias separadas por rol', () => {
     const nav = await screen.findByRole('navigation', { name: 'Navegación principal' })
     for (const label of ['Inicio', 'Clientes', 'Biblioteca', 'Rutinas', 'Plantillas', 'Calendario', 'Seguimiento', 'Configuración'])
       expect(within(nav).getByRole('link', { name: new RegExp(label) })).toBeInTheDocument()
-    expect(screen.getByText('Pendiente · Fase 9')).toBeInTheDocument()
-    // Los módulos ya disponibles no llevan la marca de fase pendiente.
-    for (const label of ['Biblioteca', 'Rutinas', 'Plantillas'])
-      expect(within(nav).getByRole('link', { name: new RegExp(label) })).not.toHaveTextContent(/Fase/)
+    expect(await screen.findByRole('heading', { name: 'Calendario' })).toBeInTheDocument()
+    // Con la Fase 9 ya no queda ningún módulo marcado como pendiente.
+    expect(nav).not.toHaveTextContent(/Fase/)
+    expect(screen.queryByText(/Pendiente · Fase/)).not.toBeInTheDocument()
   })
 
   it('el inicio de la entrenadora usa datos reales y no inventa indicadores', async () => {
@@ -112,13 +112,26 @@ describe('experiencias separadas por rol', () => {
           { id: 3, firstName: 'C', lastName: 'Tres', email: 'c@t', status: 'Active', hasAccount: true, currentProgram: null },
         ],
       }),
+      'GET /api/trainer/dashboard': () => ({
+        status: 200,
+        body: {
+          upcomingEvaluations: [{ eventId: 4, clientId: 1, clientName: 'A Uno', date: '2026-11-03', startTime: '09:30:00', title: 'Evaluación' }],
+          recentActivity: [
+            { kind: 'session', clientId: 3, clientName: 'C Tres', occurredAt: '2026-10-29T18:00:00Z', title: 'Día 1', detail: null, sessionId: 9, evaluationId: null },
+          ],
+        },
+      }),
     })
     renderApp('/entrenadora')
     expect(await screen.findByText('Clientes activos')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
     expect(screen.getByText('Clientes con programa vigente').previousElementSibling).toHaveTextContent('1')
     expect(screen.getByText('1 activos sin rutina asignada')).toBeInTheDocument()
-    expect(screen.getAllByText(/Pendiente · Fase/)).toHaveLength(2)
+    expect(await screen.findByRole('link', { name: 'A Uno' })).toHaveAttribute('href', '/entrenadora/clientes/1/seguimiento')
+    expect(screen.getByText(/09:30/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'C Tres' })).toHaveAttribute('href', '/entrenadora/clientes/3/entrenamientos/9')
+    expect(screen.getByText(/terminó «Día 1»/)).toBeInTheDocument()
+    expect(screen.queryByText(/Pendiente · Fase/)).not.toBeInTheDocument()
   })
 })
 

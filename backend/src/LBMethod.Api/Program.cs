@@ -25,8 +25,10 @@ var mediaLimits = new LBMethod.Application.Library.MediaLimits(
 builder.Services.AddLibrary(
     config["Storage:LocalPath"] is { Length: > 0 } storagePath ? storagePath : Path.Combine(builder.Environment.ContentRootPath, "storage"),
     mediaLimits);
-// El límite general de tamaño de petición se mantiene; solo la subida de medios lo amplía (MediaUploadLimit).
-builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => o.MultipartBodyLengthLimit = Math.Max(mediaLimits.MaxImageBytes, mediaLimits.MaxVideoBytes) + 1024 * 1024);
+var trackingLimits = new LBMethod.Application.Tracking.TrackingLimits(config.GetValue("Tracking:MaxPhotoBytes", 10L * 1024 * 1024));
+builder.Services.AddTracking(trackingLimits);
+// El límite general de tamaño de petición se mantiene; solo la subida de medios y fotos lo amplía (MediaUploadLimit).
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => o.MultipartBodyLengthLimit = Math.Max(Math.Max(mediaLimits.MaxImageBytes, mediaLimits.MaxVideoBytes), trackingLimits.MaxPhotoBytes) + 1024 * 1024);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 

@@ -2,7 +2,6 @@ import { ClientDetailPage, ClientProfileFormPage } from '../features/clients/Cli
 import { useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { PendingModule } from '../components/ui'
 import { AppShell, type NavItem } from '../layouts/AppShell'
 import { ChangePasswordPage, LoginPage } from '../features/auth/AuthPages'
 import { ClientsPage, TrainerDashboardPage, TrainerSettingsPage } from '../features/trainer/TrainerPages'
@@ -14,6 +13,8 @@ import { ExerciseDetailPage } from '../features/library/ExerciseDetailPage'
 import { ImportExportPage } from '../features/library/ImportExportPage'
 import { RoutineListPage, RoutinePage } from '../features/routines/RoutinesPages'
 import { RoutineBuilderPage } from '../features/routines/RoutineBuilderPage'
+import { ClientTrackingPage, PortalProgressPage, TrackingOverviewPage, TrainerSessionPage } from '../features/tracking/TrackingPages'
+import { PortalCalendarPage, TrainerCalendarPage } from '../features/tracking/CalendarPages'
 import { RedirectHome, RequireRole } from './guards'
 import { createQueryClient } from './queryClient'
 
@@ -23,8 +24,8 @@ const trainerNav: NavItem[] = [
   { to: '/entrenadora/biblioteca', label: 'Biblioteca' },
   { to: '/entrenadora/rutinas', label: 'Rutinas' },
   { to: '/entrenadora/plantillas', label: 'Plantillas' },
-  { to: '/entrenadora/calendario', label: 'Calendario', pendingPhase: 9 },
-  { to: '/entrenadora/seguimiento', label: 'Seguimiento', pendingPhase: 9 },
+  { to: '/entrenadora/calendario', label: 'Calendario' },
+  { to: '/entrenadora/seguimiento', label: 'Seguimiento' },
   { to: '/entrenadora/configuracion', label: 'Configuración' },
 ]
 
@@ -32,8 +33,8 @@ const clientNav: NavItem[] = [
   { to: '/portal', label: 'Inicio', end: true },
   { to: '/portal/rutina', label: 'Mi rutina' },
   { to: '/portal/entrenamientos', label: 'Mis entrenamientos' },
-  { to: '/portal/progreso', label: 'Mi progreso', pendingPhase: 9 },
-  { to: '/portal/calendario', label: 'Mi calendario', pendingPhase: 9 },
+  { to: '/portal/progreso', label: 'Mi progreso' },
+  { to: '/portal/calendario', label: 'Mi calendario' },
   { to: '/portal/perfil', label: 'Mi perfil' },
 ]
 
@@ -61,8 +62,10 @@ export function AppRoutes() {
           <Route path="plantillas" element={<RoutineListPage section="plantillas" />} />
           <Route path="plantillas/:id" element={<RoutinePage section="plantillas" />} />
           <Route path="plantillas/:id/editar" element={<RoutineBuilderPage section="plantillas" />} />
-          <Route path="calendario" element={<PendingModule title="Calendario" phase={9} description="Vista mensual y semanal de entrenamientos, descansos y evaluaciones." />} />
-          <Route path="seguimiento" element={<PendingModule title="Seguimiento" phase={9} description="Medidas, evaluaciones, fotos privadas y evolución de cargas de tus clientes." />} />
+          <Route path="clientes/:id/seguimiento" element={<ClientTrackingPage />} />
+          <Route path="clientes/:id/entrenamientos/:sid" element={<TrainerSessionPage />} />
+          <Route path="calendario" element={<TrainerCalendarPage />} />
+          <Route path="seguimiento" element={<TrackingOverviewPage />} />
           <Route path="configuracion" element={<TrainerSettingsPage />} />
         </Route>
       </Route>
@@ -73,8 +76,8 @@ export function AppRoutes() {
           <Route path="rutina" element={<PortalRoutinePage />} />
           <Route path="entrenamientos" element={<PortalSessionsPage />} />
           <Route path="entrenamiento/:id" element={<SessionPage />} />
-          <Route path="progreso" element={<PendingModule title="Mi progreso" phase={9} description="Tus medidas, evaluaciones y evolución de cargas." />} />
-          <Route path="calendario" element={<PendingModule title="Mi calendario" phase={9} description="Tus entrenamientos programados y completados." />} />
+          <Route path="progreso" element={<PortalProgressPage />} />
+          <Route path="calendario" element={<PortalCalendarPage />} />
           <Route path="perfil" element={<PortalProfilePage />} />
         </Route>
       </Route>

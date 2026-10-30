@@ -17,7 +17,11 @@ import {
 import { useSession } from '../../app/session'
 import { ChangePasswordForm } from '../auth/AuthPages'
 import { isEmail } from '../../lib/validation'
+import { formatDate, formatDateTime } from '../../lib/format'
 import '../clients/clients.css'
+import { trackingApi } from '../../api/tracking'
+import { MeasurementTypesSection } from '../tracking/TrackingPages'
+import { trackingKeys } from '../tracking/trackingModel'
 
 const clientsKey = ['trainer', 'clients'] as const
 
@@ -67,25 +71,72 @@ export function TrainerDashboardPage() {
             </>
           )}
         </section>
-        <PendingStat label="Próximas evaluaciones" phase={9} />
-        <PendingStat label="Actividad reciente" phase={8} />
+        <DashboardTracking />
       </div>
     </>
   )
 }
 
-/** Indicador cuyo dato todavía no existe: se marca como pendiente en lugar de inventar un número. */
-function PendingStat({ label, phase }: { label: string; phase: number }) {
+/** Próximas evaluaciones y actividad reciente de los clientes (datos reales del calendario y los registros). */
+function DashboardTracking() {
+  const { data, isPending, error, refetch } = useQuery({ queryKey: trackingKeys.dashboard, queryFn: trackingApi.dashboard })
+  if (isPending)
+    return (
+      <section className="card">
+        <LoadingState />
+      </section>
+    )
+  if (error)
+    return (
+      <section className="card">
+        <ErrorState message={error.message} onRetry={() => refetch()} />
+      </section>
+    )
   return (
-    <section className="card">
-      <p className="stat__value muted" aria-hidden="true">
-        —
-      </p>
-      <p className="stat__label">{label}</p>
-      <span className="badge badge--pending" style={{ marginTop: 'var(--lb-space-3)' }}>
-        Pendiente · Fase {phase}
-      </span>
-    </section>
+    <>
+      <section className="card" aria-labelledby="proximas-evaluaciones">
+        <h2 className="card__title" id="proximas-evaluaciones">
+          Próximas evaluaciones
+        </h2>
+        {data.upcomingEvaluations.length === 0 ? (
+          <p className="muted">
+            Nada en los próximos 14 días. Prográmalas en el <Link to="/entrenadora/calendario">calendario</Link>.
+          </p>
+        ) : (
+          <ul className="dash-list">
+            {data.upcomingEvaluations.map((e) => (
+              <li key={e.eventId}>
+                <Link to={`/entrenadora/clientes/${e.clientId}/seguimiento`}>{e.clientName}</Link>
+                <span className="muted">
+                  {formatDate(e.date)}
+                  {e.startTime ? ` · ${e.startTime.slice(0, 5)}` : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section className="card" aria-labelledby="actividad-reciente">
+        <h2 className="card__title" id="actividad-reciente">
+          Actividad reciente
+        </h2>
+        {data.recentActivity.length === 0 ? (
+          <p className="muted">Aún no hay entrenamientos finalizados ni evaluaciones.</p>
+        ) : (
+          <ul className="dash-list">
+            {data.recentActivity.map((a, i) => (
+              <li key={i}>
+                <span>
+                  <Link to={a.sessionId ? `/entrenadora/clientes/${a.clientId}/entrenamientos/${a.sessionId}` : `/entrenadora/clientes/${a.clientId}/seguimiento`}>{a.clientName}</Link>
+                  {a.kind === 'session' ? ` terminó «${a.title}»` : ` · evaluación (${a.detail})`}
+                </span>
+                <span className="muted">{formatDateTime(a.occurredAt)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </>
   )
 }
 
@@ -358,10 +409,13 @@ export function TrainerSettingsPage() {
   return (
     <>
       <PageHeader title="Configuración" />
-      <section className="card" style={{ maxWidth: 520 }}>
-        <h2 className="card__title">Cambiar contraseña</h2>
-        <ChangePasswordForm />
-      </section>
+      <div className="stack" style={{ maxWidth: 640 }}>
+        <MeasurementTypesSection />
+        <section className="card">
+          <h2 className="card__title">Cambiar contraseña</h2>
+          <ChangePasswordForm />
+        </section>
+      </div>
     </>
   )
 }

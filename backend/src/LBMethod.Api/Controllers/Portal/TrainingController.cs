@@ -27,6 +27,7 @@ namespace LBMethod.Api.Controllers.Portal;
 public class TrainingController(TrainingService training, ClientAccess access, MediaService media, IAppDbContext db) : ControllerBase
 {
     private static string? Unit(WeightUnit? u) => u?.ToString().ToLowerInvariant();
+    private static string PortalMediaUrl(int mediaId) => $"/api/portal/media/{mediaId}/content";
 
     /// <summary>Asignaciones vigentes o por empezar, con días, ejercicios, parámetros y medios.</summary>
     [HttpGet("program")]
@@ -45,7 +46,7 @@ public class TrainingController(TrainingService training, ClientAccess access, M
             .ToList();
 
         var exerciseIds = assignments.SelectMany(x => x.a.RoutineVersion.Days).SelectMany(d => d.Exercises).Select(e => e.ExerciseId).Distinct().ToList();
-        var mediaByExercise = await MediaForAsync(exerciseIds, ct);
+        var mediaByExercise = await SessionQueries.MediaForAsync(db, exerciseIds, PortalMediaUrl, ct);
 
         return assignments.Select(x =>
         {
@@ -100,8 +101,8 @@ public class TrainingController(TrainingService training, ClientAccess access, M
 
         var mine = await training.MineAsync(ct);
         var weekStartUtc = TimeZoneInfo.ConvertTimeToUtc(monday.ToDateTime(TimeOnly.MinValue), BusinessTime.TimeZone);
-        var recent = await Summaries(mine.Where(l => l.StartedAt >= weekStartUtc || l.Status == TrainingLogStatus.InProgress)).ToListAsync(ct);
-        var last = await Summaries(mine.Where(l => l.Status == TrainingLogStatus.Completed).OrderByDescending(l => l.CompletedAt)).FirstOrDefaultAsync(ct);
+        var recent = await SessionQueries.Summaries(mine.Where(l => l.StartedAt >= weekStartUtc || l.Status == TrainingLogStatus.InProgress)).ToListAsync(ct);
+        var last = await SessionQueries.Summaries(mine.Where(l => l.Status == TrainingLogStatus.Completed).OrderByDescending(l => l.CompletedAt)).FirstOrDefaultAsync(ct);
         var inProgress = recent.FirstOrDefault(s => s.Status == nameof(TrainingLogStatus.InProgress));
 
         // Próximo entrenamiento por rutina vigente: si los días tienen día de la semana, el siguiente desde hoy
@@ -139,13 +140,9 @@ public class TrainingController(TrainingService training, ClientAccess access, M
         return new PortalHomeResponse(inProgress, next, week, last);
     }
 
-    private static IQueryable<SessionSummaryResponse> Summaries(IQueryable<TrainingLog> q) => q.Select(l => new SessionSummaryResponse(
-        l.Id, l.RoutineTitle, l.RoutineVersionNumber, l.DayName, l.Status == TrainingLogStatus.InProgress ? "InProgress" : "Completed",
-        l.StartedAt, l.CompletedAt, l.Exercises.Count(e => e.IsCompleted), l.Exercises.Count(), l.Exercises.SelectMany(e => e.Sets).Count(s => s.IsCompleted)));
-
     [HttpGet("sessions")]
     public async Task<IReadOnlyList<SessionSummaryResponse>> Sessions(CancellationToken ct) =>
-        await Summaries((await training.MineAsync(ct)).OrderByDescending(l => l.StartedAt)).Take(200).ToListAsync(ct);
+        await SessionQueries.Summaries((await training.MineAsync(ct)).OrderByDescending(l => l.StartedAt)).Take(200).ToListAsync(ct);
 
     [HttpGet("sessions/current")]
     public async Task<ActionResult<SessionDetailResponse>> Current(CancellationToken ct)
@@ -157,21 +154,8 @@ public class TrainingController(TrainingService training, ClientAccess access, M
     [HttpGet("sessions/{id:int}")]
     public async Task<ActionResult<SessionDetailResponse>> Session(int id, CancellationToken ct)
     {
-        var log = await (await training.MineAsync(ct)).AsNoTracking()
-            .Include(l => l.Exercises).ThenInclude(e => e.Sets)
-            .AsSplitQuery()
-            .SingleOrDefaultAsync(l => l.Id == id, ct);
-        if (log is null) return NotFound();
-        var mediaByExercise = await MediaForAsync(log.Exercises.Select(e => e.ExerciseId).Distinct().ToList(), ct);
-        return new SessionDetailResponse(log.Id, log.RoutineAssignmentId, log.RoutineTitle, log.RoutineVersionNumber, log.DayName,
-            log.Status == TrainingLogStatus.InProgress ? "InProgress" : "Completed", log.StartedAt, log.CompletedAt, log.Comment,
-            log.Exercises.OrderBy(e => e.Position).Select(e => new LoggedExerciseResponse(e.Id, e.Position, e.ExerciseId, e.ExerciseNameEs, e.ExerciseNameEn,
-                e.SupersetGroup, e.PrescribedSets, e.PrescribedRepsMin, e.PrescribedRepsMax, e.PrescribedWeight, Unit(e.PrescribedWeightUnit),
-                e.PrescribedRestSeconds, e.PrescribedTempo, e.PrescribedRir, e.PrescribedRpe, e.PrescribedNotes, e.IsCompleted, e.Comment,
-                e.Sets.OrderBy(s => s.SetNumber).Select(s => new LoggedSetResponse(s.SetNumber, RoutineLabels.SetTypes[s.SetType], s.IsPrescribed,
-                    s.PrescribedRepsMin, s.PrescribedRepsMax, s.PrescribedWeight, Unit(s.PrescribedWeightUnit), s.PrescribedRestSeconds, s.PrescribedRir,
-                    s.PrescribedRpe, s.PrescribedNotes, s.Reps, s.Weight, (int?)s.WeightUnit, s.Rir, s.Rpe, s.IsCompleted, s.Notes)).ToList(),
-                mediaByExercise.GetValueOrDefault(e.ExerciseId) ?? [])).ToList());
+        var detail = await SessionQueries.DetailAsync(await training.MineAsync(ct), id, db, PortalMediaUrl, ct);
+        return detail is null ? NotFound() : detail;
     }
 
     /// <summary>Inicia (o retoma, si es el mismo día) un entrenamiento.</summary>
@@ -195,15 +179,4 @@ public class TrainingController(TrainingService training, ClientAccess access, M
     [HttpPost("sessions/{id:int}/finish")]
     public async Task<IActionResult> Finish(int id, CancellationToken ct) =>
         this.ToResponse(await training.FinishAsync(id, ct), NoContent);
-
-    private async Task<Dictionary<int, List<PortalMediaResponse>>> MediaForAsync(List<int> exerciseIds, CancellationToken ct)
-    {
-        var rows = await db.ExerciseMedia.AsNoTracking()
-            .Where(m => exerciseIds.Contains(m.ExerciseId) && (m.StoredFileId == null || m.StoredFile!.DeletedAt == null))
-            .OrderBy(m => m.SortOrder).ThenBy(m => m.Id)
-            .Select(m => new { m.Id, m.ExerciseId, m.MediaType, m.Title, m.ExternalUrl })
-            .ToListAsync(ct);
-        return rows.GroupBy(m => m.ExerciseId).ToDictionary(g => g.Key, g => g.Select(m => new PortalMediaResponse(m.Id,
-            m.MediaType == MediaType.Video ? "Video" : "Image", m.Title, m.ExternalUrl ?? $"/api/portal/media/{m.Id}/content", m.ExternalUrl != null)).ToList());
-    }
 }

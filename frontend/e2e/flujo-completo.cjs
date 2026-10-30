@@ -69,9 +69,9 @@ async function login(page, email, password) {
   await shot(page, '07-clientes-lista')
 
   await page.getByRole('link', { name: /Calendario/ }).click()
-  await page.getByText('Pendiente · Fase 9').waitFor()
-  check('módulo futuro se marca como pendiente', true)
-  await shot(page, '08-modulo-pendiente')
+  await page.getByRole('heading', { name: 'Calendario' }).waitFor()
+  check('el calendario ya está disponible (sin marca de fase pendiente)', !(await page.getByText(/Pendiente · Fase/).count()))
+  await shot(page, '08-calendario')
 
   await page.getByRole('button', { name: 'Cerrar sesión' }).click()
   await page.getByRole('heading', { name: 'Iniciar sesión' }).waitFor()

@@ -50,6 +50,9 @@ export function ClientDetailPage() {
         subtitle={c.email}
         actions={
           <div className="page-actions">
+            <Link className="btn btn--secondary" to={`/entrenadora/clientes/${id}/seguimiento`}>
+              Seguimiento
+            </Link>
             <Link className="btn btn--secondary" to={`/entrenadora/clientes/${id}/editar`}>
               Editar perfil
             </Link>

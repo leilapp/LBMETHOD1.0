@@ -16,10 +16,11 @@ El desarrollo avanza por fases según la guía maestra del proyecto; cada fase r
 - [Fase 6: constructor manual de rutinas](docs/fase-06-rutinas.md)
 - [Fase 7: clientes y asignaciones](docs/fase-07-clientes-y-asignaciones.md)
 - [Fase 8: portal y registro del cliente](docs/fase-08-portal-y-registro.md) (incluye cómo aplicar la nueva migración)
+- [Fase 9: seguimiento](docs/fase-09-seguimiento.md) (sin migración nueva)
 
 ## Estado
 
-Fase 8 entregada, pendiente de aprobación. Existen el modelo de datos, la API con inicio de sesión, roles y aislamiento de datos (backend/), las pantallas base para entrenadora y cliente (frontend/) y la biblioteca de ejercicios con medios privados e importación/exportación en Excel, el constructor manual de rutinas y plantillas con versiones, el perfil completo de clientes con asignación de rutinas e historial, y el portal del cliente para ver su rutina y registrar sus entrenamientos serie por serie.
+Fase 9 entregada; Fase 10 en curso. Existen el modelo de datos, la API con inicio de sesión, roles y aislamiento de datos (backend/), las pantallas base para entrenadora y cliente (frontend/) y la biblioteca de ejercicios con medios privados e importación/exportación en Excel, el constructor manual de rutinas y plantillas con versiones, el perfil completo de clientes con asignación de rutinas e historial, el portal del cliente para ver su rutina y registrar sus entrenamientos serie por serie, y el seguimiento: medidas, evaluaciones, fotos privadas, gráficas de progreso y calendario.
 
 ## Requisitos de desarrollo
 

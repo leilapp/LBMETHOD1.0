@@ -40,4 +40,14 @@ public static class DependencyInjection
         services.AddScoped<ExerciseImportService>();
         return services;
     }
+
+    /// <summary>Seguimiento: medidas, evaluaciones, fotos de progreso privadas, progreso y calendario.</summary>
+    public static IServiceCollection AddTracking(this IServiceCollection services, Application.Tracking.TrackingLimits limits)
+    {
+        services.AddSingleton(limits);
+        services.AddScoped<Application.Tracking.TrackingService>();
+        services.AddScoped<Application.Tracking.ProgressService>();
+        services.AddScoped<Application.Tracking.CalendarService>();
+        return services;
+    }
 }
