@@ -11,15 +11,17 @@ El desarrollo avanza por fases según la guía maestra del proyecto; cada fase r
 - [Fase 1: análisis y arquitectura](docs/fase-01-analisis-y-arquitectura.md)
 - [Fase 2: modelo de datos y persistencia](docs/fase-02-modelo-de-datos.md) (incluye cómo aplicar la migración en Windows)
 - [Fase 3: autenticación, roles y seguridad](docs/fase-03-autenticacion-y-seguridad.md) (incluye cómo crear la cuenta de entrenadora y arrancar la API)
+- [Fase 4: sistema visual y experiencia UI/UX](docs/fase-04-sistema-visual.md) (incluye cómo abrir las pantallas)
 
 ## Estado
 
-Fase 3 entregada, pendiente de aprobación. Existen el modelo de datos y la API con inicio de sesión, roles y aislamiento de datos (backend/); aún no hay pantallas.
+Fase 4 entregada, pendiente de aprobación. Existen el modelo de datos, la API con inicio de sesión, roles y aislamiento de datos (backend/) y las pantallas base para entrenadora y cliente (frontend/).
 
 ## Requisitos de desarrollo
 
 - .NET 10 SDK
 - SQL Server 2019 o posterior (Express o Developer)
+- Node.js 22 LTS o posterior (frontend)
 
 ```bash
 cd backend
@@ -27,4 +29,11 @@ dotnet tool restore
 dotnet build
 # Pruebas: requieren LBMETHOD_TEST_SQL (cadena de conexión a un SQL Server de pruebas, sin base de datos)
 dotnet test
+```
+
+```bash
+cd frontend
+npm install
+npm run dev     # http://localhost:5173 (reenvía /api a la API en http://localhost:5062)
+npm test
 ```

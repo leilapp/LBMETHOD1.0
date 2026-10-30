@@ -240,6 +240,8 @@ public class AuthSecurityTests(ApiFactory api) : IClassFixture<ApiFactory>
 
         Assert.Equal(HttpStatusCode.NoContent, (await trainer.PostAsync($"/api/trainer/clients/{clientId}/access", new { enabled = false })).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/portal/profile")).StatusCode);
+        var summary = await trainer.Http.GetFromJsonAsync<ClientSummaryResponse>($"/api/trainer/clients/{clientId}");
+        Assert.Equal("Inactive", summary!.Status);
 
         using var again = api.NewSession();
         var email = await ClientEmailAsync(clientId);

@@ -73,6 +73,10 @@ public class AccountService(LBMethodDbContext db, UserManager<AppUser> users, Ti
 
         user.IsActive = enabled;
         await users.UpdateAsync(user);
+        // El estado del perfil acompaña al acceso; desactivar nunca borra datos.
+        var client = await db.Clients.SingleAsync(c => c.Id == clientId, ct);
+        client.Status = enabled ? ClientStatus.Active : ClientStatus.Inactive;
+        client.DeactivatedAt = enabled ? null : clock.GetUtcNow().UtcDateTime;
         if (!enabled) await users.UpdateSecurityStampAsync(user); // cierra sesiones abiertas
         Audit(trainerId, enabled ? "ClientAccessEnabled" : "ClientAccessDisabled", clientId);
         await db.SaveChangesAsync(ct);

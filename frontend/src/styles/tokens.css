@@ -1,0 +1,66 @@
+/*
+ * LB METHOD · tokens de diseño
+ * Paleta: negro profundo, violeta oscuro, lila, blanco y acentos dorados mate discretos.
+ * Todos los componentes usan estas variables; cambiar la identidad se hace aquí.
+ */
+:root {
+  /* Superficies */
+  --lb-black: #0b0a10;
+  --lb-surface: #13111b;
+  --lb-surface-2: #1b1727;
+  --lb-surface-3: #241e35;
+  --lb-border: #2e2742;
+  --lb-border-strong: #43395e;
+
+  /* Marca */
+  --lb-violet-900: #1e1233;
+  --lb-violet-700: #3b2566;
+  --lb-violet-500: #5b3c94;
+  --lb-lilac: #b9a3e3;
+  --lb-lilac-soft: #d9cdf2;
+  --lb-gold: #b89b5e;
+  --lb-gold-soft: #cdb685;
+
+  /* Texto */
+  --lb-text: #f4f1fa;
+  --lb-text-muted: #a9a2bd;
+  --lb-text-subtle: #7c7593;
+
+  /* Estados */
+  --lb-success: #7cc4a0;
+  --lb-success-bg: #14281f;
+  --lb-danger: #e8879a;
+  --lb-danger-bg: #2d1520;
+  --lb-warning: #d9b46a;
+  --lb-warning-bg: #2a2214;
+  --lb-info-bg: #1d1830;
+
+  /* Tipografía */
+  --lb-font: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --lb-font-display: Georgia, 'Times New Roman', serif;
+  --lb-text-xs: 0.75rem;
+  --lb-text-sm: 0.875rem;
+  --lb-text-md: 1rem;
+  --lb-text-lg: 1.125rem;
+  --lb-text-xl: 1.375rem;
+  --lb-text-2xl: 1.75rem;
+
+  /* Espaciado (escala de 4 px) */
+  --lb-space-1: 0.25rem;
+  --lb-space-2: 0.5rem;
+  --lb-space-3: 0.75rem;
+  --lb-space-4: 1rem;
+  --lb-space-5: 1.5rem;
+  --lb-space-6: 2rem;
+  --lb-space-7: 3rem;
+
+  --lb-radius-sm: 6px;
+  --lb-radius: 10px;
+  --lb-radius-lg: 14px;
+  --lb-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+  --lb-focus: 0 0 0 3px rgb(185 163 227 / 0.45);
+
+  /* Controles cómodos para usar con el dedo durante el entrenamiento */
+  --lb-touch: 44px;
+  --lb-sidebar-width: 248px;
+}
