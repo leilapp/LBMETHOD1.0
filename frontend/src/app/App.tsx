@@ -1,3 +1,4 @@
+import { ClientDetailPage, ClientProfileFormPage } from '../features/clients/ClientPages'
 import { useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
@@ -46,6 +47,8 @@ export function AppRoutes() {
         <Route path="/entrenadora" element={<AppShell nav={trainerNav} areaLabel="Entrenadora" />}>
           <Route index element={<TrainerDashboardPage />} />
           <Route path="clientes" element={<ClientsPage />} />
+          <Route path="clientes/:id" element={<ClientDetailPage />} />
+          <Route path="clientes/:id/editar" element={<ClientProfileFormPage />} />
           <Route path="biblioteca" element={<LibraryPage />} />
           <Route path="biblioteca/nuevo" element={<NewExercisePage />} />
           <Route path="biblioteca/importar" element={<ImportExportPage />} />

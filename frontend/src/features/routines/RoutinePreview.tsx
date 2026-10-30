@@ -10,7 +10,7 @@ export function RoutinePreview({ version }: { version: RoutineVersion }) {
       <header className="preview__head">
         <h2 className="preview__title">{version.title || 'Sin nombre'}</h2>
         <p className="muted">
-          {[version.goal && `Objetivo: ${version.goal}`, version.durationWeeks && `${version.durationWeeks} semanas`, `${version.days.length} días`]
+          {[version.goal && `Objetivo: ${version.goal}`, version.durationWeeks && `${version.durationWeeks} ${version.durationWeeks === 1 ? 'semana' : 'semanas'}`, `${version.days.length} ${version.days.length === 1 ? 'día' : 'días'}`]
             .filter(Boolean)
             .join(' · ')}
         </p>

@@ -107,15 +107,18 @@ describe('experiencias separadas por rol', () => {
       'GET /api/trainer/clients': () => ({
         status: 200,
         body: [
-          { id: 1, firstName: 'A', lastName: 'Uno', email: 'a@t', status: 'Active', hasAccount: true },
-          { id: 2, firstName: 'B', lastName: 'Dos', email: 'b@t', status: 'Inactive', hasAccount: true },
+          { id: 1, firstName: 'A', lastName: 'Uno', email: 'a@t', status: 'Active', hasAccount: true, currentProgram: 'Glúteo 6 semanas' },
+          { id: 2, firstName: 'B', lastName: 'Dos', email: 'b@t', status: 'Inactive', hasAccount: true, currentProgram: null },
+          { id: 3, firstName: 'C', lastName: 'Tres', email: 'c@t', status: 'Active', hasAccount: true, currentProgram: null },
         ],
       }),
     })
     renderApp('/entrenadora')
     expect(await screen.findByText('Clientes activos')).toBeInTheDocument()
-    expect(screen.getByText('1')).toBeInTheDocument()
-    expect(screen.getAllByText(/Pendiente · Fase/)).toHaveLength(3)
+    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByText('Clientes con programa vigente').previousElementSibling).toHaveTextContent('1')
+    expect(screen.getByText('1 activos sin rutina asignada')).toBeInTheDocument()
+    expect(screen.getAllByText(/Pendiente · Fase/)).toHaveLength(2)
   })
 })
 

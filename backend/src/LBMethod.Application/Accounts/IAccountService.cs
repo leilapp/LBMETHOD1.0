@@ -32,5 +32,7 @@ public interface IAccountService
     Task<TemporaryPasswordResult> CreateClientAccountAsync(int trainerId, NewClientAccount data, CancellationToken ct = default);
     Task<TemporaryPasswordResult> ResetClientPasswordAsync(int trainerId, int clientId, CancellationToken ct = default);
     Task<AccountResult> SetClientAccessAsync(int trainerId, int clientId, bool enabled, CancellationToken ct = default);
+    /// <summary>Cambia el correo (que también es el usuario para entrar) de la cuenta del cliente.</summary>
+    Task<AccountResult> ChangeClientEmailAsync(int trainerId, int clientId, string email, CancellationToken ct = default);
     Task<AccountResult> CreateTrainerAsync(string email, string displayName, string password, CancellationToken ct = default);
 }

@@ -17,6 +17,7 @@ import {
 import { useSession } from '../../app/session'
 import { ChangePasswordForm } from '../auth/AuthPages'
 import { isEmail } from '../../lib/validation'
+import '../clients/clients.css'
 
 const clientsKey = ['trainer', 'clients'] as const
 
@@ -51,7 +52,21 @@ export function TrainerDashboardPage() {
             </>
           )}
         </section>
-        <PendingStat label="Programas asignados" phase={7} />
+        <section className="card" aria-labelledby="stat-programs">
+          {isPending || error ? (
+            <LoadingState />
+          ) : (
+            <>
+              <p className="stat__value">{clients!.filter((c) => c.status === 'Active' && c.currentProgram).length}</p>
+              <p className="stat__label" id="stat-programs">
+                Clientes con programa vigente
+              </p>
+              <p className="muted" style={{ marginTop: 'var(--lb-space-3)', fontSize: 'var(--lb-text-sm)' }}>
+                {clients!.filter((c) => c.status === 'Active' && !c.currentProgram).length} activos sin rutina asignada
+              </p>
+            </>
+          )}
+        </section>
         <PendingStat label="Próximas evaluaciones" phase={9} />
         <PendingStat label="Actividad reciente" phase={8} />
       </div>
@@ -84,6 +99,14 @@ export function ClientsPage() {
   const [action, setAction] = useState<PendingAction | null>(null)
   const [secret, setSecret] = useState<{ name: string; password: TemporaryPassword } | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [filter, setFilter] = useState<'Active' | 'Inactive' | 'all'>('Active')
+  const [search, setSearch] = useState('')
+  const term = search.trim().toLocaleLowerCase('es-MX')
+  const shown = (clients ?? []).filter(
+    (c) =>
+      (filter === 'all' || c.status === filter) &&
+      (!term || `${c.firstName} ${c.lastName} ${c.email}`.toLocaleLowerCase('es-MX').includes(term)),
+  )
 
   const run = useMutation({
     mutationFn: async ({ kind, client }: PendingAction) => {
@@ -104,14 +127,10 @@ export function ClientsPage() {
     <>
       <PageHeader
         title="Clientes"
-        subtitle="Cuentas de acceso de tus clientes"
+        subtitle="Perfiles, cuentas de acceso y programas de tus clientes"
         actions={<Button onClick={() => setCreating(true)}>Nuevo cliente</Button>}
       />
       <div className="stack">
-        <Alert kind="info">
-          Aquí creas las cuentas de acceso. El perfil completo (objetivos, disponibilidad, notas privadas y asignaciones)
-          llegará en la Fase 7.
-        </Alert>
         {notice && <Alert kind="success">{notice}</Alert>}
 
         {isPending ? (
@@ -127,17 +146,44 @@ export function ClientsPage() {
             />
           </div>
         ) : (
+          <>
+          <div className="client-filters">
+            <div className="tabs" role="tablist" aria-label="Estado">
+              {([
+                ['Active', 'Activos'],
+                ['Inactive', 'Inactivos'],
+                ['all', 'Todos'],
+              ] as const).map(([value, label]) => (
+                <button key={value} type="button" role="tab" aria-selected={filter === value} className={`tabs__tab${filter === value ? ' tabs__tab--active' : ''}`} onClick={() => setFilter(value)}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <input className="input client-filters__search" type="search" aria-label="Buscar cliente" placeholder="Buscar por nombre o correo" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          {shown.length === 0 && <p className="muted">No hay clientes con ese filtro.</p>}
           <ul className="list" aria-label="Lista de clientes">
-            {clients!.map((c) => (
+            {shown.map((c) => (
               <li key={c.id} className="list-item">
                 <div className="list-item__main">
                   <span className="list-item__title">
-                    {c.firstName} {c.lastName}{' '}
+                    <Link to={`/entrenadora/clientes/${c.id}`}>
+                      {c.firstName} {c.lastName}
+                    </Link>{' '}
                     <span className={`badge ${c.status === 'Active' ? 'badge--success' : 'badge--muted'}`}>
                       {c.status === 'Active' ? 'Activo' : 'Inactivo'}
                     </span>
                   </span>
                   <span className="list-item__meta">{c.email}</span>
+                  <span className="list-item__meta">
+                    {c.currentProgram ? (
+                      <>
+                        Programa: <span className="client-list__program">{c.currentProgram}</span>
+                      </>
+                    ) : (
+                      'Sin rutina vigente'
+                    )}
+                  </span>
                 </div>
                 {c.hasAccount && (
                   <div className="list-item__actions">
@@ -158,6 +204,7 @@ export function ClientsPage() {
               </li>
             ))}
           </ul>
+          </>
         )}
       </div>
 

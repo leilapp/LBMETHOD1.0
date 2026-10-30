@@ -11,6 +11,7 @@ namespace LBMethod.Application.Abstractions;
 public interface IAppDbContext
 {
     DbSet<Client> Clients { get; }
+    DbSet<ClientNote> ClientNotes { get; }
 
     DbSet<Exercise> Exercises { get; }
     DbSet<MuscleGroup> MuscleGroups { get; }

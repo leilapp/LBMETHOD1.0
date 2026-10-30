@@ -15,3 +15,15 @@ export function formatDateTime(isoUtc: string) {
     minute: '2-digit',
   })
 }
+
+/** Fecha de hoy (aaaa-mm-dd) en Guanajuato, sin importar la zona horaria del dispositivo. */
+export function todayInMexico(now = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
+}
+
+/** Suma días a una fecha de calendario aaaa-mm-dd. */
+export function addDays(iso: string, days: number) {
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(Date.UTC(y, m - 1, d + days))
+  return date.toISOString().slice(0, 10)
+}

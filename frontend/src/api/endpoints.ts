@@ -18,6 +18,8 @@ export interface ClientSummary {
   email: string
   status: 'Active' | 'Inactive'
   hasAccount: boolean
+  currentProgram: string | null
+  registeredAt: string | null
 }
 
 export interface ClientProfile {
@@ -29,6 +31,15 @@ export interface ClientProfile {
   birthDate: string | null
   goal: string | null
   declaredLimitations: string | null
+  height: number | null
+  heightUnit: string | null
+  weight: number | null
+  weightUnit: string | null
+  experience: string | null
+  trainingLocation: string | null
+  availableDays: string[]
+  sessionDurationMinutes: number | null
+  registeredAt: string | null
 }
 
 export interface TemporaryPassword {
@@ -67,6 +78,20 @@ export const trainerApi = {
   setAccess: (clientId: number, enabled: boolean) => api.post<void>(`/api/trainer/clients/${clientId}/access`, { enabled }),
 }
 
+export interface PortalAssignment {
+  id: number
+  routineName: string
+  versionNumber: number
+  startDate: string
+  endDate: string | null
+  status: AssignmentStatus
+  statusLabel: string
+  notes: string | null
+}
+
+export type AssignmentStatus = 'Scheduled' | 'Active' | 'Completed' | 'Cancelled' | 'Replaced'
+
 export const portalApi = {
   profile: () => api.get<ClientProfile>('/api/portal/profile'),
+  assignments: () => api.get<PortalAssignment[]>('/api/portal/assignments'),
 }

@@ -2,7 +2,9 @@ using LBMethod.Api.Contracts;
 using LBMethod.Api.Security;
 using LBMethod.Application.Abstractions;
 using LBMethod.Application.Accounts;
+using LBMethod.Application.Clients;
 using LBMethod.Application.Security;
+using LBMethod.Domain.Routines;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,20 +12,33 @@ using Microsoft.EntityFrameworkCore;
 namespace LBMethod.Api.Controllers.Trainer;
 
 /// <summary>
-/// Cuentas de clientes administradas por la entrenadora. El perfil completo del cliente
-/// (objetivos, disponibilidad, notas privadas…) se implementa en la Fase 7.
+/// Cuentas de clientes administradas por la entrenadora. El perfil completo, las notas privadas
+/// y las asignaciones están en <see cref="ClientProfilesController"/>.
 /// </summary>
 [ApiController]
 [Authorize(Policy = Policies.Trainer)]
 [Route("api/trainer/clients")]
-public class ClientAccountsController(IAccountService accounts, ClientAccess access, ICurrentUser user) : ControllerBase
+public class ClientAccountsController(IAccountService accounts, ClientAccess access, AssignmentService assignments, ICurrentUser user) : ControllerBase
 {
+    /// <summary>Clientes de la entrenadora, con el programa que tienen vigente hoy (si lo hay).</summary>
     [HttpGet]
-    public async Task<IReadOnlyList<ClientSummaryResponse>> List(CancellationToken ct) =>
-        await access.VisibleClients()
+    public async Task<IReadOnlyList<ClientSummaryResponse>> List(CancellationToken ct)
+    {
+        var today = assignments.Today();
+        var clients = await access.VisibleClients()
             .OrderBy(c => c.LastName).ThenBy(c => c.FirstName)
-            .Select(c => new ClientSummaryResponse(c.Id, c.FirstName, c.LastName, c.Email, c.Status.ToString(), c.UserId != null))
+            .Select(c => new { c.Id, c.FirstName, c.LastName, c.Email, c.Status, HasAccount = c.UserId != null, c.CreatedAt })
             .ToListAsync(ct);
+        var current = await assignments.Owned()
+            .Where(a => a.Status != AssignmentStatus.Cancelled && a.Status != AssignmentStatus.Replaced && a.Status != AssignmentStatus.Completed
+                        && a.StartDate <= today && (a.EndDate == null || a.EndDate >= today))
+            .OrderByDescending(a => a.StartDate)
+            .Select(a => new { a.ClientId, a.RoutineVersion.Title })
+            .ToListAsync(ct);
+        var programs = current.GroupBy(a => a.ClientId).ToDictionary(g => g.Key, g => string.Join(" · ", g.Select(x => x.Title)));
+        return clients.Select(c => new ClientSummaryResponse(c.Id, c.FirstName, c.LastName, c.Email, c.Status.ToString(), c.HasAccount,
+            programs.GetValueOrDefault(c.Id), c.CreatedAt)).ToList();
+    }
 
     [HttpGet("{clientId:int}")]
     public async Task<ActionResult<ClientSummaryResponse>> Get(int clientId, CancellationToken ct)

@@ -14,10 +14,11 @@ El desarrollo avanza por fases según la guía maestra del proyecto; cada fase r
 - [Fase 4: sistema visual y experiencia UI/UX](docs/fase-04-sistema-visual.md) (incluye cómo abrir las pantallas)
 - [Fase 5: biblioteca de ejercicios](docs/fase-05-biblioteca.md) (incluye cómo aplicar la nueva migración)
 - [Fase 6: constructor manual de rutinas](docs/fase-06-rutinas.md)
+- [Fase 7: clientes y asignaciones](docs/fase-07-clientes-y-asignaciones.md)
 
 ## Estado
 
-Fase 6 entregada, pendiente de aprobación. Existen el modelo de datos, la API con inicio de sesión, roles y aislamiento de datos (backend/), las pantallas base para entrenadora y cliente (frontend/) y la biblioteca de ejercicios con medios privados e importación/exportación en Excel, y el constructor manual de rutinas y plantillas con versiones.
+Fase 7 entregada, pendiente de aprobación. Existen el modelo de datos, la API con inicio de sesión, roles y aislamiento de datos (backend/), las pantallas base para entrenadora y cliente (frontend/) y la biblioteca de ejercicios con medios privados e importación/exportación en Excel, el constructor manual de rutinas y plantillas con versiones, y el perfil completo de clientes con asignación de rutinas e historial.
 
 ## Requisitos de desarrollo
 

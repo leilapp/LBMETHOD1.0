@@ -22,6 +22,8 @@ public static class DependencyInjection
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<ClientAccess>();
         services.AddScoped<Application.Routines.RoutineService>();
+        services.AddScoped<Application.Clients.ClientService>();
+        services.AddScoped<Application.Clients.AssignmentService>();
         return services;
     }
 

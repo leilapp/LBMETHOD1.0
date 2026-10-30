@@ -402,3 +402,19 @@ a {
 .modal--wide {
   width: min(880px, 100%);
 }
+
+/* Portal: programa actual */
+.portal-program__name {
+  font-weight: 600;
+  font-size: var(--lb-text-lg);
+  margin: 0;
+}
+.portal-program__notes {
+  margin: var(--lb-space-2) 0 0;
+  padding: var(--lb-space-2) var(--lb-space-3);
+  border-left: 3px solid var(--lb-lilac);
+  background: var(--lb-surface-2);
+  border-radius: var(--lb-radius);
+  font-size: var(--lb-text-sm);
+  white-space: pre-wrap;
+}

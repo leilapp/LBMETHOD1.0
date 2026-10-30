@@ -83,6 +83,24 @@ public class AccountService(LBMethodDbContext db, UserManager<AppUser> users, Ti
         return AccountResult.Ok();
     }
 
+    public async Task<AccountResult> ChangeClientEmailAsync(int trainerId, int clientId, string email, CancellationToken ct = default)
+    {
+        var user = await FindClientUserAsync(trainerId, clientId, ct);
+        if (user is null) return new AccountResult(AccountError.NotFound);
+        var other = await users.FindByEmailAsync(email);
+        if (other is not null && other.Id != user.Id) return new AccountResult(AccountError.EmailInUse);
+
+        user.Email = email;
+        user.UserName = email;
+        var updated = await users.UpdateAsync(user);
+        if (!updated.Succeeded)
+            return updated.Errors.Any(e => e.Code is "DuplicateEmail" or "DuplicateUserName")
+                ? new AccountResult(AccountError.EmailInUse)
+                : new AccountResult(AccountError.InvalidData, Errors(updated));
+        Audit(trainerId, "ClientEmailChanged", clientId);
+        return AccountResult.Ok();
+    }
+
     public async Task<AccountResult> CreateTrainerAsync(string email, string displayName, string password, CancellationToken ct = default)
     {
         if (await users.FindByEmailAsync(email) is not null) return new AccountResult(AccountError.EmailInUse);

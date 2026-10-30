@@ -15,7 +15,10 @@ import {
   TextAreaField,
   TextField,
 } from '../../components/ui'
-import { formatDateTime } from '../../lib/format'
+import { formatDate, formatDateTime } from '../../lib/format'
+import { clientsApi, isCurrent } from '../../api/clients'
+import { AssignModal } from '../clients/AssignModal'
+import '../clients/clients.css'
 import { RoutinePreview } from './RoutinePreview'
 import { routineKeys, sectionFor, type Section } from './routineQueries'
 import '../library/library.css'
@@ -209,6 +212,7 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
   const navigate = useNavigate()
   const [pending, setPending] = useState<Pending>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [assigning, setAssigning] = useState(false)
   const latestId = routine.draftVersionId ?? routine.latestPublishedVersionId ?? routine.versions[0]?.id
   const [viewing, setViewing] = useState<number | undefined>(routine.latestPublishedVersionId ?? latestId)
   const version = useQuery({
@@ -250,6 +254,11 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
               <Link className="btn btn--primary" to={`/entrenadora/${section}/${routine.id}/editar`}>
                 {routine.draftVersionId ? 'Seguir editando' : 'Editar'}
               </Link>
+            )}
+            {!isTemplate && !archived && routine.latestPublishedVersionId && (
+              <Button variant="secondary" onClick={() => setAssigning(true)}>
+                Asignar a clientes
+              </Button>
             )}
             {isTemplate && !archived && (
               <Button variant="secondary" onClick={() => setPending('use-template')}>
@@ -297,6 +306,7 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
                 </li>
               ))}
             </ul>
+            {!isTemplate && <RoutineAssignments routineId={routine.id} />}
           </section>
           <section className="card" aria-label="Contenido">
             {version.isPending ? (
@@ -310,6 +320,19 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
         </div>
       </div>
 
+      {assigning && (
+        <AssignModal
+          routineId={routine.id}
+          versionId={routine.latestPublishedVersionId ?? undefined}
+          onClose={() => setAssigning(false)}
+          onAssigned={async (count) => {
+            setAssigning(false)
+            setNotice(count === 1 ? 'Rutina asignada a 1 cliente.' : `Rutina asignada a ${count} clientes.`)
+            await qc.invalidateQueries({ queryKey: ['trainer', 'clients'] })
+            await qc.invalidateQueries({ queryKey: ['routines', 'assignments', routine.id] })
+          }}
+        />
+      )}
       {(pending === 'archive' || pending === 'restore') && (
         <ConfirmDialog
           title={pending === 'archive' ? 'Archivar' : 'Restaurar'}
@@ -334,6 +357,39 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
         />
       )}
     </>
+  )
+}
+
+/** Clientes que tienen esta rutina: vigentes primero y luego el historial. */
+function RoutineAssignments({ routineId }: { routineId: number }) {
+  const { data, isPending, error } = useQuery({ queryKey: ['routines', 'assignments', routineId], queryFn: () => clientsApi.routineAssignments(routineId) })
+  const current = data?.filter(isCurrent) ?? []
+  const pastCount = (data?.length ?? 0) - current.length
+  return (
+    <div className="stack routine-assigned">
+      <h3 className="card__title" id="assigned-title">
+        Asignada a
+      </h3>
+      {isPending ? (
+        <LoadingState />
+      ) : error ? (
+        <Alert kind="error">{error.message}</Alert>
+      ) : current.length === 0 ? (
+        <p className="muted">Nadie la tiene vigente.</p>
+      ) : (
+        <ul className="versions" aria-labelledby="assigned-title">
+          {current.map((a) => (
+            <li key={a.id} className="routine-assigned__item">
+              <Link to={`/entrenadora/clientes/${a.clientId}`}>{a.clientName}</Link>
+              <span className="list-item__meta">
+                Versión {a.versionNumber} · {a.statusLabel} desde {formatDate(a.startDate)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {pastCount > 0 && <p className="field__hint">Además, {pastCount} {pastCount === 1 ? 'asignación anterior' : 'asignaciones anteriores'} en el historial de los clientes.</p>}
+    </div>
   )
 }
 
