@@ -7,6 +7,7 @@ import { AppShell, type NavItem } from '../layouts/AppShell'
 import { ChangePasswordPage, LoginPage } from '../features/auth/AuthPages'
 import { ClientsPage, TrainerDashboardPage, TrainerSettingsPage } from '../features/trainer/TrainerPages'
 import { PortalHomePage, PortalProfilePage } from '../features/portal/PortalPages'
+import { PortalRoutinePage, PortalSessionsPage, SessionPage } from '../features/portal/TrainingPages'
 import { LibraryPage } from '../features/library/LibraryPage'
 import { EditExercisePage, NewExercisePage } from '../features/library/ExerciseFormPage'
 import { ExerciseDetailPage } from '../features/library/ExerciseDetailPage'
@@ -29,8 +30,8 @@ const trainerNav: NavItem[] = [
 
 const clientNav: NavItem[] = [
   { to: '/portal', label: 'Inicio', end: true },
-  { to: '/portal/rutina', label: 'Mi rutina', pendingPhase: 8 },
-  { to: '/portal/entrenamientos', label: 'Mis entrenamientos', pendingPhase: 8 },
+  { to: '/portal/rutina', label: 'Mi rutina' },
+  { to: '/portal/entrenamientos', label: 'Mis entrenamientos' },
   { to: '/portal/progreso', label: 'Mi progreso', pendingPhase: 9 },
   { to: '/portal/calendario', label: 'Mi calendario', pendingPhase: 9 },
   { to: '/portal/perfil', label: 'Mi perfil' },
@@ -69,8 +70,9 @@ export function AppRoutes() {
       <Route element={<RequireRole role="CLIENT" />}>
         <Route path="/portal" element={<AppShell nav={clientNav} areaLabel="Mi espacio" />}>
           <Route index element={<PortalHomePage />} />
-          <Route path="rutina" element={<PendingModule title="Mi rutina" phase={8} description="Tus días y ejercicios en el orden indicado por tu entrenadora, con videos e indicaciones." />} />
-          <Route path="entrenamientos" element={<PendingModule title="Mis entrenamientos" phase={8} description="Registro de tus series, repeticiones y pesos en cada sesión." />} />
+          <Route path="rutina" element={<PortalRoutinePage />} />
+          <Route path="entrenamientos" element={<PortalSessionsPage />} />
+          <Route path="entrenamiento/:id" element={<SessionPage />} />
           <Route path="progreso" element={<PendingModule title="Mi progreso" phase={9} description="Tus medidas, evaluaciones y evolución de cargas." />} />
           <Route path="calendario" element={<PendingModule title="Mi calendario" phase={9} description="Tus entrenamientos programados y completados." />} />
           <Route path="perfil" element={<PortalProfilePage />} />

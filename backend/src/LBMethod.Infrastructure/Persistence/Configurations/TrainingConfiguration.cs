@@ -58,6 +58,10 @@ public class TrainingLogSetConfiguration : IEntityTypeConfiguration<TrainingLogS
     public void Configure(EntityTypeBuilder<TrainingLogSet> b)
     {
         b.Property(x => x.Notes).HasMaxLength(500);
+        b.Property(x => x.PrescribedNotes).HasMaxLength(500);
+        b.Property(x => x.PrescribedWeight).HasPrecision(7, 2);
+        b.Property(x => x.PrescribedRir).HasPrecision(3, 1);
+        b.Property(x => x.PrescribedRpe).HasPrecision(3, 1);
         b.Property(x => x.Weight).HasPrecision(7, 2);
         b.Property(x => x.Rir).HasPrecision(3, 1);
         b.Property(x => x.Rpe).HasPrecision(3, 1);

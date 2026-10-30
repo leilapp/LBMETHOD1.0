@@ -1,6 +1,6 @@
 # LB METHOD · Fase 7: Clientes y asignaciones
 
-Estado: **entregada, pendiente de tu aprobación.** Queda una decisión tuya (sección 3). No se ha iniciado la Fase 8.
+Estado: **entregada.** La decisión de la sección 3 ya está tomada (varias rutinas vigentes a la vez).
 
 En esta fase se completa el perfil de cada cliente y se conectan las rutinas con los clientes. Cada asignación apunta a una **versión concreta** de una rutina publicada, tiene fechas y estado, y **nunca se borra**: queda en el historial.
 
@@ -80,13 +80,9 @@ Estas decisiones aplican la guía sin cambiar la arquitectura:
 4. **Cambiar el correo del perfil cambia el usuario de acceso.** Así no quedan dos correos distintos para la misma persona.
 5. **Las observaciones privadas no se editan ni se borran** en esta fase, para conservar el historial. Si quieres poder corregirlas, se puede agregar.
 
-## 3. Decisión pendiente
+## 3. Decisión tomada después de la entrega
 
-**¿Un cliente puede tener más de una rutina vigente al mismo tiempo?** Te dejé la pregunta en una tarjeta en el chat.
-- **Opción recomendada, solo una vigente:** al asignar otra rutina, la anterior termina sola el día previo y queda en el historial como "Reemplazada".
-- **Varias a la vez:** por ejemplo, gimnasio y casa. Tú terminas cada una manualmente.
-
-**Hoy el sistema no termina nada por su cuenta.** Si asignas una segunda rutina, las dos quedan vigentes hasta que termines una. La prueba en navegador hace el cambio de programa terminando primero la anterior, que funciona igual con cualquiera de las dos opciones. Cuando decidas, se aplica la regla elegida.
+**¿Un cliente puede tener más de una rutina vigente al mismo tiempo?** Decidiste que **sí**, por ejemplo gimnasio y casa. El sistema no termina ninguna rutina por su cuenta: tú terminas cada una manualmente con «Cambiar fecha de fin». Así funcionaba ya al entregar esta fase, por lo que no hubo que cambiar código.
 
 ---
 
@@ -170,4 +166,4 @@ frontend/e2e/clientes.cjs
 
 - **Fase 8:** el cliente verá los días y ejercicios de su rutina vigente y registrará sus entrenamientos.
 - **Fase 9:** calendario, medidas, evaluaciones y seguimiento.
-- **Siguen pendientes de tu decisión:** rutinas vigentes simultáneas (sección 3), almacenamiento definitivo de archivos (D3), hospedaje (D6) y videos (D7).
+- **Siguen pendientes de tu decisión:** almacenamiento definitivo de archivos (D3), hospedaje (D6) y videos (D7).

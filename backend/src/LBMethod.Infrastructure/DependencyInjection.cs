@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<Application.Routines.RoutineService>();
         services.AddScoped<Application.Clients.ClientService>();
         services.AddScoped<Application.Clients.AssignmentService>();
+        services.AddScoped<Application.Training.TrainingService>();
         return services;
     }
 

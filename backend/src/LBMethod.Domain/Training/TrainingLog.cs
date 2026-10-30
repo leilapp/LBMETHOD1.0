@@ -71,13 +71,29 @@ public class TrainingLogExercise : Entity
     public ICollection<TrainingLogSet> Sets { get; set; } = new List<TrainingLogSet>();
 }
 
-/// <summary>Serie realmente ejecutada: repeticiones y peso reales.</summary>
+/// <summary>
+/// Serie de una sesión: snapshot de lo prescrito para esa serie (si la rutina lo indicaba)
+/// y lo realmente ejecutado (repeticiones y peso reales). Las series extra que agrega el cliente no tienen prescripción.
+/// </summary>
 public class TrainingLogSet : Entity
 {
     public int TrainingLogExerciseId { get; set; }
     public TrainingLogExercise TrainingLogExercise { get; set; } = null!;
     public int SetNumber { get; set; }
     public SetType SetType { get; set; } = SetType.Working;
+
+    // Snapshot de lo prescrito para esta serie
+    public bool IsPrescribed { get; set; }
+    public int? PrescribedRepsMin { get; set; }
+    public int? PrescribedRepsMax { get; set; }
+    public decimal? PrescribedWeight { get; set; }
+    public WeightUnit? PrescribedWeightUnit { get; set; }
+    public int? PrescribedRestSeconds { get; set; }
+    public decimal? PrescribedRir { get; set; }
+    public decimal? PrescribedRpe { get; set; }
+    public string? PrescribedNotes { get; set; }
+
+    // Lo realizado
     public int? Reps { get; set; }
     public decimal? Weight { get; set; }
     public WeightUnit? WeightUnit { get; set; }

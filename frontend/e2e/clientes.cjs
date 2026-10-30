@@ -205,6 +205,8 @@ async function publish(page, routineId, title, exerciseId, sets = 4) {
   await cp.goto(`${BASE}/portal/perfil`)
   await cp.getByRole('heading', { name: 'Mis programas' }).waitFor()
   await cp.getByRole('list', { name: 'Mis programas' }).locator('li').first().waitFor()
+  // Los datos y los programas llegan por consultas separadas: se espera a ambos antes de leer.
+  await cp.locator('#contenido').getByText('165.5 cm').waitFor()
   const portalText = await cp.locator('#contenido').textContent()
   check('el cliente ve su perfil completo', ['165.5 cm', 'Intermedio', 'Lunes, Miércoles, Viernes', 'Molestia en rodilla izquierda'].every((t) => portalText.includes(t)))
   check('el cliente ve su historial pero no lo cancelado', (await cp.getByRole('list', { name: 'Mis programas' }).locator('li').count()) === 2 && !portalText.includes('Cancelada'))

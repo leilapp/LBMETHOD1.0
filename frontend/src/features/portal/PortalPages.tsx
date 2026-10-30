@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { portalApi, type PortalAssignment } from '../../api/endpoints'
 import { ErrorState, LoadingState, PageHeader } from '../../components/ui'
 import { useSession } from '../../app/session'
 import { ChangePasswordForm } from '../auth/AuthPages'
 import { formatDate } from '../../lib/format'
+import { TrainingHomeCards } from './TrainingPages'
 
 const profileKey = ['portal', 'profile'] as const
 const assignmentsKey = ['portal', 'assignments'] as const
@@ -14,10 +16,8 @@ export function PortalHomePage() {
     <>
       <PageHeader title={`Hola, ${session?.displayName ?? ''}`} subtitle="Te damos la bienvenida a tu espacio de entrenamiento" />
       <div className="grid-cards">
+        <TrainingHomeCards />
         <CurrentProgramCard />
-        <PendingCard title="Próximo entrenamiento" text="Tu siguiente sesión programada." phase={8} />
-        <PendingCard title="Último entrenamiento" text="Resumen de tu sesión más reciente." phase={8} />
-        <PendingCard title="Semana" text="Calendario semanal de entrenamientos y descansos." phase={9} />
       </div>
     </>
   )
@@ -27,7 +27,7 @@ function period(a: PortalAssignment) {
   return a.endDate ? `Del ${formatDate(a.startDate)} al ${formatDate(a.endDate)}` : `Desde el ${formatDate(a.startDate)}`
 }
 
-/** Programa vigente (o el próximo, si aún no empieza). El detalle de días y ejercicios llega en la Fase 8. */
+/** Programa vigente (o el próximo, si aún no empieza). El detalle de días y ejercicios está en «Mi rutina». */
 function CurrentProgramCard() {
   const { data, isPending, error, refetch } = useQuery({ queryKey: assignmentsKey, queryFn: portalApi.assignments })
   const current = data?.filter((a) => a.status === 'Active' || a.status === 'Scheduled') ?? []
@@ -53,21 +53,9 @@ function CurrentProgramCard() {
               {a.notes && <p className="portal-program__notes">{a.notes}</p>}
             </div>
           ))}
-          <span className="badge badge--pending">Días y ejercicios · Fase 8</span>
+          <Link to="/portal/rutina">Ver días y ejercicios</Link>
         </div>
       )}
-    </section>
-  )
-}
-
-function PendingCard({ title, text, phase }: { title: string; text: string; phase: number }) {
-  return (
-    <section className="card">
-      <h2 className="card__title">{title}</h2>
-      <p className="muted">{text}</p>
-      <span className="badge badge--pending" style={{ marginTop: 'var(--lb-space-3)' }}>
-        Pendiente · Fase {phase}
-      </span>
     </section>
   )
 }

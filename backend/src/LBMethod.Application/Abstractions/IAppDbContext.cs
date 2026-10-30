@@ -3,6 +3,7 @@ using LBMethod.Domain.Clients;
 using LBMethod.Domain.Exercises;
 using LBMethod.Domain.Files;
 using LBMethod.Domain.Routines;
+using LBMethod.Domain.Training;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBMethod.Application.Abstractions;
@@ -29,6 +30,8 @@ public interface IAppDbContext
     DbSet<RoutineExercise> RoutineExercises { get; }
     DbSet<RoutineExerciseSet> RoutineExerciseSets { get; }
     DbSet<RoutineAssignment> RoutineAssignments { get; }
+
+    DbSet<TrainingLog> TrainingLogs { get; }
 
     DbSet<StoredFile> StoredFiles { get; }
     DbSet<AuditLog> AuditLogs { get; }

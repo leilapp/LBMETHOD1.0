@@ -1607,9 +1607,40 @@ namespace LBMethod.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsPrescribed")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PrescribedNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("PrescribedRepsMax")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PrescribedRepsMin")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PrescribedRestSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("PrescribedRir")
+                        .HasPrecision(3, 1)
+                        .HasColumnType("decimal(3,1)");
+
+                    b.Property<decimal?>("PrescribedRpe")
+                        .HasPrecision(3, 1)
+                        .HasColumnType("decimal(3,1)");
+
+                    b.Property<decimal?>("PrescribedWeight")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("decimal(7,2)");
+
+                    b.Property<int?>("PrescribedWeightUnit")
+                        .HasColumnType("int");
 
                     b.Property<int?>("Reps")
                         .HasColumnType("int");
