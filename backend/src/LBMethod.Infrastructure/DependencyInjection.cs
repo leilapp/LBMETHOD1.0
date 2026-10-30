@@ -1,6 +1,8 @@
 using LBMethod.Application.Abstractions;
 using LBMethod.Application.Accounts;
+using LBMethod.Application.Library;
 using LBMethod.Application.Security;
+using LBMethod.Infrastructure.Files;
 using LBMethod.Infrastructure.Identity;
 using LBMethod.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +21,19 @@ public static class DependencyInjection
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<LBMethodDbContext>());
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<ClientAccess>();
+        return services;
+    }
+
+    /// <summary>Biblioteca de ejercicios: servicios, almacenamiento privado de archivos y Excel.</summary>
+    public static IServiceCollection AddLibrary(this IServiceCollection services, string storagePath, MediaLimits limits)
+    {
+        services.AddSingleton<IFileStorage>(new LocalFileStorage(storagePath));
+        services.AddSingleton(limits);
+        services.AddSingleton<IExerciseSpreadsheet, ClosedXmlExerciseSpreadsheet>();
+        services.AddScoped<ExerciseService>();
+        services.AddScoped<CatalogService>();
+        services.AddScoped<MediaService>();
+        services.AddScoped<ExerciseImportService>();
         return services;
     }
 }

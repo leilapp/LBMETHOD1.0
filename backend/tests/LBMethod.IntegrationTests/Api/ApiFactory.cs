@@ -22,6 +22,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     private readonly Dictionary<string, string> _settings;
     public string ConnectionString { get; }
+    public string StoragePath { get; } = Path.Combine(Path.GetTempPath(), $"lbmethod-test-storage-{Guid.NewGuid():N}");
     public ConcurrentQueue<string> Logs { get; } = new();
 
     public ApiFactory() : this(new Dictionary<string, string>()) { }
@@ -37,7 +38,9 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             ["ConnectionStrings:LBMethod"] = ConnectionString,
             ["Security:SessionRevalidationSeconds"] = "0",
             ["Security:LoginRequestsPerMinute"] = "1000",
-            ["Cors:AllowedOrigins:0"] = AllowedOrigin
+            ["Cors:AllowedOrigins:0"] = AllowedOrigin,
+            ["Storage:LocalPath"] = StoragePath,
+            ["Library:MaxVideoBytes"] = (2 * 1024 * 1024).ToString()
         };
         foreach (var (k, v) in overrides) _settings[k] = v;
     }
@@ -62,6 +65,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public new async Task DisposeAsync()
     {
         await using (var db = NewDbContext()) await db.Database.EnsureDeletedAsync();
+        if (Directory.Exists(StoragePath)) Directory.Delete(StoragePath, recursive: true);
         await base.DisposeAsync();
     }
 
@@ -116,6 +120,27 @@ public sealed class ApiSession(HttpClient http) : IDisposable
     }
 
     public Task<HttpResponseMessage> GetAsync(string path) => Http.GetAsync(path);
+
+    public Task<HttpResponseMessage> PutAsync(string path, object? body = null) => SendAsync(HttpMethod.Put, path, JsonContent.Create(body ?? new { }));
+
+    public Task<HttpResponseMessage> DeleteAsync(string path) => SendAsync(HttpMethod.Delete, path, null);
+
+    /// <summary>Envía un formulario con un archivo, como lo hace el navegador al subir medios o un Excel.</summary>
+    public Task<HttpResponseMessage> UploadAsync(string path, byte[] content, string fileName, IDictionary<string, string>? fields = null)
+    {
+        var form = new MultipartFormDataContent();
+        form.Add(new ByteArrayContent(content), "file", fileName);
+        foreach (var (k, v) in fields ?? new Dictionary<string, string>()) form.Add(new StringContent(v), k);
+        return SendAsync(HttpMethod.Post, path, form);
+    }
+
+    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, HttpContent? content)
+    {
+        if (_csrf is null) await RefreshCsrfAsync();
+        using var req = new HttpRequestMessage(method, path) { Content = content };
+        req.Headers.Add("X-CSRF-TOKEN", _csrf);
+        return await Http.SendAsync(req);
+    }
 
     /// <summary>Inicia sesión y renueva el token CSRF (queda ligado a la nueva identidad).</summary>
     public async Task<HttpResponseMessage> LoginAsync(string email, string password)

@@ -19,6 +19,14 @@ var connectionString = config.GetConnectionString(PersistenceSetup.ConnectionStr
     ?? throw new InvalidOperationException(
         "Falta la cadena de conexión 'ConnectionStrings:LBMethod'. Configúrala con User Secrets o variables de entorno.");
 builder.Services.AddInfrastructure(connectionString);
+// Los archivos privados viven fuera de cualquier carpeta pública y solo se entregan por un endpoint con permisos.
+var mediaLimits = new LBMethod.Application.Library.MediaLimits(
+    config.GetValue("Library:MaxImageBytes", 5L * 1024 * 1024), config.GetValue("Library:MaxVideoBytes", 100L * 1024 * 1024));
+builder.Services.AddLibrary(
+    config["Storage:LocalPath"] is { Length: > 0 } storagePath ? storagePath : Path.Combine(builder.Environment.ContentRootPath, "storage"),
+    mediaLimits);
+// El límite general de tamaño de petición se mantiene; solo la subida de medios lo amplía (MediaUploadLimit).
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => o.MultipartBodyLengthLimit = Math.Max(mediaLimits.MaxImageBytes, mediaLimits.MaxVideoBytes) + 1024 * 1024);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 

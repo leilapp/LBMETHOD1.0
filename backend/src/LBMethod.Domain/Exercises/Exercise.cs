@@ -61,8 +61,17 @@ public class Exercise : Entity
     public ICollection<ExerciseMedia> Media { get; set; } = new List<ExerciseMedia>();
 }
 
+/// <summary>Elemento de un catálogo administrable por la entrenadora, con nombre bilingüe.</summary>
+public interface ICatalogEntry
+{
+    int Id { get; }
+    string NameEs { get; set; }
+    string NameEn { get; set; }
+    bool IsActive { get; set; }
+}
+
 /// <summary>Grupo muscular administrable por la entrenadora (nombre bilingüe).</summary>
-public class MuscleGroup : Entity
+public class MuscleGroup : Entity, ICatalogEntry
 {
     public string NameEs { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
@@ -71,7 +80,7 @@ public class MuscleGroup : Entity
 }
 
 /// <summary>Equipamiento administrable por la entrenadora (nombre bilingüe).</summary>
-public class Equipment : Entity
+public class Equipment : Entity, ICatalogEntry
 {
     public string NameEs { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
@@ -79,7 +88,7 @@ public class Equipment : Entity
 }
 
 /// <summary>Patrón de movimiento (bisagra de cadera, sentadilla, empuje…), administrable.</summary>
-public class MovementPattern : Entity
+public class MovementPattern : Entity, ICatalogEntry
 {
     public string NameEs { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;

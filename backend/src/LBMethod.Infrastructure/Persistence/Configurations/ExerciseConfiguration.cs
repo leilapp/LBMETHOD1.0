@@ -11,8 +11,8 @@ public class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
 {
     public void Configure(EntityTypeBuilder<Exercise> b)
     {
-        b.Property(e => e.NameEs).HasMaxLength(150).IsRequired();
-        b.Property(e => e.NameEn).HasMaxLength(150);
+        b.Property(e => e.NameEs).HasMaxLength(150).IsRequired().UseCollation(Collations.CatalogNames);
+        b.Property(e => e.NameEn).HasMaxLength(150).UseCollation(Collations.CatalogNames);
         b.Property(e => e.Description).HasMaxLength(2000);
         b.Property(e => e.Instructions).HasMaxLength(4000);
         b.Property(e => e.CommonMistakes).HasMaxLength(2000);
@@ -31,8 +31,8 @@ public class MuscleGroupConfiguration : IEntityTypeConfiguration<MuscleGroup>
 {
     public void Configure(EntityTypeBuilder<MuscleGroup> b)
     {
-        b.Property(m => m.NameEs).HasMaxLength(100).IsRequired();
-        b.Property(m => m.NameEn).HasMaxLength(100).IsRequired();
+        b.Property(m => m.NameEs).HasMaxLength(100).IsRequired().UseCollation(Collations.CatalogNames);
+        b.Property(m => m.NameEn).HasMaxLength(100).IsRequired().UseCollation(Collations.CatalogNames);
         b.HasIndex(m => m.NameEs).IsUnique();
         b.HasIndex(m => m.NameEn).IsUnique();
         b.HasData(ReferenceData.MuscleGroups);
@@ -44,8 +44,8 @@ public class EquipmentConfiguration : IEntityTypeConfiguration<Equipment>
     public void Configure(EntityTypeBuilder<Equipment> b)
     {
         b.ToTable("Equipment");
-        b.Property(e => e.NameEs).HasMaxLength(100).IsRequired();
-        b.Property(e => e.NameEn).HasMaxLength(100).IsRequired();
+        b.Property(e => e.NameEs).HasMaxLength(100).IsRequired().UseCollation(Collations.CatalogNames);
+        b.Property(e => e.NameEn).HasMaxLength(100).IsRequired().UseCollation(Collations.CatalogNames);
         b.HasIndex(e => e.NameEs).IsUnique();
         b.HasIndex(e => e.NameEn).IsUnique();
     }
@@ -55,8 +55,8 @@ public class MovementPatternConfiguration : IEntityTypeConfiguration<MovementPat
 {
     public void Configure(EntityTypeBuilder<MovementPattern> b)
     {
-        b.Property(m => m.NameEs).HasMaxLength(100).IsRequired();
-        b.Property(m => m.NameEn).HasMaxLength(100).IsRequired();
+        b.Property(m => m.NameEs).HasMaxLength(100).IsRequired().UseCollation(Collations.CatalogNames);
+        b.Property(m => m.NameEn).HasMaxLength(100).IsRequired().UseCollation(Collations.CatalogNames);
         b.HasIndex(m => m.NameEs).IsUnique();
         b.HasIndex(m => m.NameEn).IsUnique();
     }

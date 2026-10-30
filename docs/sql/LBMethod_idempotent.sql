@@ -1426,3 +1426,144 @@ END;
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261030182102_LibraryCollation'
+)
+BEGIN
+    DROP INDEX [IX_MuscleGroups_NameEs] ON [MuscleGroups];
+    DECLARE @var nvarchar(max);
+    SELECT @var = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[MuscleGroups]') AND [c].[name] = N'NameEs');
+    IF @var IS NOT NULL EXEC(N'ALTER TABLE [MuscleGroups] DROP CONSTRAINT ' + @var + ';');
+    ALTER TABLE [MuscleGroups] ALTER COLUMN [NameEs] nvarchar(100) COLLATE Latin1_General_100_CI_AI NOT NULL;
+    CREATE UNIQUE INDEX [IX_MuscleGroups_NameEs] ON [MuscleGroups] ([NameEs]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261030182102_LibraryCollation'
+)
+BEGIN
+    DROP INDEX [IX_MuscleGroups_NameEn] ON [MuscleGroups];
+    DECLARE @var1 nvarchar(max);
+    SELECT @var1 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[MuscleGroups]') AND [c].[name] = N'NameEn');
+    IF @var1 IS NOT NULL EXEC(N'ALTER TABLE [MuscleGroups] DROP CONSTRAINT ' + @var1 + ';');
+    ALTER TABLE [MuscleGroups] ALTER COLUMN [NameEn] nvarchar(100) COLLATE Latin1_General_100_CI_AI NOT NULL;
+    CREATE UNIQUE INDEX [IX_MuscleGroups_NameEn] ON [MuscleGroups] ([NameEn]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261030182102_LibraryCollation'
+)
+BEGIN
+    DROP INDEX [IX_MovementPatterns_NameEs] ON [MovementPatterns];
+    DECLARE @var2 nvarchar(max);
+    SELECT @var2 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[MovementPatterns]') AND [c].[name] = N'NameEs');
+    IF @var2 IS NOT NULL EXEC(N'ALTER TABLE [MovementPatterns] DROP CONSTRAINT ' + @var2 + ';');
+    ALTER TABLE [MovementPatterns] ALTER COLUMN [NameEs] nvarchar(100) COLLATE Latin1_General_100_CI_AI NOT NULL;
+    CREATE UNIQUE INDEX [IX_MovementPatterns_NameEs] ON [MovementPatterns] ([NameEs]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261030182102_LibraryCollation'
+)
+BEGIN
+    DROP INDEX [IX_MovementPatterns_NameEn] ON [MovementPatterns];
+    DECLARE @var3 nvarchar(max);
+    SELECT @var3 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[MovementPatterns]') AND [c].[name] = N'NameEn');
+    IF @var3 IS NOT NULL EXEC(N'ALTER TABLE [MovementPatterns] DROP CONSTRAINT ' + @var3 + ';');
+    ALTER TABLE [MovementPatterns] ALTER COLUMN [NameEn] nvarchar(100) COLLATE Latin1_General_100_CI_AI NOT NULL;
+    CREATE UNIQUE INDEX [IX_MovementPatterns_NameEn] ON [MovementPatterns] ([NameEn]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261030182102_LibraryCollation'
+)
+BEGIN
+    DROP INDEX [IX_Exercises_NameEs] ON [Exercises];
+    DECLARE @var4 nvarchar(max);
+    SELECT @var4 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Exercises]') AND [c].[name] = N'NameEs');
+    IF @var4 IS NOT NULL EXEC(N'ALTER TABLE [Exercises] DROP CONSTRAINT ' + @var4 + ';');
+    ALTER TABLE [Exercises] ALTER COLUMN [NameEs] nvarchar(150) COLLATE Latin1_General_100_CI_AI NOT NULL;
+    CREATE UNIQUE INDEX [IX_Exercises_NameEs] ON [Exercises] ([NameEs]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261030182102_LibraryCollation'
+)
+BEGIN
+    DROP INDEX [IX_Exercises_NameEn] ON [Exercises];
+    DECLARE @var5 nvarchar(max);
+    SELECT @var5 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Exercises]') AND [c].[name] = N'NameEn');
+    IF @var5 IS NOT NULL EXEC(N'ALTER TABLE [Exercises] DROP CONSTRAINT ' + @var5 + ';');
+    ALTER TABLE [Exercises] ALTER COLUMN [NameEn] nvarchar(150) COLLATE Latin1_General_100_CI_AI NULL;
+    EXEC(N'CREATE UNIQUE INDEX [IX_Exercises_NameEn] ON [Exercises] ([NameEn]) WHERE [NameEn] IS NOT NULL');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261030182102_LibraryCollation'
+)
+BEGIN
+    DROP INDEX [IX_Equipment_NameEs] ON [Equipment];
+    DECLARE @var6 nvarchar(max);
+    SELECT @var6 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Equipment]') AND [c].[name] = N'NameEs');
+    IF @var6 IS NOT NULL EXEC(N'ALTER TABLE [Equipment] DROP CONSTRAINT ' + @var6 + ';');
+    ALTER TABLE [Equipment] ALTER COLUMN [NameEs] nvarchar(100) COLLATE Latin1_General_100_CI_AI NOT NULL;
+    CREATE UNIQUE INDEX [IX_Equipment_NameEs] ON [Equipment] ([NameEs]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261030182102_LibraryCollation'
+)
+BEGIN
+    DROP INDEX [IX_Equipment_NameEn] ON [Equipment];
+    DECLARE @var7 nvarchar(max);
+    SELECT @var7 = QUOTENAME([d].[name])
+    FROM [sys].[default_constraints] [d]
+    INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+    WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Equipment]') AND [c].[name] = N'NameEn');
+    IF @var7 IS NOT NULL EXEC(N'ALTER TABLE [Equipment] DROP CONSTRAINT ' + @var7 + ';');
+    ALTER TABLE [Equipment] ALTER COLUMN [NameEn] nvarchar(100) COLLATE Latin1_General_100_CI_AI NOT NULL;
+    CREATE UNIQUE INDEX [IX_Equipment_NameEn] ON [Equipment] ([NameEn]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261030182102_LibraryCollation'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261030182102_LibraryCollation', N'10.0.14');
+END;
+
+COMMIT;
+GO
+

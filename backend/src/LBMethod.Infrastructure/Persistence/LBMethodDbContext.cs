@@ -51,6 +51,16 @@ public class LBMethodDbContext(DbContextOptions<LBMethodDbContext> options)
     public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
+    public Task<T> InTransactionAsync<T>(Func<Task<T>> work, CancellationToken cancellationToken = default) =>
+        // Si ya hay una operación en curso (por ejemplo, una importación), se suma a ella.
+        Database.CurrentTransaction is not null ? work() : Database.CreateExecutionStrategy().ExecuteAsync(async ct =>
+        {
+            await using var tx = await Database.BeginTransactionAsync(ct);
+            var result = await work();
+            await tx.CommitAsync(ct);
+            return result;
+        }, cancellationToken);
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
