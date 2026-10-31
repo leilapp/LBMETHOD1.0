@@ -1,6 +1,13 @@
 # LB METHOD en Cloudflare · Plan y avance por etapas
 
-Estado: **etapas 1 a 8 entregadas**. El PDF ahora se genera en el navegador (jsPDF) y espera tu autorización. Toda la aplicación de la Fase 10 funciona en Cloudflare con las mismas pantallas; faltan los pasos de publicación que solo tú puedes hacer en tu cuenta ([cloudflare-publicacion.md](cloudflare-publicacion.md)).
+Estado: **etapas 1 a 8 entregadas**, con el PDF generado en el navegador (jsPDF).
+
+**Cambio del 31/10/2026 (noche): plan gratuito.** Pediste no pagar. Desde entonces:
+- los archivos (imágenes, videos y fotos) se guardan en **Workers KV** en lugar de R2;
+- los videos subidos son de hasta 25 MB (antes 90);
+- las contraseñas usan 10 000 iteraciones (antes 100 000), para caber en los 10 ms de procesador del plan gratis.
+
+Donde abajo dice R2 o 90 MB, es el plan original: lo vigente está en [cloudflare-publicacion.md](cloudflare-publicacion.md).
 
 ## 1. La decisión
 

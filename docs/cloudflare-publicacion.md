@@ -1,29 +1,45 @@
 # LB METHOD en Cloudflare · Publicación y respaldos
 
-Guía de la etapa 8. Explica qué ya está listo en tu cuenta, los pasos que solo tú puedes hacer (porque piden tu inicio de sesión, tu pago o tu contraseña), cómo publicar cada cambio y cómo respaldar y restaurar la información.
+Guía de la etapa 8, actualizada el 31/10/2026 para el **plan gratuito**: no necesitas pagar ni registrar una tarjeta. Explica qué ya está listo en tu cuenta, cómo abrir la app desde el link gratuito de Cloudflare, cómo publicar cada cambio y cómo respaldar y restaurar la información.
 
-## 1. Lo que ya está hecho en tu cuenta
+## 1. Lo que ya está hecho en tu cuenta (todo gratis)
 
 | Pieza | Estado |
 |---|---|
-| Worker `lbmethod1-0` | Ya existía: lo creó tu conexión de Git. `cloudflare/wrangler.jsonc` usa ahora ese mismo nombre para publicar sobre él. |
-| Base de datos D1 `lbmethod` | **Creada y lista el 31/10/2026**, en la región oeste de Norteamérica (la más cercana a Guanajuato). Tiene las 7 migraciones aplicadas, idéntica a la base probada (32 tablas, 25 índices, 37 protecciones del historial y los catálogos iniciales). |
-| Tu cuenta de entrenadora | **Creada** en esa base con tu correo y una contraseña temporal. Al entrar por primera vez, la app te pide crear la tuya. |
-| Llave de seguridad (`APP_SECRET`) | **Ya no hace falta configurarla.** Si no existe, el Worker genera una llave al azar la primera vez y la guarda en la base. Si algún día quieres definirla tú, `npx wrangler secret put APP_SECRET` tiene prioridad. |
-| Espacio de archivos R2 `lbmethod-media` | **Falta.** R2 no está activado en tu cuenta (Cloudflare responde «Please enable R2 through the Cloudflare Dashboard»). |
+| Worker `lbmethod1-0` | Ya existía: lo creó tu conexión de Git. `cloudflare/wrangler.jsonc` usa ese mismo nombre para publicar sobre él. |
+| Base de datos D1 `lbmethod` | **Creada y lista**, en la región oeste de Norteamérica (la más cercana a Guanajuato). Tiene las 7 migraciones aplicadas (32 tablas, 25 índices, 37 protecciones del historial y los catálogos iniciales). Plan gratis: hasta 500 MB. |
+| Tu cuenta de entrenadora | **Creada** con tu correo y una contraseña temporal. Al entrar por primera vez, la app te pide crear la tuya. |
+| Espacio de archivos KV `lbmethod-archivos` | **Creado.** Guarda imágenes, videos y fotos de progreso, privados (sin dirección pública). Reemplaza a R2, que pedía tarjeta. |
+| Llave de seguridad (`APP_SECRET`) | **No hace falta configurarla.** El Worker genera una al azar y la guarda en la base. |
 
-## 2. Lo único que falta y solo tú puedes hacer
+## 2. Abrir la app
 
-1. **Plan de pago de Workers** (unos 5 USD al mes; confirma el precio vigente). En el plan gratuito cada petición tiene unos 10 ms de procesador, y verificar una contraseña de forma segura tarda más: el inicio de sesión fallaría. En el panel: *Workers & Pages → Plans*.
-2. **Activar R2.** En el panel: *R2 Object Storage → Activar*. Cloudflare pide un medio de pago aunque los primeros 10 GB son gratis. En cuanto lo actives, el espacio privado `lbmethod-media` se crea desde aquí (o tú con `npx wrangler r2 bucket create lbmethod-media`). No le actives acceso público ni dominio.
-3. **Revisar la conexión de Git del Worker** `lbmethod1-0`. En el panel: *Workers & Pages → lbmethod1-0 → Settings → Build*:
-   - Directorio raíz: `cloudflare`
-   - Comando de compilación: `npm ci && npm run build`
-   - Comando de publicación: `npx wrangler deploy`
-   - Rama: la que tenga este código. Hoy es `claude/project-thread-wllv8a`; cuando la unas a `main`, cambia a `main`.
-4. **Entrar.** Abre la dirección del Worker (`https://lbmethod1-0.<tu-subdominio>.workers.dev`), entra con tu correo y la contraseña temporal, y crea la tuya. Si algo falla, en el panel *lbmethod1-0 → Logs* se ve el error (sin datos de las clientas).
+1. Cada cambio que llega a la rama `claude/project-thread-wllv8a` se publica solo en tu Worker (unos 2 minutos).
+2. Abre `https://lbmethod1-0.<tu-subdominio>.workers.dev`. El link exacto está en el panel: *Workers & Pages → lbmethod1-0*, arriba a la derecha («Visit» o «Domains & Routes»).
+3. Entra con tu correo y la contraseña temporal, y crea la tuya.
+4. **Instalar la app:** en Chrome (Android o computadora) aparece el botón «Instalar la app en este dispositivo» debajo del inicio de sesión. También puedes usar el menú ⋮ → «Instalar app» o «Agregar a pantalla de inicio». En iPhone: Compartir → «Agregar a inicio». Queda con su ícono, como una app más, sin tienda.
 
-**Sin la terminal:** ya no necesitas `wrangler login`, ni el secreto, ni crear tablas o la cuenta a mano. Esos comandos siguen sirviendo para respaldos y para migraciones futuras (sección 3).
+**Si el link no abre o muestra un error de Cloudflare**, revisa la conexión de Git: *Workers & Pages → lbmethod1-0 → Settings → Build*:
+- Directorio raíz: `cloudflare`
+- Comando de compilación: `npm ci && npm run build`
+- Comando de publicación: `npx wrangler deploy`
+- Rama: `claude/project-thread-wllv8a` (cuando la unas a `main`, cambia a `main`).
+
+En *lbmethod1-0 → Deployments* se ve si la última publicación falló, y en *Logs* el error (sin datos de las clientas).
+
+### Límites del plan gratuito que conviene conocer
+
+| Límite | Qué significa para LB METHOD |
+|---|---|
+| 100 000 peticiones al día | Sobra para un estudio: cada pantalla usa unas cuantas. |
+| ~10 ms de procesador por petición | Por eso las contraseñas se guardan con 10 000 iteraciones de PBKDF2 en lugar de 100 000 (ver abajo). Si una exportación o importación de Excel muy grande fallara con «error 1102», divídela en partes. |
+| Archivos: 1 GB en total y 1 000 subidas al día | Imágenes hasta 5 MB, fotos de progreso hasta 10 MB y videos hasta **25 MB** (antes 90 MB). Para videos largos usa un enlace (por ejemplo, YouTube no listado), que la biblioteca ya acepta. Un video se guarda en partes de 4 MB: cada parte cuenta como una subida. |
+| Base de datos: 500 MB | Para datos de texto (clientas, rutinas, registros) alcanza para muchos años. |
+| Time Travel: 7 días | Puedes volver la base a cualquier momento de la última semana (con plan de pago serían 30). |
+
+**Sobre las contraseñas:** con 10 000 iteraciones el inicio de sesión tarda unos 5 ms y cabe en el plan gratis. La defensa principal contra quien intente adivinar contraseñas sigue igual: 10 intentos por minuto y bloqueo de 15 minutos tras 5 fallos. La diferencia solo importaría si alguien robara la base completa: descifrar cada contraseña le costaría 10 veces menos. Si algún día pasas al plan de pago, se puede volver a subir el número y las cuentas se actualizan solas al entrar.
+
+**Si algún día quieres R2** (más espacio para videos): actívalo en el panel, crea el bucket privado `lbmethod-media` y agrega en `wrangler.jsonc` `"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "lbmethod-media" }]`. El código ya sabe usarlo. Los archivos ya guardados en KV tendrían que copiarse (respaldo y restauración).
 
 ## 3. Publicar cambios después
 
@@ -35,14 +51,14 @@ Guía de la etapa 8. Explica qué ya está listo en tu cuenta, los pasos que sol
 
 Hay dos protecciones que se complementan.
 
-**a) Time Travel de D1 (automático).** Cloudflare guarda el historial de la base: con el plan de pago puedes volver a cualquier minuto de los últimos 30 días.
+**a) Time Travel de D1 (automático).** Cloudflare guarda el historial de la base: en el plan gratuito puedes volver a cualquier minuto de los últimos 7 días.
 ```powershell
 npx wrangler d1 time-travel info lbmethod                                   # ver el punto actual
 npx wrangler d1 time-travel restore lbmethod --timestamp=2026-11-15T10:00:00-06:00
 ```
-Restaurar con Time Travel **reemplaza** la base actual por la de ese momento (se puede deshacer con otro restore al punto anterior, que el comando muestra). Úsalo solo ante un error grave y después de un respaldo con `npm run backup`. No cubre los archivos de R2.
+Restaurar con Time Travel **reemplaza** la base actual por la de ese momento (se puede deshacer con otro restore al punto anterior, que el comando muestra). Úsalo solo ante un error grave y después de un respaldo con `npm run backup`. No cubre los archivos (imágenes, videos y fotos).
 
-**b) Respaldo completo propio (`npm run backup`).** Copia la base completa (con historial) y todos los archivos privados de R2 a tu computadora:
+**b) Respaldo completo propio (`npm run backup`).** Copia la base completa (con historial) y todos los archivos privados del espacio KV a tu computadora:
 ```powershell
 npm run backup
 ```
@@ -53,7 +69,7 @@ Crea `cloudflare\respaldos\AAAA-MM-DD_HHMMSS\` con:
 
 Recomendación: hazlo cada semana y antes de cualquier cambio grande. Guarda la carpeta en un disco cifrado (BitLocker) y en un segundo lugar. Contiene datos personales de tus clientas: la carpeta `respaldos/` está excluida de Git y nunca debe subirse.
 
-Tarda unos 3 segundos por archivo (cada archivo se descarga por separado). Con cientos de fotos puede tardar varios minutos.
+Tarda unos 3 segundos por parte de 4 MB (cada parte se descarga por separado). Con cientos de fotos puede tardar varios minutos. Leer archivos cuenta para el límite gratis de 100 000 lecturas al día, que sobra.
 
 ## 5. Restaurar un respaldo
 
@@ -69,6 +85,7 @@ npm run restore -- respaldos\2026-11-15_100000 --local --persist-to .wrangler\pr
 npx wrangler d1 create lbmethod-restaurada          # copia el id que devuelve
 npm run restore -- respaldos\2026-11-15_100000 --remote --database-id <id>
 ```
+Los archivos se suben al espacio KV de `wrangler.jsonc` (o a otro con `--kv-id <id>`; se crea con `npx wrangler kv namespace create lbmethod-archivos-restaurados`). Ten en cuenta el límite gratis de 1 000 escrituras al día: cada parte de 4 MB es una escritura.
 El comando sube la base y los archivos, y compara filas y huellas con el manifiesto. Si todo coincide, pon `database_name` y `database_id` de la base restaurada en `wrangler.jsonc` y publica. La base anterior queda intacta hasta que tú decidas qué hacer con ella.
 
 ## 6. Cómo se probó
@@ -77,4 +94,6 @@ El comando sube la base y los archivos, y compara filas y huellas con el manifie
 - `npm run restore` en una copia local vacía: filas y huellas idénticas; un segundo intento sobre la misma copia se niega («ya tiene 31 tablas»).
 - La aplicación funcionando sobre la copia restaurada: inicio de sesión, lista de clientes y una foto de progreso idéntica byte por byte.
 - Respaldo de una base vacía (como la nueva de tu cuenta antes de migrar): se guarda un respaldo vacío y la migración puede seguir.
-- No pude probar los pasos de la sección 2 en tu cuenta porque piden tu inicio de sesión de Wrangler, tu pago y tu contraseña.
+- Archivos en KV (plan gratuito): un video de 9 MB (3 partes) se sube, se descarga idéntico byte por byte y se entrega por trozos, incluido un trozo que cruza dos partes; uno de más de 25 MB se rechaza con un mensaje claro.
+- Inicio de sesión con 10 000 iteraciones, y una cuenta guardada con 100 000 que se actualiza sola al entrar sin cambiar su contraseña.
+- No puedo abrir tu link de workers.dev desde mi entorno (la red lo bloquea), así que la prueba final en tu cuenta es abrirlo tú.

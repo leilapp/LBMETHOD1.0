@@ -4,6 +4,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { authApi } from '../../api/endpoints'
 import { Alert, Button, LoadingState, Logo, TextField } from '../../components/ui'
 import { homeFor, sessionKey, useSession, useSignOut } from '../../app/session'
+import { installApp, useCanInstall } from '../../lib/install'
 import { passwordProblems } from '../../lib/validation'
 import './auth.css'
 
@@ -15,6 +16,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const canInstall = useCanInstall()
 
   if (isPending) return <LoadingState label="Verificando sesión…" />
   if (session) return <Navigate to={homeFor(session)} replace />
@@ -70,6 +72,14 @@ export function LoginPage() {
           </Button>
           <p className="auth__help">¿Olvidaste tu contraseña? Pide a tu entrenadora que la restablezca.</p>
         </form>
+        {canInstall && (
+          <div className="auth__install">
+            <Button type="button" variant="secondary" block onClick={() => void installApp()}>
+              Instalar la app en este dispositivo
+            </Button>
+            <p className="auth__help">Queda como una app más en tu teléfono o computadora, sin pasar por una tienda.</p>
+          </div>
+        )}
       </div>
     </div>
   )

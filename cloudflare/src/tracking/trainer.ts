@@ -6,6 +6,7 @@ import { addDays, isDate, localDate } from '../dates'
 import { notFound, nowIso, readJson, validation } from '../http'
 import { detect, serveObject } from '../library/media'
 import { duplicate } from '../library/catalogs'
+import { deleteFile, putFile } from '../storage'
 import { currentUser } from '../session'
 import { clean, cleanOptional, normalize } from '../text'
 import { sessionDetail, summaryRows, toSummary } from '../training/queries'
@@ -377,7 +378,7 @@ trackingTrainer.put('/measurements/:id{[0-9]+}', async (c) => {
   return c.body(null, 204)
 })
 
-// ---------- Fotos de progreso (R2 privado) ----------
+// ---------- Fotos de progreso (espacio privado: KV, o R2 si se activa) ----------
 
 trackingTrainer.get('/clients/:clientId{[0-9]+}/photos', async (c) => {
   const clientId = clientParam(c)
@@ -426,7 +427,7 @@ trackingTrainer.post('/clients/:clientId{[0-9]+}/photos', async (c) => {
 
   const fileId = crypto.randomUUID()
   const key = `progress/${fileId.replace(/-/g, '')}${signature.extension}`
-  await c.env.MEDIA.put(key, file.stream(), { httpMetadata: { contentType: signature.contentType } })
+  await putFile(c.env, key, file, signature.contentType)
   const now = nowIso()
   try {
     const [, inserted] = await c.env.DB.batch<{ id: number }>([
@@ -443,7 +444,7 @@ trackingTrainer.post('/clients/:clientId{[0-9]+}/photos', async (c) => {
     await audit(c, 'ProgressPhotoUploaded', 'ProgressPhoto', photoId, `Cliente ${clientId}`)
     return c.json({ id: photoId }, 201)
   } catch (err) {
-    await c.env.MEDIA.delete(key) // no dejar archivos huérfanos
+    await deleteFile(c.env, key) // no dejar archivos huérfanos
     throw err
   }
 })

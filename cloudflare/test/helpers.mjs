@@ -1,4 +1,4 @@
-// Arranque compartido de las pruebas: un Worker real (wrangler dev) con una base D1 y un R2 locales nuevos por
+// Arranque compartido de las pruebas: un Worker real (wrangler dev) con una base D1 y un espacio de archivos (KV) locales nuevos por
 // archivo de pruebas, dos entrenadoras de prueba y una sesión de navegador mínima.
 import assert from 'node:assert/strict'
 import { execFileSync, spawn } from 'node:child_process'
@@ -18,9 +18,10 @@ let server
 export const MAX_PHOTO_BYTES = 200 * 1024
 
 const wrangler = (...args) => execFileSync('npx', ['wrangler', ...args, '--persist-to', state], { stdio: 'pipe' })
-const hash = (password) => {
+/** Igual que src/crypto.ts (10 000 iteraciones). OTHER se guarda con 100 000, como las cuentas de antes del plan gratis. */
+const hash = (password, iterations = 10_000) => {
   const salt = randomBytes(16)
-  return `pbkdf2-sha256$100000$${salt.toString('base64')}$${pbkdf2Sync(password, salt, 100_000, 32, 'sha256').toString('base64')}`
+  return `pbkdf2-sha256$${iterations}$${salt.toString('base64')}$${pbkdf2Sync(password, salt, iterations, 32, 'sha256').toString('base64')}`
 }
 export const sql = (statement) => {
   try {
@@ -40,7 +41,7 @@ export function useServer() {
     writeFileSync(
       file,
       [TRAINER, OTHER]
-        .map((t) => `INSERT INTO users (email, display_name, password_hash, role, created_at) VALUES ('${t.email}', 'Entrenadora', '${hash(t.password)}', 'TRAINER', '${now}');`)
+        .map((t) => `INSERT INTO users (email, display_name, password_hash, role, created_at) VALUES ('${t.email}', 'Entrenadora', '${hash(t.password, t === OTHER ? 100_000 : 10_000)}', 'TRAINER', '${now}');`)
         .join('\n'),
     )
     wrangler('d1', 'execute', 'lbmethod', '--local', '--file', file)

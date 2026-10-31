@@ -1,4 +1,4 @@
-// Pruebas de la etapa 2 (biblioteca de ejercicios, imágenes y videos en R2, Excel) contra el Worker real.
+// Pruebas de la etapa 2 (biblioteca de ejercicios, imágenes y videos en el espacio privado KV, Excel) contra el Worker real.
 //   npm test
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
@@ -214,7 +214,7 @@ describe('ejercicios', () => {
   })
 })
 
-describe('imágenes y videos (R2 privado)', () => {
+describe('imágenes y videos (espacio privado KV)', () => {
   test('sube una imagen real, la entrega con permisos y Range; rechaza tipos falsos, tamaños excesivos y enlaces http', async () => {
     const s = await trainer()
     const id = await createExercise(s, { nameEs: 'Puente de glúteo medios' })
@@ -268,6 +268,39 @@ describe('imágenes y videos (R2 privado)', () => {
     assert.equal((await new Session().get(video.contentUrl)).status, 401)
     const actions = sql(`SELECT action FROM audit_logs WHERE entity_type = 'Exercise' AND entity_id = '${id}' AND action LIKE 'ExerciseMedia%' ORDER BY id`).map((r) => r.action)
     assert.deepEqual(actions, ['ExerciseMediaUploaded', 'ExerciseMediaUploaded', 'ExerciseMediaLinked', 'ExerciseMediaDeleted'])
+  })
+
+  test('un video de varias partes (más de 4 MB) se entrega completo y por trozos; el máximo es 25 MB', async () => {
+    const s = await trainer()
+    const id = await createExercise(s, { nameEs: 'Peso muerto rumano video largo' })
+    assert.match((await json(await upload(s, id, mp4(25 * 1024 * 1024 + 1), 'enorme.mp4'), 400)).errors.file[0], /25 MB para videos/)
+    const bytes = mp4(9 * 1024 * 1024 + 123) // tres partes de 4 MB
+    for (let i = 16; i < bytes.length; i++) bytes[i] = (i * 31 + (i >> 12)) & 0xff
+    const { id: videoId } = await json(await upload(s, id, bytes, 'largo.mp4'), 201)
+    const url = `${LIB}/media/${videoId}/content`
+    const full = await s.get(url)
+    assert.equal(full.status, 200)
+    assert.equal(full.headers.get('content-length'), String(bytes.length))
+    assert.ok(Buffer.from(await full.arrayBuffer()).equals(bytes), 'idéntico byte por byte')
+    const M = 4 * 1024 * 1024
+    const cases = [
+      [`bytes=${M - 10}-${M + 9}`, M - 10, M + 9], // cruza el límite entre la parte 1 y la 2
+      [`bytes=${2 * M + 5}-`, 2 * M + 5, bytes.length - 1], // desde un punto hasta el final (adelantar un video)
+      ['bytes=-100', bytes.length - 100, bytes.length - 1],
+      [`bytes=0-${bytes.length + 500}`, 0, bytes.length - 1], // más allá del final: se recorta
+    ]
+    for (const [range, from, to] of cases) {
+      const res = await s.get(url, { headers: { Range: range } })
+      assert.equal(res.status, 206, range)
+      assert.equal(res.headers.get('content-range'), `bytes ${from}-${to}/${bytes.length}`, range)
+      assert.equal(res.headers.get('content-length'), String(to - from + 1), range)
+      assert.ok(Buffer.from(await res.arrayBuffer()).equals(bytes.subarray(from, to + 1)), range)
+    }
+    const beyond = await s.get(url, { headers: { Range: `bytes=${bytes.length + 10}-` } })
+    assert.equal(beyond.status, 416)
+    assert.equal(beyond.headers.get('content-range'), `bytes */${bytes.length}`)
+    await json(await s.delete(`${EX}/${id}/media/${videoId}`), 204)
+    assert.equal((await s.get(url)).status, 404)
   })
 })
 

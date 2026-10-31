@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import type { Context } from 'hono'
-import { DUMMY_HASH, hashPassword, passwordProblems, verifyPassword } from '../crypto'
+import { DUMMY_HASH, hashPassword, needsRehash, passwordProblems, verifyPassword } from '../crypto'
 import { audit } from '../audit'
 import { email, nowIso, problem, readJson, validation } from '../http'
 import { currentUser, endSession, issueCsrfToken, requireRole, startSession } from '../session'
@@ -52,6 +52,10 @@ auth.post('/login', async (c) => {
   await c.env.DB.prepare('UPDATE users SET failed_logins = 0, lockout_until = NULL, last_login_at = ? WHERE id = ?')
     .bind(nowIso(), user.id)
     .run()
+  // Cuentas guardadas con otra cantidad de iteraciones (por ejemplo, 100 000 antes del plan gratuito): se actualizan.
+  if (needsRehash(user.password_hash)) {
+    await c.env.DB.prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(await hashPassword(password), user.id).run()
+  }
   await startSession(c, user.id)
   console.log(`Inicio de sesión correcto del usuario ${user.id}.`)
   return c.json(await sessionFor(c, user.id))

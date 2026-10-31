@@ -1,8 +1,8 @@
-// Restaura un respaldo hecho con scripts/backup.mjs en una base D1 VACÍA y sube sus archivos a R2.
+// Restaura un respaldo hecho con scripts/backup.mjs en una base D1 VACÍA y sube sus archivos al espacio KV «FILES».
 // Nunca escribe sobre una base que ya tiene tablas: así un error no puede borrar ni mezclar información.
 //   npm run restore -- respaldos/<carpeta> --local [--persist-to <carpeta>]
 //        → en una copia local vacía (para comprobar que el respaldo sirve)
-//   npm run restore -- respaldos/<carpeta> --remote --database-id <id> [--database-name lbmethod-restaurada] [--bucket lbmethod-media]
+//   npm run restore -- respaldos/<carpeta> --remote --database-id <id> [--database-name lbmethod-restaurada] [--kv-id <id del espacio KV>]
 //        → en una base nueva de Cloudflare creada antes con «npx wrangler d1 create lbmethod-restaurada»
 // Al terminar compara el conteo de filas de cada tabla y la huella SHA-256 de cada archivo con el manifiesto.
 import { execFileSync } from 'node:child_process'
@@ -11,6 +11,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { kvNamespaceId, readKvFile, writeKvFile } from './archivos-kv.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
@@ -25,7 +26,7 @@ if (!backup || local === remote) {
 const persistTo = option('--persist-to')
 const databaseId = option('--database-id')
 const databaseName = option('--database-name') ?? (remote ? 'lbmethod-restaurada' : 'lbmethod')
-const bucket = option('--bucket') ?? 'lbmethod-media'
+const kvId = option('--kv-id') ?? kvNamespaceId(root)
 if (remote && !/^[0-9a-f-]{36}$/.test(databaseId ?? '')) {
   console.error('Con --remote indica el id de la base nueva y vacía: --database-id <id> (lo devuelve «npx wrangler d1 create»).')
   process.exit(1)
@@ -54,12 +55,14 @@ writeFileSync(
     main: join(root, 'src/index.ts'),
     compatibility_date: '2026-10-01',
     d1_databases: [{ binding: 'DB', database_name: databaseName, database_id: databaseId ?? localDatabaseId }],
-    r2_buckets: [{ binding: 'MEDIA', bucket_name: bucket }],
+    kv_namespaces: [{ binding: 'FILES', id: kvId }],
   }),
 )
 // En local, por omisión, la misma carpeta que usa «npm run dev» (solo si está vacía).
 const where = local ? ['--local', '--persist-to', resolve(persistTo ?? join(root, '.wrangler', 'state'))] : ['--remote']
 const wrangler = (...a) => execFileSync('npx', ['wrangler', ...a, '-c', config], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 256 * 1024 * 1024 })
+const wranglerBytes = (...a) => execFileSync('npx', ['wrangler', ...a, '-c', config], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 })
+const kvTarget = ['--binding', 'FILES', ...where]
 const query = (sql) => JSON.parse(wrangler('d1', 'execute', databaseName, ...where, '--json', '--command', sql))[0].results
 
 try {
@@ -73,9 +76,9 @@ try {
   wrangler('d1', 'execute', databaseName, ...where, '--file', sqlFile, '-y')
 
   for (const f of manifest.files) {
-    const file = join(backup, 'archivos', f.key)
-    if (createHash('sha256').update(readFileSync(file)).digest('hex') !== f.sha256) throw new Error(`El archivo ${f.key} no coincide con el manifiesto.`)
-    wrangler('r2', 'object', 'put', `${bucket}/${f.key}`, ...where, '--file', file, '--content-type', f.contentType)
+    const bytes = readFileSync(join(backup, 'archivos', f.key))
+    if (createHash('sha256').update(bytes).digest('hex') !== f.sha256) throw new Error(`El archivo ${f.key} no coincide con el manifiesto.`)
+    writeKvFile(wranglerBytes, kvTarget, f.key, bytes, f.contentType)
   }
 
   // Comprobación: mismas filas por tabla y mismos archivos (se vuelven a descargar y se comparan sus huellas).
@@ -84,9 +87,8 @@ try {
   const counts = query(`SELECT ${tables.map((t) => `(SELECT COUNT(*) FROM "${t}") AS "${t}"`).join(', ')}`)[0]
   for (const t of tables) if (counts[t] !== manifest.rows[t]) problems.push(`tabla ${t}: ${counts[t]} filas, el respaldo tiene ${manifest.rows[t]}`)
   for (const f of manifest.files) {
-    const copy = join(work, 'comprobar')
-    wrangler('r2', 'object', 'get', `${bucket}/${f.key}`, ...where, '--file', copy)
-    if (createHash('sha256').update(readFileSync(copy)).digest('hex') !== f.sha256) problems.push(`archivo ${f.key} distinto`)
+    const copy = readKvFile(wranglerBytes, kvTarget, f.key)
+    if (!copy || createHash('sha256').update(copy).digest('hex') !== f.sha256) problems.push(`archivo ${f.key} distinto o ausente`)
   }
   if (problems.length) {
     console.error('La restauración no coincide con el respaldo:\n  ' + problems.join('\n  '))

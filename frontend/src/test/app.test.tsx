@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { api } from '../api/client'
 import { passwordProblems } from '../lib/validation'
 import { formatDate } from '../lib/format'
+import { listenForInstall } from '../lib/install'
 import { clientSession, mockApi, renderApp, trainerSession } from './utils'
 
 afterEach(() => {
@@ -49,6 +50,24 @@ describe('cliente HTTP', () => {
 })
 
 describe('inicio de sesión', () => {
+  it('ofrece instalar la app cuando el navegador lo permite, y la instala al pulsar', async () => {
+    listenForInstall()
+    mockApi({ 'GET /api/auth/me': () => ({ status: 401 }) })
+    renderApp('/login')
+    await screen.findByRole('heading', { name: 'Iniciar sesión' })
+    expect(screen.queryByRole('button', { name: /Instalar la app/ })).not.toBeInTheDocument()
+    const prompt = vi.fn(async () => undefined)
+    const event = Object.assign(new Event('beforeinstallprompt', { cancelable: true }), {
+      prompt,
+      userChoice: Promise.resolve({ outcome: 'accepted' as const }),
+    })
+    window.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(true)
+    await userEvent.click(await screen.findByRole('button', { name: /Instalar la app/ }))
+    expect(prompt).toHaveBeenCalledOnce()
+    await waitFor(() => expect(screen.queryByRole('button', { name: /Instalar la app/ })).not.toBeInTheDocument())
+  })
+
   it('sin sesión redirige al inicio de sesión', async () => {
     mockApi({ 'GET /api/auth/me': () => ({ status: 401 }) })
     renderApp('/entrenadora/clientes')

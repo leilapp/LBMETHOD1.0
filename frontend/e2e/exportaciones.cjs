@@ -93,7 +93,7 @@ async function download(page, button, name) {
   const emailB = `ines.${TAG}@test.local`
   const clientA = await call(tp, 'POST', '/api/trainer/clients', { firstName: 'Begoña', lastName: `Muñoz ${TAG}`, email: emailA, phone: null })
   const clientB = await call(tp, 'POST', '/api/trainer/clients', { firstName: 'Inés', lastName: `Peña ${TAG}`, email: emailB, phone: null })
-  const [assignmentId] = (await call(tp, 'POST', '/api/trainer/assignments', { clientIds: [clientA.clientId], routineVersionId: draft.id, startDate: today, endDate: null, notes: 'Anota el peso real de cada serie' })).ids
+  await call(tp, 'POST', '/api/trainer/assignments', { clientIds: [clientA.clientId], routineVersionId: draft.id, startDate: today, endDate: null, notes: 'Anota el peso real de cada serie' })
   await call(tp, 'POST', `/api/trainer/clients/${clientA.clientId}/evaluations`, { evaluatedOn: today, notes: 'Evaluación inicial', measurements: [{ measurementTypeId: 1, value: 61.4 }, { measurementTypeId: 4, value: 98 }] })
 
   // ---------- PDF desde la ficha de la rutina ----------

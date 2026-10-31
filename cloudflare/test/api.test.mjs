@@ -30,6 +30,20 @@ describe('inicio de sesión y sesiones', () => {
     assert.equal((await s.get('/api/auth/me')).status, 401)
   })
 
+  test('plan gratuito: las contraseñas nuevas usan 10 000 iteraciones y las de 100 000 se actualizan al entrar', async () => {
+    const before = sql(`SELECT password_hash FROM users WHERE email = '${OTHER.email}'`)[0].password_hash
+    assert.match(before, /^pbkdf2-sha256\$100000\$/)
+    assert.equal((await new Session().login(OTHER)).status, 200)
+    const after = sql(`SELECT password_hash FROM users WHERE email = '${OTHER.email}'`)[0].password_hash
+    assert.match(after, /^pbkdf2-sha256\$10000\$/)
+    assert.equal((await new Session().login(OTHER)).status, 200, 'la contraseña sigue siendo la misma')
+    assert.equal((await new Session().login({ email: OTHER.email, password: 'Incorrecta2026' })).status, 401)
+    const s = await trainer()
+    const created = await (await s.post('/api/trainer/clients', { firstName: 'Iteraciones', lastName: 'Prueba', email: 'iteraciones@prueba.local' })).json()
+    assert.match(sql("SELECT password_hash FROM users WHERE email = 'iteraciones@prueba.local'")[0].password_hash, /^pbkdf2-sha256\$10000\$/)
+    assert.equal((await new Session().login({ email: 'iteraciones@prueba.local', password: created.temporaryPassword })).status, 200)
+  })
+
   test('correo inexistente y contraseña incorrecta dan el mismo mensaje', async () => {
     const a = await (await new Session().login({ email: 'nadie@prueba.local', password: 'Algo2026Segura' })).json()
     const b = await (await new Session().login({ email: TRAINER.email, password: 'Incorrecta2026' })).json()

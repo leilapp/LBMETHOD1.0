@@ -6,9 +6,11 @@ import { currentUser } from '../session'
 import { cleanOptional } from '../text'
 import type { AppBindings } from '../types'
 import { exists } from './exercises'
+import { deleteFile, getFile, putFile, type FileRange } from '../storage'
 
 /**
- * Imágenes y videos de los ejercicios. Los archivos se guardan en R2 (privado) con un nombre aleatorio; el tipo se
+ * Imágenes y videos de los ejercicios. Los archivos se guardan en el espacio privado (KV gratuito, o R2 si se activa; ver
+ * storage.ts) con un nombre aleatorio; el tipo se
  * comprueba por su contenido real (no por la extensión) y se limita el tamaño. También se aceptan enlaces https
  * (por ejemplo, un video no listado de YouTube).
  */
@@ -61,7 +63,7 @@ exerciseMedia.post('/:id{[0-9]+}/media', async (c) => {
 
   const fileId = crypto.randomUUID()
   const key = `exercises/${fileId.replace(/-/g, '')}${signature.extension}`
-  await c.env.MEDIA.put(key, file.stream(), { httpMetadata: { contentType: signature.contentType } })
+  await putFile(c.env, key, file, signature.contentType)
   const now = nowIso()
   try {
     const [, inserted] = await c.env.DB.batch<{ id: number }>([
@@ -78,7 +80,7 @@ exerciseMedia.post('/:id{[0-9]+}/media', async (c) => {
     await audit(c, 'ExerciseMediaUploaded', 'Exercise', id)
     return c.json({ id: inserted.results[0].id }, 201)
   } catch (err) {
-    await c.env.MEDIA.delete(key) // no dejar archivos huérfanos
+    await deleteFile(c.env, key) // no dejar archivos huérfanos
     throw err
   }
 })
@@ -110,7 +112,7 @@ exerciseMedia.post('/:id{[0-9]+}/media/link', async (c) => {
   return c.json({ id: row!.id }, 201)
 })
 
-/** Quita el medio del ejercicio y borra el archivo de R2; el registro del archivo queda marcado como borrado. */
+/** Quita el medio del ejercicio y borra el archivo guardado; el registro del archivo queda marcado como borrado. */
 exerciseMedia.delete('/:id{[0-9]+}/media/:mediaId{[0-9]+}', async (c) => {
   const id = Number(c.req.param('id'))
   const mediaId = Number(c.req.param('mediaId'))
@@ -126,7 +128,7 @@ exerciseMedia.delete('/:id{[0-9]+}/media/:mediaId{[0-9]+}', async (c) => {
     ...(media.stored_file_id ? [c.env.DB.prepare('UPDATE stored_files SET deleted_at = ? WHERE id = ?').bind(nowIso(), media.stored_file_id)] : []),
   ])
   await audit(c, 'ExerciseMediaDeleted', 'Exercise', id)
-  if (media.storage_key) await c.env.MEDIA.delete(media.storage_key)
+  if (media.storage_key) await deleteFile(c.env, media.storage_key)
   return c.body(null, 204)
 })
 
@@ -145,17 +147,10 @@ mediaContent.get('/:mediaId{[0-9]+}/content', async (c) => {
   return serveObject(c, file.storage_key, file.content_type)
 })
 
-/** Sirve un objeto privado de R2 con soporte de Range (206) y sin caché. */
+/** Sirve un archivo privado con soporte de Range (206) y sin caché. */
 export async function serveObject(c: Context<AppBindings>, key: string, contentType: string) {
-  let range = parseRange(c.req.header('Range'))
-  if (range && 'suffix' in range) {
-    // «Los últimos N bytes»: se convierte a inicio y largo con el tamaño real del archivo.
-    const head = await c.env.MEDIA.head(key)
-    if (!head) return notFound(c)
-    const length = Math.min(range.suffix, head.size)
-    range = { offset: head.size - length, length }
-  }
-  const object = range ? await c.env.MEDIA.get(key, { range }) : await c.env.MEDIA.get(key)
+  const range = parseRange(c.req.header('Range'))
+  const object = await getFile(c.env, key, range)
   if (!object) return notFound(c)
   const headers = new Headers({
     'Content-Type': contentType,
@@ -163,9 +158,12 @@ export async function serveObject(c: Context<AppBindings>, key: string, contentT
     'Accept-Ranges': 'bytes',
     'X-Content-Type-Options': 'nosniff',
   })
-  if (range && object.range && 'offset' in object.range) {
-    const offset = object.range.offset ?? 0
-    const length = object.range.length ?? object.size - offset
+  if (object.range) {
+    const { offset, length } = object.range
+    if (length <= 0) {
+      await object.body.cancel()
+      return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${object.size}` } })
+    }
     headers.set('Content-Range', `bytes ${offset}-${offset + length - 1}/${object.size}`)
     headers.set('Content-Length', String(length))
     return new Response(object.body, { status: 206, headers })
@@ -174,7 +172,7 @@ export async function serveObject(c: Context<AppBindings>, key: string, contentT
   return new Response(object.body, { status: 200, headers })
 }
 
-function parseRange(header: string | undefined): R2Range | null {
+function parseRange(header: string | undefined): FileRange | null {
   const match = header?.match(/^bytes=(\d*)-(\d*)$/)
   if (!match || (!match[1] && !match[2])) return null
   if (!match[1]) return { suffix: Number(match[2]) }

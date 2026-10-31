@@ -53,8 +53,8 @@ if ((await askHidden('Repite la contraseña: ')) !== password) { console.error('
 
 // Mismo formato que src/crypto.ts.
 const salt = randomBytes(16)
-const hash = pbkdf2Sync(password, salt, 100_000, 32, 'sha256')
-const stored = `pbkdf2-sha256$100000$${salt.toString('base64')}$${hash.toString('base64')}`
+const hash = pbkdf2Sync(password, salt, 10_000, 32, 'sha256')
+const stored = `pbkdf2-sha256$10000$${salt.toString('base64')}$${hash.toString('base64')}`
 const q = (v) => `'${String(v).replace(/'/g, "''")}'`
 const now = new Date().toISOString()
 const sql = `INSERT INTO users (email, display_name, password_hash, role, must_change_password, created_at)

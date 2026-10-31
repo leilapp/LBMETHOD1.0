@@ -1,9 +1,14 @@
 /**
  * Contraseñas, tokens y firmas con Web Crypto (incluido en Workers).
- * Contraseñas: PBKDF2-SHA256 con sal aleatoria. 100 000 iteraciones es el máximo que permite Workers.
+ * Contraseñas: PBKDF2-SHA256 con sal aleatoria de 16 bytes.
  * Formato guardado: pbkdf2-sha256$<iteraciones>$<sal base64>$<huella base64> (scripts/create-trainer.mjs usa el mismo).
+ *
+ * Iteraciones: 10 000. El plan gratuito de Workers da unos 10 ms de procesador por petición y 100 000 iteraciones
+ * tardan unos 50 ms, así que el inicio de sesión fallaba (error 1102). Con 10 000 tarda unos 5 ms. La protección
+ * principal contra adivinar contraseñas sigue igual: 10 intentos por minuto y bloqueo tras 5 fallos.
+ * Las cuentas guardadas con otra cantidad se actualizan solas al iniciar sesión (needsRehash).
  */
-const ITERATIONS = 100_000
+export const ITERATIONS = 10_000
 const encoder = new TextEncoder()
 
 const toB64 = (bytes: ArrayBuffer | Uint8Array) => btoa(String.fromCharCode(...new Uint8Array(bytes)))
@@ -36,8 +41,11 @@ export async function verifyPassword(password: string, stored: string) {
   return sameBytes(await pbkdf2(password, fromB64(salt), Number(iterations)), fromB64(hash))
 }
 
+/** true si la contraseña se guardó con otra cantidad de iteraciones y conviene volver a guardarla. */
+export const needsRehash = (stored: string) => stored.split('$')[1] !== String(ITERATIONS)
+
 /** Hash de cuenta inexistente: se verifica igual para que el tiempo no revele si el correo existe. */
-export const DUMMY_HASH = 'pbkdf2-sha256$100000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
+export const DUMMY_HASH = 'pbkdf2-sha256$10000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
 
 export const randomToken = (bytes = 32) => toB64Url(crypto.getRandomValues(new Uint8Array(bytes)))
 

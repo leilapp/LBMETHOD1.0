@@ -23,16 +23,20 @@
       "migrations_dir": "migrations"
     }
   ],
-  // Fotos, imágenes y videos privados. El bucket no tiene acceso público: los archivos solo salen por la API.
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "lbmethod-media" }],
+  // Fotos, imágenes y videos privados en Workers KV: gratis y sin medio de pago (1 GB en total, 1 000 escrituras al día).
+  // No tiene acceso público: los archivos solo salen por la API. El id no es un secreto.
+  // Si algún día activas R2, agrega aquí "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "lbmethod-media" }]
+  // y los archivos nuevos se guardarán en R2 (ver src/storage.ts).
+  "kv_namespaces": [{ "binding": "FILES", "id": "4c7f921509eb43f28aae57cd5eaace19" }],
   "vars": {
     "SESSION_HOURS": "8",
     "MAX_FAILED_LOGINS": "5",
     "LOCKOUT_MINUTES": "15",
     "LOGIN_REQUESTS_PER_MINUTE": "10",
-    // 5 MB por imagen. Videos: 90 MB (Cloudflare limita cada petición a 100 MB en los planes Free y Pro).
+    // 5 MB por imagen. Videos: 25 MB, para no agotar el espacio gratuito de 1 GB ni el procesador del plan gratis.
+    // Para videos largos conviene un enlace (YouTube no listado, por ejemplo).
     "MAX_IMAGE_BYTES": "5242880",
-    "MAX_VIDEO_BYTES": "94371840",
+    "MAX_VIDEO_BYTES": "26214400",
     "MAX_PHOTO_BYTES": "10485760"
   },
   "observability": { "enabled": true }
