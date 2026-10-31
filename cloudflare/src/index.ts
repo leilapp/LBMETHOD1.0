@@ -9,6 +9,7 @@ import { portalTraining } from './training/portal'
 import { calendarEvents } from './tracking/calendar'
 import { trackingPortal } from './tracking/portal'
 import { trackingTrainer } from './tracking/trainer'
+import { excelExports } from './exports/excel'
 import { profiles } from './clients/profiles'
 import { catalogs } from './library/catalogs'
 import { exercises } from './library/exercises'
@@ -43,6 +44,7 @@ api.route('/trainer/routines', routines)
 api.route('/trainer/routines', routineAssignments)
 api.route('/trainer/calendar', calendarEvents)
 api.route('/trainer', trackingTrainer)
+api.route('/trainer/exports', excelExports)
 api.route('/portal', portalProfile)
 api.route('/portal', portalTraining)
 api.route('/portal', trackingPortal)

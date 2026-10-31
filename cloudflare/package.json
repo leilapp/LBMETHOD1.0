@@ -11,7 +11,7 @@
     "db:migrate:local": "wrangler d1 migrations apply lbmethod --local",
     "db:migrate:remote": "wrangler d1 migrations apply lbmethod --remote",
     "create-trainer": "node scripts/create-trainer.mjs",
-    "test": "node --test --test-concurrency=1 --test-reporter=spec test/api.test.mjs test/biblioteca.test.mjs test/rutinas.test.mjs test/clientes.test.mjs test/portal.test.mjs test/seguimiento.test.mjs",
+    "test": "node --test --test-concurrency=1 --test-reporter=spec test/api.test.mjs test/biblioteca.test.mjs test/rutinas.test.mjs test/clientes.test.mjs test/portal.test.mjs test/seguimiento.test.mjs test/exportaciones.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
