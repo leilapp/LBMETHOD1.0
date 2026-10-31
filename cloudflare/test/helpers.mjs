@@ -32,6 +32,9 @@ export const sql = (statement) => {
   }
 }
 
+/** Ejecuta un archivo .sql en la base local de las pruebas (como `wrangler d1 execute --file`). */
+export const sqlFile = (file) => wrangler('d1', 'execute', 'lbmethod', '--local', '--file', file)
+
 /** Registra el arranque y el cierre del Worker para el archivo de pruebas que lo importa. */
 export function useServer() {
   before(async () => {
