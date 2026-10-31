@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { Activity, CalendarCheck, CalendarDays, ClipboardPlus, Dumbbell, Ruler, UserPlus, Users, type LucideIcon } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import { trainerApi, type ClientSummary, type TemporaryPassword } from '../../api/endpoints'
@@ -16,11 +17,13 @@ import {
 } from '../../components/ui'
 import { DownloadButton } from '../../components/DownloadButton'
 import { useSession } from '../../app/session'
+import { ThemeSwitch } from '../../layouts/AppShell'
 import { ChangePasswordForm } from '../auth/AuthPages'
 import { isEmail } from '../../lib/validation'
-import { formatDate, formatDateTime } from '../../lib/format'
+import { formatDate, formatDateTime, initials, todayLong } from '../../lib/format'
 import '../clients/clients.css'
-import { trackingApi } from '../../api/tracking'
+import { trackingApi, type TrainerDashboard } from '../../api/tracking'
+import { useExercises } from '../library/libraryQueries'
 import { MeasurementTypesSection } from '../tracking/TrackingPages'
 import { trackingKeys } from '../tracking/trackingModel'
 
@@ -34,53 +37,106 @@ function useClients() {
 export function TrainerDashboardPage() {
   const { data: session } = useSession()
   const { data: clients, isPending, error, refetch } = useClients()
-  const active = clients?.filter((c) => c.status === 'Active').length ?? 0
+  const tracking = useQuery({ queryKey: trackingKeys.dashboard, queryFn: trackingApi.dashboard })
+  const library = useExercises({})
+  const active = clients?.filter((c) => c.status === 'Active') ?? []
+  const withProgram = active.filter((c) => c.currentProgram).length
 
   return (
-    <>
-      <PageHeader title={`Hola, ${session?.displayName ?? ''}`} subtitle="Resumen de tu trabajo en LB METHOD" />
-      <div className="grid-cards">
-        <section className="card" aria-labelledby="stat-active">
-          {isPending ? (
-            <LoadingState />
-          ) : error ? (
-            <ErrorState message={error.message} onRetry={() => refetch()} />
-          ) : (
-            <>
-              <p className="stat__value">{active}</p>
-              <p className="stat__label" id="stat-active">
-                Clientes activos
-              </p>
-              <p className="muted" style={{ marginTop: 'var(--lb-space-3)', fontSize: 'var(--lb-text-sm)' }}>
-                {clients!.length} en total · <Link to="/entrenadora/clientes">Ver clientes</Link>
-              </p>
-            </>
-          )}
-        </section>
-        <section className="card" aria-labelledby="stat-programs">
-          {isPending || error ? (
-            <LoadingState />
-          ) : (
-            <>
-              <p className="stat__value">{clients!.filter((c) => c.status === 'Active' && c.currentProgram).length}</p>
-              <p className="stat__label" id="stat-programs">
-                Clientes con programa vigente
-              </p>
-              <p className="muted" style={{ marginTop: 'var(--lb-space-3)', fontSize: 'var(--lb-text-sm)' }}>
-                {clients!.filter((c) => c.status === 'Active' && !c.currentProgram).length} activos sin rutina asignada
-              </p>
-            </>
-          )}
-        </section>
-        <DashboardTracking />
+    <div className="stack">
+      <section className="hero lb-dark" aria-labelledby="saludo">
+        <div className="hero__top">
+          <span className="avatar avatar--gold avatar--lg" aria-hidden="true">
+            {initials(session?.displayName)}
+          </span>
+          <div>
+            <h1 className="hero__hello" id="saludo">
+              Hola, {session?.displayName ?? ''}
+            </h1>
+            <p className="hero__date">{todayLong()}</p>
+          </div>
+        </div>
+        {isPending ? (
+          <LoadingState />
+        ) : error ? (
+          <ErrorState message={error.message} onRetry={() => refetch()} />
+        ) : (
+          <div className="hero__main">
+            <div>
+              <p className="hero__number">{active.length}</p>
+              <p className="hero__label">Clientes activos</p>
+            </div>
+            <div className="hero__mini">
+              <span className="hero__pill">
+                <strong>{clients!.length}</strong> en total
+              </span>
+              <span className="hero__pill">
+                <strong>{clients!.length - active.length}</strong> inactivos
+              </span>
+            </div>
+          </div>
+        )}
+        <div className="quick-actions" role="group" aria-label="Accesos rápidos de inicio">
+          <QuickAction to="/entrenadora/clientes" icon={UserPlus} label="Clientes" />
+          <QuickAction to="/entrenadora/rutinas" icon={ClipboardPlus} label="Rutinas" />
+          <QuickAction to="/entrenadora/biblioteca" icon={Dumbbell} label="Ejercicios" />
+          <QuickAction to="/entrenadora/calendario" icon={CalendarDays} label="Calendario" />
+        </div>
+      </section>
+
+      <div className="tiles">
+        <Link className="tile" to="/entrenadora/clientes">
+          <span className="icon-chip">
+            <Users size={22} aria-hidden="true" />
+          </span>
+          <p className="tile__value">{clients ? withProgram : '—'}</p>
+          <p className="tile__label">Clientes con programa vigente</p>
+          {clients && <p className="tile__label">{active.length - withProgram} activos sin rutina asignada</p>}
+        </Link>
+        <Link className="tile" to="/entrenadora/biblioteca">
+          <span className="icon-chip icon-chip--gold">
+            <Dumbbell size={22} aria-hidden="true" />
+          </span>
+          <p className="tile__value">{library.data ? library.data.total : '—'}</p>
+          <p className="tile__label">Ejercicios en tu biblioteca</p>
+        </Link>
+        <Link className="tile" to="/entrenadora/calendario">
+          <span className="icon-chip icon-chip--rose">
+            <CalendarCheck size={22} aria-hidden="true" />
+          </span>
+          <p className="tile__value">{tracking.data ? tracking.data.upcomingEvaluations.length : '—'}</p>
+          <p className="tile__label">Evaluaciones en los próximos 14 días</p>
+        </Link>
+        <Link className="tile" to="/entrenadora/seguimiento">
+          <span className="icon-chip icon-chip--mint">
+            <Activity size={22} aria-hidden="true" />
+          </span>
+          <p className="tile__value">{tracking.data ? tracking.data.recentActivity.length : '—'}</p>
+          <p className="tile__label">Registros recientes</p>
+        </Link>
       </div>
-    </>
+
+      <div className="grid-cards">
+        <DashboardTracking query={tracking} />
+      </div>
+    </div>
+  )
+}
+
+function QuickAction({ to, icon: Icon, label }: { to: string; icon: LucideIcon; label: string }) {
+  return (
+    <Link className="quick-action" to={to}>
+      <span className="quick-action__icon" aria-hidden="true">
+        <Icon size={22} />
+      </span>
+      {label}
+    </Link>
   )
 }
 
 /** Próximas evaluaciones y actividad reciente de los clientes (datos reales del calendario y los registros). */
-function DashboardTracking() {
-  const { data, isPending, error, refetch } = useQuery({ queryKey: trackingKeys.dashboard, queryFn: trackingApi.dashboard })
+function DashboardTracking({ query }: { query: UseQueryResult<TrainerDashboard> }) {
+  const { data, isPending, error, refetch } = query
   if (isPending)
     return (
       <section className="card">
@@ -96,21 +152,29 @@ function DashboardTracking() {
   return (
     <>
       <section className="card" aria-labelledby="proximas-evaluaciones">
-        <h2 className="card__title" id="proximas-evaluaciones">
-          Próximas evaluaciones
-        </h2>
+        <div className="section-head">
+          <h2 className="card__title" id="proximas-evaluaciones">
+            Próximas evaluaciones
+          </h2>
+          <Link to="/entrenadora/calendario">Calendario</Link>
+        </div>
         {data.upcomingEvaluations.length === 0 ? (
           <p className="muted">
             Nada en los próximos 14 días. Prográmalas en el <Link to="/entrenadora/calendario">calendario</Link>.
           </p>
         ) : (
-          <ul className="dash-list">
+          <ul className="person-list">
             {data.upcomingEvaluations.map((e) => (
-              <li key={e.eventId}>
-                <Link to={`/entrenadora/clientes/${e.clientId}/seguimiento`}>{e.clientName}</Link>
-                <span className="muted">
-                  {formatDate(e.date)}
-                  {e.startTime ? ` · ${e.startTime.slice(0, 5)}` : ''}
+              <li key={e.eventId} className="person-row">
+                <span className="avatar" aria-hidden="true">
+                  {initials(e.clientName)}
+                </span>
+                <span className="person-row__main">
+                  <Link to={`/entrenadora/clientes/${e.clientId}/seguimiento`}>{e.clientName}</Link>
+                  <span className="person-row__meta">
+                    {formatDate(e.date)}
+                    {e.startTime ? ` · ${e.startTime.slice(0, 5)}` : ''}
+                  </span>
                 </span>
               </li>
             ))}
@@ -118,20 +182,28 @@ function DashboardTracking() {
         )}
       </section>
       <section className="card" aria-labelledby="actividad-reciente">
-        <h2 className="card__title" id="actividad-reciente">
-          Actividad reciente
-        </h2>
+        <div className="section-head">
+          <h2 className="card__title" id="actividad-reciente">
+            Actividad reciente
+          </h2>
+          <Link to="/entrenadora/seguimiento">Seguimiento</Link>
+        </div>
         {data.recentActivity.length === 0 ? (
           <p className="muted">Aún no hay entrenamientos finalizados ni evaluaciones.</p>
         ) : (
-          <ul className="dash-list">
+          <ul className="person-list">
             {data.recentActivity.map((a, i) => (
-              <li key={i}>
-                <span>
-                  <Link to={a.sessionId ? `/entrenadora/clientes/${a.clientId}/entrenamientos/${a.sessionId}` : `/entrenadora/clientes/${a.clientId}/seguimiento`}>{a.clientName}</Link>
-                  {a.kind === 'session' ? ` terminó «${a.title}»` : ` · evaluación (${a.detail})`}
+              <li key={i} className="person-row">
+                <span className={`icon-chip icon-chip--sm${a.kind === 'session' ? ' icon-chip--mint' : ' icon-chip--sky'}`} aria-hidden="true">
+                  {a.kind === 'session' ? <Dumbbell size={18} /> : <Ruler size={18} />}
                 </span>
-                <span className="muted">{formatDateTime(a.occurredAt)}</span>
+                <span className="person-row__main">
+                  <span>
+                    <Link to={a.sessionId ? `/entrenadora/clientes/${a.clientId}/entrenamientos/${a.sessionId}` : `/entrenadora/clientes/${a.clientId}/seguimiento`}>{a.clientName}</Link>
+                    {a.kind === 'session' ? ` terminó «${a.title}»` : ` · evaluación (${a.detail})`}
+                  </span>
+                  <span className="person-row__meta">{formatDateTime(a.occurredAt)}</span>
+                </span>
               </li>
             ))}
           </ul>
@@ -446,6 +518,15 @@ export function TrainerSettingsPage() {
     <>
       <PageHeader title="Configuración" />
       <div className="stack" style={{ maxWidth: 640 }}>
+        <section className="card" aria-labelledby="apariencia">
+          <h2 className="card__title" id="apariencia">
+            Apariencia
+          </h2>
+          <p className="muted" style={{ marginBottom: 'var(--lb-space-3)' }}>
+            «Automático» usa el mismo tema que tu teléfono o computadora.
+          </p>
+          <ThemeSwitch />
+        </section>
         <MeasurementTypesSection />
         <section className="card">
           <h2 className="card__title">Cambiar contraseña</h2>

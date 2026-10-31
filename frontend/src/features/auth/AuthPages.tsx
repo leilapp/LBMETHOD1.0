@@ -43,7 +43,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="auth">
+    <div className="auth lb-dark">
       <div className="lb-sparkles" aria-hidden="true" />
       <div className="auth__panel">
         <div className="auth__brand">
@@ -195,7 +195,7 @@ export function ChangePasswordPage() {
   if (!session.mustChangePassword) return <Navigate to={homeFor(session)} replace />
 
   return (
-    <div className="auth">
+    <div className="auth lb-dark">
       <div className="lb-sparkles" aria-hidden="true" />
       <div className="auth__panel">
         <div className="auth__brand">

@@ -21,22 +21,29 @@ a.btn {
   line-height: 1.5;
 }
 
-/* Pestañas */
+/* Pestañas: píldoras al estilo Android */
 .tabs {
   display: flex;
-  gap: var(--lb-space-1);
+  gap: var(--lb-space-2);
   overflow-x: auto;
-  border-bottom: 1px solid var(--lb-border);
   margin-bottom: var(--lb-space-5);
+  padding: 4px;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: var(--lb-radius-pill);
+  background: var(--lb-surface-2);
+  border: 1px solid var(--lb-border);
+  scrollbar-width: none;
 }
 .tabs__tab {
-  min-height: var(--lb-touch);
+  min-height: 38px;
   padding: 0 var(--lb-space-4);
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-radius: var(--lb-radius-pill);
   color: var(--lb-text-muted);
   font: inherit;
+  font-size: var(--lb-text-sm);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -45,8 +52,9 @@ a.btn {
   color: var(--lb-text);
 }
 .tabs__tab--active {
-  color: var(--lb-lilac-soft);
-  border-bottom-color: var(--lb-lilac);
+  background: var(--lb-surface);
+  color: var(--lb-text);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
 }
 .tabs__tab:focus-visible {
   outline: none;
@@ -65,7 +73,50 @@ a.btn {
   flex-wrap: wrap;
 }
 .filters__search > .field {
-  flex: 1 1 260px;
+  flex: 1 1 200px;
+}
+.filters .filters__toggle {
+  display: none;
+}
+/* En el teléfono, los filtros detallados se abren con «Filtros» para que la lista quede a la vista */
+@media (max-width: 700px) {
+  .filters {
+    gap: var(--lb-space-3);
+    padding: var(--lb-space-4);
+  }
+  .filters__search .field__hint {
+    display: none;
+  }
+  .filters__search {
+    flex-wrap: nowrap;
+    gap: var(--lb-space-2);
+  }
+  .filters__search > .field {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .filters__search > .btn {
+    width: var(--lb-touch);
+    padding: 0;
+  }
+  .filters__search-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .filters .filters__toggle {
+    display: inline-flex;
+    margin-top: calc(var(--lb-text-sm) * 1.5 + var(--lb-space-2));
+    min-height: var(--lb-touch);
+    padding: 0 var(--lb-space-3);
+  }
+  .filters:not(.filters--open) .filters__grid,
+  .filters:not(.filters--open) > .check {
+    display: none;
+  }
 }
 .filters__search > .btn {
   margin-top: calc(var(--lb-text-sm) * 1.5 + var(--lb-space-2));
@@ -96,13 +147,23 @@ a.btn {
 .exercise-item .list-item__main {
   flex: 1;
 }
+.exercise-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  gap: var(--lb-space-3);
+}
+.list-item.exercise-item {
+  align-items: flex-start;
+}
 .exercise-item__thumb {
   flex: none;
   width: 56px;
   height: 56px;
-  border-radius: var(--lb-radius);
+  border-radius: 18px;
   object-fit: cover;
   background: var(--lb-surface-2);
+}
+.exercise-item__thumb.icon-chip {
+  display: grid;
 }
 .exercise-item__thumb--empty {
   display: grid;
@@ -138,18 +199,21 @@ a.btn {
 }
 .fav {
   flex: none;
+  display: grid;
+  place-items: center;
   width: var(--lb-touch);
   height: var(--lb-touch);
   border-radius: 50%;
-  border: 1px solid var(--lb-border);
-  background: var(--lb-surface-2);
+  border: 0;
+  background: transparent;
   color: var(--lb-text-subtle);
-  font-size: 1.25rem;
   cursor: pointer;
+}
+.fav:hover {
+  background: var(--lb-surface-2);
 }
 .fav--on {
   color: var(--lb-gold);
-  border-color: var(--lb-gold);
 }
 .fav:focus-visible {
   outline: none;

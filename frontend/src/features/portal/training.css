@@ -320,7 +320,7 @@
   position: fixed;
   left: var(--lb-sidebar-width);
   right: 0;
-  bottom: 0;
+  bottom: var(--lb-bottom-nav);
   z-index: 20;
   display: flex;
   gap: var(--lb-space-3);
@@ -328,7 +328,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   padding: var(--lb-space-3) var(--lb-space-5);
-  background: rgb(19 17 27 / 0.96);
+  background: var(--lb-bar-bg);
   border-top: 1px solid var(--lb-border-strong);
   backdrop-filter: blur(6px);
 }

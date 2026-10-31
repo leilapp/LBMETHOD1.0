@@ -5,6 +5,7 @@ import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -34,7 +35,10 @@ import java.io.OutputStream;
  */
 public class MainActivity extends Activity {
     private static final int PICK_FILE = 1;
-    private static final String BACKGROUND = "#0B0A10";
+    private static final String DARK = "#07060B";
+    private static final String LIGHT = "#F3F1F9";
+    // View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR (Android 8); se compila contra API 23, por eso el número.
+    private static final int LIGHT_NAVIGATION_BAR = 0x10;
 
     private WebView web;
     private FrameLayout root;
@@ -47,13 +51,12 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         appHost = Uri.parse(AppConfig.URL).getHost();
-        getWindow().setStatusBarColor(Color.parseColor(BACKGROUND));
-        getWindow().setNavigationBarColor(Color.parseColor(BACKGROUND));
+        String background = systemIsDark() ? DARK : LIGHT;
 
         root = new FrameLayout(this);
-        root.setBackgroundColor(Color.parseColor(BACKGROUND));
+        root.setBackgroundColor(Color.parseColor(background));
         web = new WebView(this);
-        web.setBackgroundColor(Color.parseColor(BACKGROUND));
+        web.setBackgroundColor(Color.parseColor(background));
         root.addView(web, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         setContentView(root);
 
@@ -72,8 +75,27 @@ public class MainActivity extends Activity {
         web.setWebViewClient(new AppClient());
         web.setWebChromeClient(new AppChrome());
 
+        applyBars(!systemIsDark());
         if (state != null) web.restoreState(state);
         else web.loadUrl(AppConfig.URL);
+    }
+
+    private boolean systemIsDark() {
+        return (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    /** Barras del sistema del color de la app: claras con íconos oscuros, u oscuras con íconos claros. */
+    private void applyBars(boolean light) {
+        int color = Color.parseColor(light ? LIGHT : DARK);
+        getWindow().setStatusBarColor(color);
+        getWindow().setNavigationBarColor(color);
+        View decor = getWindow().getDecorView();
+        int flags = decor.getSystemUiVisibility();
+        if (light) flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | LIGHT_NAVIGATION_BAR;
+        else flags &= ~(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | LIGHT_NAVIGATION_BAR);
+        decor.setSystemUiVisibility(flags);
+        if (web != null) web.setBackgroundColor(color);
+        if (root != null) root.setBackgroundColor(color);
     }
 
     @Override
@@ -124,7 +146,7 @@ public class MainActivity extends Activity {
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (!request.isForMainFrame()) return;
             String html = "<html><head><meta name='viewport' content='width=device-width,initial-scale=1'></head>"
-                + "<body style='background:" + BACKGROUND + ";color:#F4F1FA;font-family:sans-serif;display:flex;"
+                + "<body style='background:" + DARK + ";color:#F4F1FA;font-family:sans-serif;display:flex;"
                 + "flex-direction:column;align-items:center;justify-content:center;height:90vh;text-align:center;padding:24px'>"
                 + "<h2 style='color:#B89B5E'>LB METHOD</h2><p>No hay conexión con el servidor.<br>Revisa tu internet.</p>"
                 + "<p><a style='color:#B89B5E' href='" + AppConfig.URL + "'>Reintentar</a></p></body></html>";
@@ -185,8 +207,20 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    /** Lo usa la página (frontend/src/lib/saveFile.ts) para guardar PDF y Excel en Descargas. */
+    /** Lo usa la página: saveFile (frontend/src/lib/saveFile.ts) y setTheme (frontend/src/lib/theme.ts). */
     private class Bridge {
+        /** La página avisa qué tema muestra («light» o «dark», incluso si la persona lo fijó en la app). */
+        @JavascriptInterface
+        public void setTheme(final String theme) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (web.getUrl() == null || !isAppUrl(Uri.parse(web.getUrl()))) return;
+                    applyBars("light".equals(theme));
+                }
+            });
+        }
+
         @JavascriptInterface
         public void saveFile(final String base64, final String mimeType, final String fileName) {
             runOnUiThread(new Runnable() {

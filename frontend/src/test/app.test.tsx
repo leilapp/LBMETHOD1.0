@@ -227,3 +227,57 @@ describe('clientes', () => {
     expect(screen.getByRole('button', { name: 'Crear su rutina' })).toBeInTheDocument()
   })
 })
+
+describe('estilo app de Android', () => {
+  it('barra inferior con los cuatro accesos principales y «Más» con todas las secciones', async () => {
+    const user = userEvent.setup()
+    mockApi({
+      'GET /api/auth/me': () => ({ status: 200, body: trainerSession }),
+      'GET /api/trainer/clients': () => ({ status: 200, body: [] }),
+    })
+    renderApp('/entrenadora/calendario')
+    const bar = await screen.findByRole('navigation', { name: 'Accesos rápidos' })
+    expect(within(bar).getAllByRole('link').map((a) => a.textContent)).toEqual(['Inicio', 'Clientes', 'Biblioteca', 'Rutinas'])
+    const more = within(bar).getByRole('button', { name: 'Más' })
+    // Calendario no está en la barra: «Más» se marca como activo.
+    expect(more).toHaveClass('active')
+    await user.click(more)
+    expect(more).toHaveAttribute('aria-expanded', 'true')
+    expect(document.getElementById('shell-nav')).toHaveClass('shell__sidebar--open')
+  })
+
+  it('el avatar muestra tus iniciales y abre tu cuenta con el tema y cerrar sesión', async () => {
+    const user = userEvent.setup()
+    mockApi({
+      'GET /api/auth/me': () => ({ status: 200, body: { ...clientSession, displayName: 'Ana (prueba) Cliente' } }),
+      'GET /api/portal/home': () => ({ status: 200, body: { inProgress: null, next: [], week: [], last: null } }),
+      'GET /api/portal/assignments': () => ({ status: 200, body: [] }),
+    })
+    renderApp('/portal')
+    const open = await screen.findByRole('button', { name: 'Abrir menú de tu cuenta' })
+    expect(open).toHaveTextContent('AC')
+    await user.click(open)
+    const sheet = screen.getByRole('dialog', { name: 'Tu cuenta' })
+    expect(within(sheet).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
+    expect(within(sheet).getByRole('group', { name: 'Tema de la app' })).toBeInTheDocument()
+  })
+
+  it('el tema sigue al sistema y se puede fijar en claro u oscuro', async () => {
+    const user = userEvent.setup()
+    mockApi({
+      'GET /api/auth/me': () => ({ status: 200, body: trainerSession }),
+      'GET /api/trainer/clients': () => ({ status: 200, body: [] }),
+    })
+    renderApp('/entrenadora/calendario')
+    await screen.findByRole('navigation', { name: 'Navegación principal' })
+    expect(document.documentElement).not.toHaveAttribute('data-theme')
+    await user.click(screen.getAllByRole('button', { name: 'Claro' })[0])
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
+    expect(localStorage.getItem('lb-theme')).toBe('light')
+    await user.click(screen.getAllByRole('button', { name: 'Oscuro' })[0])
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    await user.click(screen.getAllByRole('button', { name: 'Automático' })[0])
+    expect(document.documentElement).not.toHaveAttribute('data-theme')
+    expect(localStorage.getItem('lb-theme')).toBeNull()
+  })
+})

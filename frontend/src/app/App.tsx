@@ -17,25 +17,39 @@ import { ClientTrackingPage, PortalProgressPage, TrackingOverviewPage, TrainerSe
 import { PortalCalendarPage, TrainerCalendarPage } from '../features/tracking/CalendarPages'
 import { RedirectHome, RequireRole } from './guards'
 import { createQueryClient } from './queryClient'
+import {
+  Activity,
+  CalendarDays,
+  ClipboardList,
+  Dumbbell,
+  History,
+  House,
+  LayoutTemplate,
+  Settings,
+  TrendingUp,
+  UserRound,
+  Users,
+} from 'lucide-react'
 
+// «primary»: va en la barra inferior del teléfono (máximo 4); el resto queda en «Más».
 const trainerNav: NavItem[] = [
-  { to: '/entrenadora', label: 'Inicio', end: true },
-  { to: '/entrenadora/clientes', label: 'Clientes' },
-  { to: '/entrenadora/biblioteca', label: 'Biblioteca' },
-  { to: '/entrenadora/rutinas', label: 'Rutinas' },
-  { to: '/entrenadora/plantillas', label: 'Plantillas' },
-  { to: '/entrenadora/calendario', label: 'Calendario' },
-  { to: '/entrenadora/seguimiento', label: 'Seguimiento' },
-  { to: '/entrenadora/configuracion', label: 'Configuración' },
+  { to: '/entrenadora', label: 'Inicio', icon: House, primary: true, end: true },
+  { to: '/entrenadora/clientes', label: 'Clientes', icon: Users, primary: true },
+  { to: '/entrenadora/biblioteca', label: 'Biblioteca', icon: Dumbbell, primary: true },
+  { to: '/entrenadora/rutinas', label: 'Rutinas', icon: ClipboardList, primary: true },
+  { to: '/entrenadora/plantillas', label: 'Plantillas', icon: LayoutTemplate },
+  { to: '/entrenadora/calendario', label: 'Calendario', icon: CalendarDays },
+  { to: '/entrenadora/seguimiento', label: 'Seguimiento', icon: Activity },
+  { to: '/entrenadora/configuracion', label: 'Configuración', icon: Settings },
 ]
 
 const clientNav: NavItem[] = [
-  { to: '/portal', label: 'Inicio', end: true },
-  { to: '/portal/rutina', label: 'Mi rutina' },
-  { to: '/portal/entrenamientos', label: 'Mis entrenamientos' },
-  { to: '/portal/progreso', label: 'Mi progreso' },
-  { to: '/portal/calendario', label: 'Mi calendario' },
-  { to: '/portal/perfil', label: 'Mi perfil' },
+  { to: '/portal', label: 'Inicio', icon: House, primary: true, end: true },
+  { to: '/portal/rutina', label: 'Mi rutina', short: 'Rutina', icon: Dumbbell, primary: true },
+  { to: '/portal/entrenamientos', label: 'Mis entrenamientos', short: 'Historial', icon: History, primary: true },
+  { to: '/portal/progreso', label: 'Mi progreso', short: 'Progreso', icon: TrendingUp, primary: true },
+  { to: '/portal/calendario', label: 'Mi calendario', icon: CalendarDays },
+  { to: '/portal/perfil', label: 'Mi perfil', icon: UserRound },
 ]
 
 export function AppRoutes() {

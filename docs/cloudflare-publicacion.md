@@ -11,6 +11,7 @@ Guía de la etapa 8, actualizada el 31/10/2026 para el **plan gratuito**: no nec
 | Tu cuenta de entrenadora | **Creada** con tu correo y una contraseña temporal. Al entrar por primera vez, la app te pide crear la tuya. |
 | Espacio de archivos KV `lbmethod-archivos` | **Creado.** Guarda imágenes, videos y fotos de progreso, privados (sin dirección pública). Reemplaza a R2, que pedía tarjeta. |
 | Llave de seguridad (`APP_SECRET`) | **No hace falta configurarla.** El Worker genera una al azar y la guarda en la base. |
+| Biblioteca base de ejercicios | **Cargada el 31/10/2026**: 129 ejercicios reales (nombre en español e inglés, músculo principal y secundarios, equipo, tipo, dificultad y patrón), 23 equipos y 22 patrones de movimiento. No crea rutinas. Puedes editar o desactivar cualquiera. Se puede volver a correr sin duplicar ni deshacer tus cambios: `npm run db:seed:ejercicios:remote` (hace respaldo antes). |
 
 ## 2. Abrir la app
 

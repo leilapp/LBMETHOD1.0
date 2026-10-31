@@ -16,6 +16,7 @@ import {
   TextField,
 } from '../../components/ui'
 import { libraryKeys, useCatalogs, useExercises } from './libraryQueries'
+import { Dumbbell, FileSpreadsheet, Plus, Search, SlidersHorizontal, Star } from 'lucide-react'
 import './library.css'
 
 const tabs = [
@@ -39,9 +40,11 @@ export function LibraryPage() {
         actions={
           <div className="page-actions">
             <Link className="btn btn--secondary" to="/entrenadora/biblioteca/importar">
+              <FileSpreadsheet size={18} aria-hidden="true" />
               Importar / exportar
             </Link>
             <Link className="btn btn--primary" to="/entrenadora/biblioteca/nuevo">
+              <Plus size={18} aria-hidden="true" />
               Nuevo ejercicio
             </Link>
           </div>
@@ -80,6 +83,7 @@ function ExerciseList() {
   const qc = useQueryClient()
   const catalogs = useCatalogs()
   const [search, setSearch] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState<ExerciseFilters>({ status: 'active', page: 1 })
   const { data, isPending, error, refetch, isFetching } = useExercises(filters)
 
@@ -100,7 +104,7 @@ function ExerciseList() {
 
   return (
     <div className="stack">
-      <form className="card filters" onSubmit={onSearch} role="search">
+      <form className={`card filters${showFilters ? ' filters--open' : ''}`} onSubmit={onSearch} role="search">
         <div className="filters__search">
           <TextField
             label="Buscar"
@@ -110,8 +114,13 @@ function ExerciseList() {
             hint="No importan mayúsculas ni acentos."
           />
           <Button type="submit" variant="secondary">
-            Buscar
+            <Search size={18} aria-hidden="true" />
+            <span className="filters__search-text">Buscar</span>
           </Button>
+          <button type="button" className="chip filters__toggle" aria-expanded={showFilters} onClick={() => setShowFilters((v) => !v)}>
+            <SlidersHorizontal size={16} aria-hidden="true" />
+            Filtros
+          </button>
         </div>
         <div className="filters__grid">
           <SelectField label="Grupo muscular" value={filters.muscleGroupId ?? ''} onChange={(e) => update({ muscleGroupId: toNumber(e.target.value) })}>
@@ -158,6 +167,25 @@ function ExerciseList() {
         </label>
       </form>
 
+      {active(catalogs.data?.muscleGroups).length > 0 && (
+        <div className="chips" role="group" aria-label="Filtrar por músculo">
+          <button type="button" className="chip" aria-pressed={!filters.muscleGroupId} onClick={() => update({ muscleGroupId: undefined })}>
+            Todos
+          </button>
+          {active(catalogs.data?.muscleGroups).map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              className="chip"
+              aria-pressed={filters.muscleGroupId === m.id}
+              onClick={() => update({ muscleGroupId: filters.muscleGroupId === m.id ? undefined : m.id })}
+            >
+              {m.nameEs}
+            </button>
+          ))}
+        </div>
+      )}
+
       {favorite.error && <Alert kind="error">{favorite.error.message}</Alert>}
 
       {isPending ? (
@@ -191,14 +219,14 @@ function ExerciseList() {
             {data!.total === 1 ? '1 ejercicio' : `${data!.total} ejercicios`}
             {isFetching && ' · actualizando…'}
           </p>
-          <ul className="list" aria-label="Ejercicios">
+          <ul className="list exercise-grid" aria-label="Ejercicios">
             {data!.items.map((e) => (
               <li key={e.id} className="list-item exercise-item">
                 {e.thumbnailMediaId ? (
                   <img className="exercise-item__thumb" src={libraryApi.mediaUrl(e.thumbnailMediaId)} alt="" loading="lazy" />
                 ) : (
-                  <span className="exercise-item__thumb exercise-item__thumb--empty" aria-hidden="true">
-                    {e.nameEs.charAt(0).toUpperCase()}
+                  <span className={`exercise-item__thumb icon-chip icon-chip--${muscleColor(e.primaryMuscleGroup)}`} aria-hidden="true">
+                    <Dumbbell size={24} />
                   </span>
                 )}
                 <div className="list-item__main">
@@ -226,7 +254,7 @@ function ExerciseList() {
                   onClick={() => favorite.mutate({ id: e.id, value: !e.isFavorite })}
                   disabled={favorite.isPending}
                 >
-                  {e.isFavorite ? '★' : '☆'}
+                  <Star size={20} fill={e.isFavorite ? 'currentColor' : 'none'} aria-hidden="true" />
                 </button>
               </li>
             ))}
@@ -249,6 +277,23 @@ function ExerciseList() {
     </div>
   )
 }
+
+/** Color del ícono según el músculo principal, para reconocer los ejercicios de un vistazo. */
+const MUSCLE_COLORS: Record<string, string> = {
+  Glúteos: 'rose',
+  Femoral: 'rose',
+  Abductores: 'rose',
+  Aductores: 'rose',
+  Cuádriceps: 'gold',
+  Pantorrillas: 'gold',
+  Espalda: 'sky',
+  Pecho: 'sky',
+  Hombros: 'violet',
+  Bíceps: 'violet',
+  Tríceps: 'violet',
+  Abdomen: 'mint',
+}
+const muscleColor = (name: string | null) => (name && MUSCLE_COLORS[name]) || 'violet'
 
 /* ---------- Catálogos administrables ---------- */
 const catalogField: Record<CatalogKind, 'muscleGroups' | 'equipment' | 'movementPatterns'> = {

@@ -1,17 +1,33 @@
 /*
  * LB METHOD · tokens de diseño
- * Paleta basada en el logo (monograma LB caligráfico, blanco sobre negro): negro de noche, oro champaña con brillo,
- * amatista y un toque rosa suave para los resplandores.
+ * Paleta basada en el logo (monograma LB caligráfico en oro): estilo de app de Android (Material), con tarjetas
+ * grandes y redondeadas, íconos en chips de color y una tarjeta principal oscura con degradado.
+ *
+ * Dos temas:
+ * - Oscuro: negro de noche, oro champaña con brillo y amatista.
+ * - Claro: lavanda suave con tarjetas blancas (como las apps de referencia), el mismo oro más profundo.
+ * Por defecto sigue el tema del teléfono o la computadora; la persona puede fijarlo (src/lib/theme.ts pone data-theme).
+ * La clase .lb-dark fuerza el tema oscuro en una parte de la pantalla (inicio de sesión, tarjeta principal).
  * Todos los componentes usan estas variables; cambiar la identidad se hace aquí.
  */
-:root {
+:root,
+.lb-dark {
+  color-scheme: dark;
+
   /* Superficies */
   --lb-black: #07060b;
-  --lb-surface: #120f19;
-  --lb-surface-2: #1a1524;
-  --lb-surface-3: #241d33;
+  --lb-surface: #13101b;
+  --lb-surface-2: #1b1626;
+  --lb-surface-3: #251e34;
   --lb-border: #2c2440;
   --lb-border-strong: #463a5f;
+  --lb-bar-bg: rgb(17 14 24 / 0.96);
+  --lb-scrim: rgb(5 4 8 / 0.65);
+  --lb-body-glow:
+    radial-gradient(ellipse 70% 45% at 85% -5%, rgb(141 106 208 / 0.16), transparent 70%),
+    radial-gradient(ellipse 60% 40% at -10% 105%, rgb(212 176 106 / 0.08), transparent 70%);
+  --lb-card-border: linear-gradient(145deg, rgb(212 176 106 / 0.4), var(--lb-border) 35%, var(--lb-border) 70%, rgb(141 106 208 / 0.35));
+  --lb-card-shadow: 0 10px 30px rgb(0 0 0 / 0.25);
 
   /* Marca */
   --lb-violet-900: #1e1233;
@@ -27,8 +43,25 @@
   --lb-amethyst: #8d6ad0;
   /* Oro con brillo: se usa en el logo, el botón principal y los detalles */
   --lb-gold-gradient: linear-gradient(115deg, #9d7638 0%, #d4b06a 22%, #f6e8c3 38%, #fffaf0 45%, #e6cf9b 55%, #c49a52 75%, #9d7638 100%);
+  --lb-logo-glow: drop-shadow(0 0 6px rgb(212 176 106 / 0.35));
   --lb-glow-gold: 0 0 18px rgb(212 176 106 / 0.35);
   --lb-glow-violet: 0 0 40px rgb(141 106 208 / 0.25);
+
+  /* Navegación: elemento activo (píldora) */
+  --lb-active-bg: rgb(212 176 106 / 0.16);
+  --lb-active-fg: var(--lb-gold-light);
+
+  /* Chips de color para íconos */
+  --lb-chip-violet-bg: rgb(141 106 208 / 0.2);
+  --lb-chip-violet-fg: #cbb7f5;
+  --lb-chip-gold-bg: rgb(212 176 106 / 0.18);
+  --lb-chip-gold-fg: #ecd6a4;
+  --lb-chip-rose-bg: rgb(227 150 170 / 0.18);
+  --lb-chip-rose-fg: #f1c3cd;
+  --lb-chip-mint-bg: rgb(124 196 160 / 0.18);
+  --lb-chip-mint-fg: #a3dcc0;
+  --lb-chip-sky-bg: rgb(120 170 230 / 0.18);
+  --lb-chip-sky-fg: #b2cff3;
 
   /* Texto */
   --lb-text: #f4f1fa;
@@ -44,8 +77,124 @@
   --lb-warning-bg: #2a2214;
   --lb-info-bg: #1d1830;
 
-  /* Tipografía */
-  --lb-font: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --lb-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
+  --lb-focus: 0 0 0 3px rgb(212 176 106 / 0.45);
+}
+
+/* ---------- Tema claro (se repite: una vez para «sigue al sistema» y otra para «claro» elegido a mano) ---------- */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+    --lb-black: #f3f1f9;
+    --lb-surface: #ffffff;
+    --lb-surface-2: #f5f2fb;
+    --lb-surface-3: #ebe6f6;
+    --lb-border: #e6e0f2;
+    --lb-border-strong: #cdc4e2;
+    --lb-bar-bg: rgb(255 255 255 / 0.97);
+    --lb-scrim: rgb(28 22 48 / 0.45);
+    --lb-body-glow:
+      radial-gradient(ellipse 70% 45% at 85% -5%, rgb(141 106 208 / 0.12), transparent 70%),
+      radial-gradient(ellipse 60% 40% at -10% 105%, rgb(212 176 106 / 0.1), transparent 70%);
+    --lb-card-border: linear-gradient(var(--lb-border), var(--lb-border));
+    --lb-card-shadow: 0 1px 2px rgb(30 20 60 / 0.04), 0 8px 24px rgb(60 40 110 / 0.06);
+    --lb-violet-900: #f0eafc;
+    --lb-violet-700: #e4daf8;
+    --lb-violet-500: #c9b8ee;
+    --lb-lilac: #6446ad;
+    --lb-lilac-soft: #3d2670;
+    --lb-gold: #b8913f;
+    --lb-gold-soft: #8a6424;
+    --lb-gold-light: #7a5618;
+    --lb-rose: #b5596d;
+    --lb-amethyst: #7a55c7;
+    --lb-gold-gradient: linear-gradient(115deg, #7a5618 0%, #a8813c 22%, #d4b06a 38%, #ecd9a8 45%, #c49a52 58%, #8a6424 100%);
+    --lb-logo-glow: drop-shadow(0 1px 1px rgb(122 86 24 / 0.25));
+    --lb-glow-gold: 0 0 0 3px rgb(184 145 63 / 0.18);
+    --lb-active-bg: #ebe3fb;
+    --lb-active-fg: #3d2670;
+    --lb-chip-violet-bg: #efe8fc;
+    --lb-chip-violet-fg: #6446ad;
+    --lb-chip-gold-bg: #fbf1dc;
+    --lb-chip-gold-fg: #8a6424;
+    --lb-chip-rose-bg: #fce7ec;
+    --lb-chip-rose-fg: #a8475c;
+    --lb-chip-mint-bg: #e1f4ea;
+    --lb-chip-mint-fg: #1f7a52;
+    --lb-chip-sky-bg: #e4eefc;
+    --lb-chip-sky-fg: #2d5fa8;
+    --lb-text: #1c1630;
+    --lb-text-muted: #5d5676;
+    --lb-text-subtle: #847d9d;
+    --lb-success: #1f7a52;
+    --lb-success-bg: #e2f4ea;
+    --lb-danger: #b3261e;
+    --lb-danger-bg: #fde8eb;
+    --lb-warning: #8a5d00;
+    --lb-warning-bg: #fdf2d8;
+    --lb-info-bg: #efeafb;
+    --lb-shadow: 0 16px 40px rgb(40 25 80 / 0.16);
+    --lb-focus: 0 0 0 3px rgb(122 85 199 / 0.35);
+  }
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+  --lb-black: #f3f1f9;
+  --lb-surface: #ffffff;
+  --lb-surface-2: #f5f2fb;
+  --lb-surface-3: #ebe6f6;
+  --lb-border: #e6e0f2;
+  --lb-border-strong: #cdc4e2;
+  --lb-bar-bg: rgb(255 255 255 / 0.97);
+  --lb-scrim: rgb(28 22 48 / 0.45);
+  --lb-body-glow:
+    radial-gradient(ellipse 70% 45% at 85% -5%, rgb(141 106 208 / 0.12), transparent 70%),
+    radial-gradient(ellipse 60% 40% at -10% 105%, rgb(212 176 106 / 0.1), transparent 70%);
+  --lb-card-border: linear-gradient(var(--lb-border), var(--lb-border));
+  --lb-card-shadow: 0 1px 2px rgb(30 20 60 / 0.04), 0 8px 24px rgb(60 40 110 / 0.06);
+  --lb-violet-900: #f0eafc;
+  --lb-violet-700: #e4daf8;
+  --lb-violet-500: #c9b8ee;
+  --lb-lilac: #6446ad;
+  --lb-lilac-soft: #3d2670;
+  --lb-gold: #b8913f;
+  --lb-gold-soft: #8a6424;
+  --lb-gold-light: #7a5618;
+  --lb-rose: #b5596d;
+  --lb-amethyst: #7a55c7;
+  --lb-gold-gradient: linear-gradient(115deg, #7a5618 0%, #a8813c 22%, #d4b06a 38%, #ecd9a8 45%, #c49a52 58%, #8a6424 100%);
+  --lb-logo-glow: drop-shadow(0 1px 1px rgb(122 86 24 / 0.25));
+  --lb-glow-gold: 0 0 0 3px rgb(184 145 63 / 0.18);
+  --lb-active-bg: #ebe3fb;
+  --lb-active-fg: #3d2670;
+  --lb-chip-violet-bg: #efe8fc;
+  --lb-chip-violet-fg: #6446ad;
+  --lb-chip-gold-bg: #fbf1dc;
+  --lb-chip-gold-fg: #8a6424;
+  --lb-chip-rose-bg: #fce7ec;
+  --lb-chip-rose-fg: #a8475c;
+  --lb-chip-mint-bg: #e1f4ea;
+  --lb-chip-mint-fg: #1f7a52;
+  --lb-chip-sky-bg: #e4eefc;
+  --lb-chip-sky-fg: #2d5fa8;
+  --lb-text: #1c1630;
+  --lb-text-muted: #5d5676;
+  --lb-text-subtle: #847d9d;
+  --lb-success: #1f7a52;
+  --lb-success-bg: #e2f4ea;
+  --lb-danger: #b3261e;
+  --lb-danger-bg: #fde8eb;
+  --lb-warning: #8a5d00;
+  --lb-warning-bg: #fdf2d8;
+  --lb-info-bg: #efeafb;
+  --lb-shadow: 0 16px 40px rgb(40 25 80 / 0.16);
+  --lb-focus: 0 0 0 3px rgb(122 85 199 / 0.35);
+}
+
+/* Medidas: iguales en los dos temas */
+:root {
+  /* Tipografía: Roboto en Android, Segoe en Windows, San Francisco en iPhone */
+  --lb-font: Roboto, 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
   --lb-font-display: Georgia, 'Times New Roman', serif;
   --lb-text-xs: 0.75rem;
   --lb-text-sm: 0.875rem;
@@ -53,6 +202,7 @@
   --lb-text-lg: 1.125rem;
   --lb-text-xl: 1.375rem;
   --lb-text-2xl: 1.75rem;
+  --lb-text-3xl: 2.5rem;
 
   /* Espaciado (escala de 4 px) */
   --lb-space-1: 0.25rem;
@@ -63,13 +213,21 @@
   --lb-space-6: 2rem;
   --lb-space-7: 3rem;
 
-  --lb-radius-sm: 6px;
-  --lb-radius: 10px;
-  --lb-radius-lg: 14px;
-  --lb-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
-  --lb-focus: 0 0 0 3px rgb(212 176 106 / 0.45);
+  /* Esquinas redondeadas al estilo Android (Material 3) */
+  --lb-radius-sm: 10px;
+  --lb-radius: 14px;
+  --lb-radius-lg: 22px;
+  --lb-radius-xl: 28px;
+  --lb-radius-pill: 999px;
 
   /* Controles cómodos para usar con el dedo durante el entrenamiento */
   --lb-touch: 44px;
-  --lb-sidebar-width: 248px;
+  --lb-sidebar-width: 256px;
+  /* Barra inferior del teléfono (0 en computadora). Las barras fijas de acciones se ponen encima de ella. */
+  --lb-bottom-nav: 0px;
+}
+@media (max-width: 900px) {
+  :root {
+    --lb-bottom-nav: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
 }

@@ -3,19 +3,50 @@ import { Link } from 'react-router-dom'
 import { portalApi, type PortalAssignment } from '../../api/endpoints'
 import { ErrorState, LoadingState, PageHeader } from '../../components/ui'
 import { useSession } from '../../app/session'
+import { ThemeSwitch } from '../../layouts/AppShell'
 import { ChangePasswordForm } from '../auth/AuthPages'
-import { formatDate } from '../../lib/format'
+import { formatDate, initials, todayLong } from '../../lib/format'
+import { CalendarDays, Dumbbell, History, TrendingUp } from 'lucide-react'
 import { TrainingHomeCards } from './TrainingPages'
 
 const profileKey = ['portal', 'profile'] as const
+const QUICK = [
+  { to: '/portal/rutina', label: 'Mi rutina', icon: Dumbbell },
+  { to: '/portal/entrenamientos', label: 'Historial', icon: History },
+  { to: '/portal/progreso', label: 'Progreso', icon: TrendingUp },
+  { to: '/portal/calendario', label: 'Calendario', icon: CalendarDays },
+]
 const assignmentsKey = ['portal', 'assignments'] as const
 
 export function PortalHomePage() {
   const { data: session } = useSession()
   return (
     <>
-      <PageHeader title={`Hola, ${session?.displayName ?? ''}`} subtitle="Te damos la bienvenida a tu espacio de entrenamiento" />
-      <div className="grid-cards">
+      <section className="hero lb-dark" aria-labelledby="saludo">
+        <div className="hero__top">
+          <span className="avatar avatar--gold avatar--lg" aria-hidden="true">
+            {initials(session?.displayName)}
+          </span>
+          <div>
+            <h1 className="hero__hello" id="saludo">
+              Hola, {session?.displayName ?? ''}
+            </h1>
+            <p className="hero__date">{todayLong()}</p>
+          </div>
+        </div>
+        <p className="hero__label">Te damos la bienvenida a tu espacio de entrenamiento</p>
+        <div className="quick-actions" role="group" aria-label="Accesos rápidos de inicio">
+          {QUICK.map(({ to, label, icon: Icon }) => (
+            <Link key={to} className="quick-action" to={to}>
+              <span className="quick-action__icon" aria-hidden="true">
+                <Icon size={22} />
+              </span>
+              {label}
+            </Link>
+          ))}
+        </div>
+      </section>
+      <div className="grid-cards portal-home__cards">
         <TrainingHomeCards />
         <CurrentProgramCard />
       </div>
@@ -96,6 +127,15 @@ export function PortalProfilePage() {
           </p>
         </section>
         <ProgramsHistory />
+        <section className="card" aria-labelledby="apariencia">
+          <h2 className="card__title" id="apariencia">
+            Apariencia
+          </h2>
+          <p className="muted" style={{ marginBottom: 'var(--lb-space-3)' }}>
+            «Automático» usa el mismo tema que tu teléfono o computadora.
+          </p>
+          <ThemeSwitch />
+        </section>
         <section className="card">
           <h2 className="card__title">Cambiar contraseña</h2>
           <ChangePasswordForm />

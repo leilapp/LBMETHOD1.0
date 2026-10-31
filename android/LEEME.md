@@ -1,6 +1,6 @@
 # LB METHOD · App de Android (APK)
 
-App pequeña (unos 40 KB) que abre LB METHOD, publicado en Cloudflare, en su propia ventana, con el ícono de LB METHOD.
+App pequeña (unos 90 KB) que abre LB METHOD, publicado en Cloudflare, en su propia ventana, con el ícono de LB METHOD.
 Se descarga desde el inicio de sesión de la app, en un teléfono Android: botón «Descargar app para Android (APK)».
 
 ## Qué hace
@@ -11,7 +11,8 @@ Se descarga desde el inicio de sesión de la app, en un teléfono Android: botó
 - Guarda los PDF y Excel en **Descargas** y los abre. Usa el puente `window.LBAndroid.saveFile`, en `frontend/src/lib/saveFile.ts`.
 - Pone los videos a pantalla completa, y el botón «atrás» regresa a la pantalla anterior.
 - Usa la misma sesión segura que el navegador (cookie HttpOnly). No guarda contraseñas ni datos propios.
-- Requiere Android 10 o más nuevo.
+- Sigue el tema del teléfono (claro u oscuro). Si eliges un tema dentro de la app, las barras del sistema cambian con él.
+- Requiere Android 10 o más nuevo. Versión actual: 1.2 (versionCode 3).
 
 ## Instalarla en el teléfono
 
