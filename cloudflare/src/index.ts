@@ -5,6 +5,7 @@ import { clients } from './routes/clients'
 import { routines } from './routines/routines'
 import { assignments, routineAssignments } from './clients/assignments'
 import { portalProfile } from './clients/portal'
+import { portalTraining } from './training/portal'
 import { profiles } from './clients/profiles'
 import { catalogs } from './library/catalogs'
 import { exercises } from './library/exercises'
@@ -38,6 +39,7 @@ api.route('/trainer/library/media', mediaContent)
 api.route('/trainer/routines', routines)
 api.route('/trainer/routines', routineAssignments)
 api.route('/portal', portalProfile)
+api.route('/portal', portalTraining)
 
 // Lo que aún no se migra responde 501 con un mensaje claro (con la misma regla de sesión y rol que tendrá).
 api.all('*', requireRole(), (c) =>

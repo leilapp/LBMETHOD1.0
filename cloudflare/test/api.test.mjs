@@ -124,7 +124,7 @@ describe('clientes y separación de datos', () => {
     assert.equal((await c.post('/api/auth/change-password', { currentPassword: temporaryPassword, newPassword: 'NuevaClave2026' })).status, 204)
     assert.equal((await c.get('/api/trainer/clients')).status, 403)
     assert.equal((await c.get(`/api/trainer/clients/${clientId}`)).status, 403)
-    assert.equal((await c.get('/api/portal/home')).status, 501, 'el portal llega en una etapa siguiente')
+    assert.equal((await c.get('/api/portal/home')).status, 200, 'con su contraseña propia ya usa el portal')
     assert.equal((await t.get('/api/portal/home')).status, 403)
   })
 

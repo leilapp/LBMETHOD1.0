@@ -19,3 +19,18 @@ export function addYears(value: string, years: number) {
   const lastDay = new Date(Date.UTC(y + years, m, 0)).getUTCDate()
   return `${String(y + years).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(Math.min(d, lastDay)).padStart(2, '0')}`
 }
+
+/** Suma (o resta) días a una fecha AAAA-MM-DD. */
+export function addDays(value: string, days: number) {
+  const [y, m, d] = value.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10)
+}
+
+/** Día de la semana de una fecha AAAA-MM-DD: 0 = domingo … 6 = sábado (como .NET). */
+export function dayOfWeek(value: string) {
+  const [y, m, d] = value.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay()
+}
+
+/** Formato dd/MM/yyyy para mensajes. */
+export const shortDate = (value: string) => value.split('-').reverse().join('/')

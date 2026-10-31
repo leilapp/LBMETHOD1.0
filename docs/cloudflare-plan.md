@@ -1,6 +1,6 @@
 # LB METHOD en Cloudflare · Plan y avance por etapas
 
-Estado: **etapas 1 a 4 entregadas** (cuentas y clientes, biblioteca, constructor de rutinas, perfil del cliente y asignaciones). Por tu indicación del 31/10/2026, sigo con las siguientes etapas sin pedir autorización entre una y otra; al terminar cada una dejo un informe corto.
+Estado: **etapas 1 a 5 entregadas** (cuentas y clientes, biblioteca, constructor de rutinas, perfil del cliente y asignaciones, portal del cliente y registro de entrenamientos). Por tu indicación del 31/10/2026, sigo con las siguientes etapas sin pedir autorización entre una y otra; al terminar cada una dejo un informe corto.
 
 ## 1. La decisión
 
@@ -293,6 +293,52 @@ Las pantallas de Clientes, la ficha del cliente, «Asignar a clientes» y el per
 
 ---
 
+## 4.3 Qué incluye la etapa 5 (Fase 8: portal del cliente y registro de entrenamientos)
+
+Las pantallas del portal (inicio, mi rutina, entrenar, historial y detalle) funcionan sin cambios.
+
+- **Base D1** (`migrations/0005_entrenamientos.sql`): solo agrega tablas. No cambia ni borra nada de lo existente.
+- **Mi rutina (solo lectura):**
+  - las rutinas vigentes primero y luego las que están por empezar;
+  - días y ejercicios en tu orden, con series, repeticiones, peso, descanso, tempo, RIR, RPE, notas, instrucciones y consejos técnicos;
+  - las series detalladas con su tipo (calentamiento, efectiva, etc.);
+  - las imágenes y videos privados solo se entregan si el ejercicio está en una rutina asignada a ese cliente.
+- **Entrenar serie por serie:**
+  - al iniciar se copia lo que prescribiste (instantánea), así el historial no cambia aunque después edites la rutina o el ejercicio;
+  - el cliente anota repeticiones, peso (kg o lb), RIR, RPE, notas y si completó cada serie y cada ejercicio;
+  - puede agregar series extra y quitarlas, pero **no puede quitar las series que tú indicaste**;
+  - el guardado automático se puede repetir sin duplicar nada;
+  - solo un entrenamiento en curso por cliente: al volver (aunque cierre sesión) retoma el mismo, y un doble toque no crea otro;
+  - una rutina que aún no empieza o que ya terminó no se puede entrenar.
+- **Inicio del portal:**
+  - entrenamiento en curso para retomarlo;
+  - próximo entrenamiento: si los días tienen día de la semana, el siguiente desde hoy que falta; si no, el que sigue al último entrenado;
+  - la semana de lunes a domingo con lo planeado y lo hecho, y el último entrenamiento.
+- **Historial:** hasta 200 entrenamientos, del más reciente al más antiguo, con su avance; el detalle muestra lo prescrito junto a lo hecho.
+- **Protecciones en la base:** los entrenamientos nunca se borran; uno finalizado ya no cambia; lo prescrito no se edita; las series prescritas no se quitan.
+- **Privacidad:** todo se resuelve con la sesión del cliente; lo de otro cliente responde «no encontrado» y la entrenadora no usa el portal.
+
+### Pruebas realizadas
+
+| Prueba | Resultado |
+|---|---|
+| Pruebas automáticas de la API (`npm test`) | **47 de 47 correctas** (41 anteriores y 6 nuevas) |
+| Recorrido en navegador de la Fase 8 en un celular Android simulado (`frontend/e2e/portal.cjs`) contra el Worker | **35 de 36 correctas** |
+| Revisión de tipos (TypeScript) | Sin errores |
+
+**Las pruebas nuevas cubren:**
+- la rutina del cliente con todos sus parámetros y solo los medios autorizados;
+- registro serie por serie, guardado repetido sin duplicados, retomar tras cerrar sesión y finalizar;
+- serie extra que se quita, serie prescrita que no se puede quitar;
+- el historial conserva lo prescrito aunque cambien la rutina y el nombre del ejercicio, y la base impide borrarlo o cambiarlo;
+- inicio: próximo entrenamiento (por día de la semana y por orden), semana y último entrenamiento;
+- reglas: rutina por empezar, asignación ajena, errores por campo exacto;
+- privacidad entre clientes y bloqueo para la entrenadora.
+
+**La única falla del recorrido en navegador es esperada.** El inicio de la entrenadora pide el tablero de la etapa 6, que por ahora responde 501. Todo lo del portal pasó, incluido el uso en celular (controles de al menos 44 px y sin desbordes).
+
+---
+
 ## 5. Etapas siguientes (cada una con tu aprobación)
 
 | Etapa | Contenido | Equivale a |
@@ -300,7 +346,7 @@ Las pantallas de Clientes, la ficha del cliente, «Asignar a clientes» y el per
 | 2 ✓ | Biblioteca de ejercicios bilingüe, grupos musculares, equipo, medios privados en **R2**, importación y exportación Excel (**entregada**, sección 4) | Fase 5 |
 | 3 ✓ | Constructor manual de rutinas, borradores, versiones inmutables y plantillas (**entregada**, sección 4.1) | Fase 6 |
 | 4 ✓ | Perfil completo del cliente, observaciones privadas, asignaciones (varias vigentes a la vez) (**entregada**, sección 4.2) | Fase 7 |
-| 5 | Portal del cliente y registro de entrenamientos serie por serie | Fase 8 |
+| 5 ✓ | Portal del cliente y registro de entrenamientos serie por serie (**entregada**, sección 4.3) | Fase 8 |
 | 6 | Medidas, evaluaciones, fotos privadas, gráficas y calendario | Fase 9 |
 | 7 | PDF y Excel | Fase 10 |
 | 8 | Auditoría completa (pruebas de todos los endpoints), respaldos, publicación en tu cuenta y guía | Fase 10 |
