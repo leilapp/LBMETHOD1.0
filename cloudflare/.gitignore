@@ -1,0 +1,6 @@
+node_modules/
+.wrangler/
+# Secretos locales (APP_SECRET); en Cloudflare se guardan con «wrangler secret put»
+.dev.vars
+# Pantallas compiladas que se copian desde ../frontend/dist
+public/

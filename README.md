@@ -19,7 +19,10 @@ El desarrollo avanza por fases según la guía maestra del proyecto; cada fase r
 - [Fase 9: seguimiento](docs/fase-09-seguimiento.md) (sin migración nueva)
 - [Fase 10: exportaciones, auditoría y entrega](docs/fase-10-entrega.md) (sin migración nueva; incluye limitaciones conocidas y decisiones pendientes)
 
-Guías de operación:
+Versión Cloudflare (en construcción por etapas, por decisión del 31/10/2026):
+- [Plan y etapa 1: Workers + D1](docs/cloudflare-plan.md) (carpeta `cloudflare/`; la versión .NET + SQL Server sigue en `backend/`)
+
+Guías de operación (versión .NET + SQL Server):
 - [Instalación y ejecución en Windows](docs/instalacion.md)
 - [Respaldo y restauración de SQL Server y archivos](docs/respaldo-y-restauracion.md)
 - [Despliegue y variables de entorno](docs/despliegue.md)

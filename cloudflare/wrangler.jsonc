@@ -1,0 +1,32 @@
+// LB METHOD en Cloudflare: un solo Worker sirve las pantallas (React compilado en ./public) y la API (/api).
+// Así todo vive en el mismo dominio, como se aprobó desde la Fase 1 (cookie SameSite=Strict + token CSRF, sin CORS).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "lbmethod",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // El Worker atiende todo para poner las mismas cabeceras de seguridad en páginas, archivos y API.
+    "run_worker_first": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lbmethod",
+      // Al crear la base en tu cuenta (wrangler d1 create lbmethod), pega aquí el id que te devuelve.
+      // No es un secreto. En local (wrangler dev) se usa una copia en .wrangler/ y este valor no importa.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "SESSION_HOURS": "8",
+    "MAX_FAILED_LOGINS": "5",
+    "LOCKOUT_MINUTES": "15",
+    "LOGIN_REQUESTS_PER_MINUTE": "10"
+  },
+  "observability": { "enabled": true }
+}
