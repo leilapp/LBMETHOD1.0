@@ -2,10 +2,9 @@
 // Seguimiento (Fase 9): evaluaciones, medidas, fotos privadas, progreso y calendario. Frontend (Vite) + API real + SQL Server real.
 // Requiere LBMETHOD_E2E_EMAIL, LBMETHOD_E2E_PASSWORD (cuenta de PRUEBA) y LBMETHOD_E2E_TAG (texto único por ejecución).
 const { chromium } = require('playwright')
-const fs = require('fs')
 const path = require('path')
 
-const BASE = 'http://localhost:5173'
+const BASE = process.env.LBMETHOD_E2E_BASE || 'http://localhost:5173'
 const OUT = process.argv[2] ?? require('os').tmpdir()
 const IMAGE = process.argv[3]
 const TAG = process.env.LBMETHOD_E2E_TAG

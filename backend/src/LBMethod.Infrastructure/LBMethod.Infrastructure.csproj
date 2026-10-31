@@ -13,7 +13,13 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
+    <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Fuentes del PDF incluidas en el programa (licencia en Files/Fonts/LICENSE-DejaVu.txt). -->
+    <EmbeddedResource Include="Files\Fonts\*.ttf" LogicalName="LBMethod.Fonts.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <PropertyGroup>

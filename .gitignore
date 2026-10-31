@@ -22,3 +22,6 @@ storage/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Build de React copiado junto a la API para publicarla
+backend/src/LBMethod.Api/wwwroot/

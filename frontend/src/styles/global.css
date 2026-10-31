@@ -169,6 +169,17 @@ a {
 }
 
 /* ---------- Tarjetas y estructura ---------- */
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--lb-space-2);
+}
+.download {
+  display: inline-grid;
+  gap: var(--lb-space-2);
+  justify-items: start;
+}
 .card {
   background: var(--lb-surface);
   border: 1px solid var(--lb-border);

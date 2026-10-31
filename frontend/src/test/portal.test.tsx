@@ -160,6 +160,29 @@ describe('mi rutina', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Empezar Día A · Glúteo' })).toBeInTheDocument()
   })
+
+  it('descarga el PDF de su rutina y, si no está autorizado, lo explica', async () => {
+    let allowed = true
+    const calls = mockApi({
+      ...me,
+      'GET /api/portal/program': () => ({ status: 200, body: [program] }),
+      'GET /api/portal/home': () => ({ status: 200, body: home() }),
+      'GET /api/portal/program/5/pdf': () => (allowed ? { status: 200, body: 'pdf' } : { status: 404, body: { title: 'No se encontró el recurso solicitado.' } }),
+    })
+    const created = vi.fn(() => 'blob:rutina')
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: created, revokeObjectURL: vi.fn() }))
+    const user = userEvent.setup()
+    renderApp('/portal/rutina')
+    const button = await screen.findByRole('button', { name: 'Descargar en PDF: Glúteo 6 semanas' })
+    await user.click(button)
+    await waitFor(() => expect(created).toHaveBeenCalledTimes(1))
+    expect(calls.some((c) => c.key === 'GET /api/portal/program/5/pdf')).toBe(true)
+
+    allowed = false
+    await user.click(button)
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(created).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('registro del entrenamiento', () => {

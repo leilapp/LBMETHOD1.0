@@ -6,7 +6,7 @@ const { chromium } = require('playwright')
 const path = require('path')
 const fs = require('fs')
 
-const BASE = 'http://localhost:5173'
+const BASE = process.env.LBMETHOD_E2E_BASE || 'http://localhost:5173'
 const [OUT = require('os').tmpdir(), IMAGE, IMPORT_FILE] = process.argv.slice(2)
 const TAG = process.env.LBMETHOD_E2E_TAG
 const TRAINER = { email: process.env.LBMETHOD_E2E_EMAIL, password: process.env.LBMETHOD_E2E_PASSWORD }

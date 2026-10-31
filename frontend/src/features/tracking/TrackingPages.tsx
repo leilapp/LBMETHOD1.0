@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import { clientsApi } from '../../api/clients'
 import { portalTrackingApi, trackingApi, type Evaluation, type Measurement, type MeasurementType } from '../../api/tracking'
 import { Alert, Button, EmptyState, ErrorState, LoadingState, Modal, PageHeader, SelectField, TextAreaField, TextField } from '../../components/ui'
+import { DownloadButton } from '../../components/DownloadButton'
 import { formatDate, formatDateTime, todayInMexico } from '../../lib/format'
 import { clientKeys } from '../clients/clientModel'
 import { ProgressView } from './ProgressView'
@@ -19,7 +20,15 @@ export function TrackingOverviewPage() {
   const rows = overview.data?.filter((c) => showInactive || c.status === 'Active') ?? []
   return (
     <>
-      <PageHeader title="Seguimiento" subtitle="Evaluaciones, medidas, fotos y entrenamientos de cada cliente." />
+      <PageHeader
+        title="Seguimiento"
+        subtitle="Evaluaciones, medidas, fotos y entrenamientos de cada cliente."
+        actions={
+          <DownloadButton path="/api/trainer/exports/evaluations" fileName="evaluaciones-lbmethod.xlsx" label="Exportar evaluaciones de todos los clientes a Excel">
+            Exportar evaluaciones a Excel
+          </DownloadButton>
+        }
+      />
       <div className="stack">
         <label className="check">
           <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
@@ -88,6 +97,9 @@ export function ClientTrackingPage() {
         title={`Seguimiento de ${name}`}
         actions={
           <div className="page-actions">
+            <DownloadButton path={`/api/trainer/exports/evaluations?clientId=${id}`} fileName="evaluaciones-lbmethod.xlsx" label={`Exportar evaluaciones de ${name} a Excel`}>
+              Exportar a Excel
+            </DownloadButton>
             <Button variant="secondary" onClick={() => setModal('photo')}>
               Subir foto
             </Button>

@@ -50,4 +50,13 @@ public static class DependencyInjection
         services.AddScoped<Application.Tracking.CalendarService>();
         return services;
     }
+
+    /// <summary>PDF de rutinas y exportaciones a Excel.</summary>
+    public static IServiceCollection AddExports(this IServiceCollection services)
+    {
+        services.AddSingleton<Application.Exports.ITableExporter, ClosedXmlTableExporter>();
+        services.AddSingleton<Application.Exports.IRoutinePdfRenderer, MigraDocRoutinePdf>();
+        services.AddScoped<Application.Exports.ExportService>();
+        return services;
+    }
 }

@@ -5,7 +5,7 @@ const { chromium } = require('playwright')
 const fs = require('fs')
 const path = require('path')
 
-const BASE = 'http://localhost:5173'
+const BASE = process.env.LBMETHOD_E2E_BASE || 'http://localhost:5173'
 const OUT = process.argv[2] ?? require('os').tmpdir()
 const IMAGE = process.argv[3]
 const TAG = process.env.LBMETHOD_E2E_TAG

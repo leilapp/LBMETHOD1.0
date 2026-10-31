@@ -17,10 +17,16 @@ El desarrollo avanza por fases según la guía maestra del proyecto; cada fase r
 - [Fase 7: clientes y asignaciones](docs/fase-07-clientes-y-asignaciones.md)
 - [Fase 8: portal y registro del cliente](docs/fase-08-portal-y-registro.md) (incluye cómo aplicar la nueva migración)
 - [Fase 9: seguimiento](docs/fase-09-seguimiento.md) (sin migración nueva)
+- [Fase 10: exportaciones, auditoría y entrega](docs/fase-10-entrega.md) (sin migración nueva; incluye limitaciones conocidas y decisiones pendientes)
+
+Guías de operación:
+- [Instalación y ejecución en Windows](docs/instalacion.md)
+- [Respaldo y restauración de SQL Server y archivos](docs/respaldo-y-restauracion.md)
+- [Despliegue y variables de entorno](docs/despliegue.md)
 
 ## Estado
 
-Fase 9 entregada; Fase 10 en curso. Existen el modelo de datos, la API con inicio de sesión, roles y aislamiento de datos (backend/), las pantallas base para entrenadora y cliente (frontend/) y la biblioteca de ejercicios con medios privados e importación/exportación en Excel, el constructor manual de rutinas y plantillas con versiones, el perfil completo de clientes con asignación de rutinas e historial, el portal del cliente para ver su rutina y registrar sus entrenamientos serie por serie, y el seguimiento: medidas, evaluaciones, fotos privadas, gráficas de progreso y calendario.
+Las 10 fases de la guía están entregadas; la Fase 10 está pendiente de revisión y aprobación. Existen el modelo de datos, la API con inicio de sesión, roles y aislamiento de datos (backend/), las pantallas para entrenadora y cliente (frontend/), la biblioteca de ejercicios con medios privados e importación/exportación en Excel, el constructor manual de rutinas y plantillas con versiones, el perfil de clientes con asignación de rutinas e historial, el portal del cliente para ver su rutina y registrar sus entrenamientos serie por serie, el seguimiento (medidas, evaluaciones, fotos privadas, gráficas y calendario) y las exportaciones: PDF de la rutina y Excel de clientes, rutinas y evaluaciones.
 
 ## Requisitos de desarrollo
 
@@ -41,4 +47,5 @@ cd frontend
 npm install
 npm run dev     # http://localhost:5173 (reenvía /api a la API en http://localhost:5062)
 npm test
+npm run build   # pantallas compiladas en dist/, que la API sirve en producción (ver docs/despliegue.md)
 ```

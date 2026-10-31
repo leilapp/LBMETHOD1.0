@@ -15,6 +15,7 @@ import {
   TextAreaField,
   TextField,
 } from '../../components/ui'
+import { DownloadButton } from '../../components/DownloadButton'
 import { formatDate, formatDateTime } from '../../lib/format'
 import { clientsApi, isCurrent } from '../../api/clients'
 import { AssignModal } from '../clients/AssignModal'
@@ -52,7 +53,18 @@ export function RoutineListPage({ section }: { section: Section }) {
 
   return (
     <>
-      <PageHeader title={text.title} subtitle={text.subtitle} actions={<Button onClick={() => setCreating(true)}>Nueva {text.singular}</Button>} />
+      <PageHeader
+        title={text.title}
+        subtitle={text.subtitle}
+        actions={
+          <div className="page-actions">
+            <DownloadButton path="/api/trainer/exports/routines" fileName="rutinas-lbmethod.xlsx" label="Exportar rutinas y plantillas a Excel">
+              Exportar a Excel
+            </DownloadButton>
+            <Button onClick={() => setCreating(true)}>Nueva {text.singular}</Button>
+          </div>
+        }
+      />
       <div className="tabs" role="tablist" aria-label="Estado">
         {(['active', 'archived'] as const).map((s) => (
           <button
@@ -314,7 +326,16 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
             ) : version.error ? (
               <ErrorState message={version.error.message} onRetry={() => version.refetch()} />
             ) : (
-              <RoutinePreview version={version.data!} />
+              <div className="stack">
+                <DownloadButton
+                  path={`/api/trainer/routines/${routine.id}/versions/${version.data!.id}/pdf`}
+                  fileName="rutina-lbmethod.pdf"
+                  label={`Descargar la versión ${version.data!.versionNumber} en PDF`}
+                >
+                  Descargar versión {version.data!.versionNumber} en PDF
+                </DownloadButton>
+                <RoutinePreview version={version.data!} />
+              </div>
             )}
           </section>
         </div>

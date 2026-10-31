@@ -14,6 +14,7 @@ import {
   PageHeader,
   TextField,
 } from '../../components/ui'
+import { DownloadButton } from '../../components/DownloadButton'
 import { useSession } from '../../app/session'
 import { ChangePasswordForm } from '../auth/AuthPages'
 import { isEmail } from '../../lib/validation'
@@ -179,7 +180,14 @@ export function ClientsPage() {
       <PageHeader
         title="Clientes"
         subtitle="Perfiles, cuentas de acceso y programas de tus clientes"
-        actions={<Button onClick={() => setCreating(true)}>Nuevo cliente</Button>}
+        actions={
+          <div className="page-actions">
+            <DownloadButton path="/api/trainer/exports/clients" fileName="clientes-lbmethod.xlsx" label="Exportar clientes a Excel">
+              Exportar a Excel
+            </DownloadButton>
+            <Button onClick={() => setCreating(true)}>Nuevo cliente</Button>
+          </div>
+        }
       />
       <div className="stack">
         {notice && <Alert kind="success">{notice}</Alert>}

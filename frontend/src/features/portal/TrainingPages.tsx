@@ -11,6 +11,7 @@ import {
   type SessionSummary,
 } from '../../api/portal'
 import { Alert, Button, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader } from '../../components/ui'
+import { DownloadButton } from '../../components/DownloadButton'
 import { formatDate, formatDateTime, todayInMexico } from '../../lib/format'
 import { summarize } from '../routines/routineModel'
 import '../library/library.css'
@@ -237,6 +238,9 @@ function ProgramView({ program, canStart }: { program: PortalProgram; canStart: 
         </p>
         {program.notes && <p className="portal-program__notes">{program.notes}</p>}
       </div>
+      <DownloadButton path={`/api/portal/program/${program.assignmentId}/pdf`} fileName="rutina-lbmethod.pdf" label={`Descargar en PDF: ${program.routineName}`}>
+        Descargar en PDF
+      </DownloadButton>
       {start.error && <Alert kind="error">{start.error.message}</Alert>}
       {program.days.map((d) => (
         <details key={d.id} className="program-day" open={program.days.length <= 2}>
@@ -288,7 +292,6 @@ export function PortalRoutinePage() {
         ) : (
           program.data.map((p) => <ProgramView key={p.assignmentId} program={p} canStart={!inProgress} />)
         )}
-        <p className="field__hint">La descarga en PDF estará disponible más adelante (Fase 10).</p>
       </div>
     </>
   )

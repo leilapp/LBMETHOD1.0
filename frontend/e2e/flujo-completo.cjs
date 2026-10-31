@@ -3,7 +3,7 @@
 const { chromium } = require('playwright')
 const path = require('path')
 
-const BASE = 'http://localhost:5173'
+const BASE = process.env.LBMETHOD_E2E_BASE || 'http://localhost:5173'
 const OUT = process.argv[2] ?? require('os').tmpdir()
 // Cuenta de entrenadora de PRUEBA (nunca la real): definir LBMETHOD_E2E_EMAIL y LBMETHOD_E2E_PASSWORD.
 const TRAINER = { email: process.env.LBMETHOD_E2E_EMAIL, password: process.env.LBMETHOD_E2E_PASSWORD }

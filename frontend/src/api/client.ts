@@ -96,7 +96,7 @@ async function send<T>(method: string, path: string, body?: unknown, retry = tru
   return (await res.json()) as T
 }
 
-/** Descarga un archivo protegido (Excel) con la sesión actual y lo guarda en el equipo. */
+/** Descarga un archivo protegido (Excel o PDF) con la sesión actual y lo guarda en el equipo. */
 async function download(path: string, fallbackName: string): Promise<void> {
   let res: Response
   try {

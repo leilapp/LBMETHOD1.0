@@ -1,11 +1,13 @@
 using System.Threading.RateLimiting;
 using LBMethod.Api.Cli;
+using LBMethod.Api.Hosting;
 using LBMethod.Api.Security;
 using LBMethod.Application.Abstractions;
 using LBMethod.Infrastructure;
 using LBMethod.Infrastructure.Identity;
 using LBMethod.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -27,10 +29,19 @@ builder.Services.AddLibrary(
     mediaLimits);
 var trackingLimits = new LBMethod.Application.Tracking.TrackingLimits(config.GetValue("Tracking:MaxPhotoBytes", 10L * 1024 * 1024));
 builder.Services.AddTracking(trackingLimits);
+builder.Services.AddExports();
 // El límite general de tamaño de petición se mantiene; solo la subida de medios y fotos lo amplía (MediaUploadLimit).
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => o.MultipartBodyLengthLimit = Math.Max(Math.Max(mediaLimits.MaxImageBytes, mediaLimits.MaxVideoBytes), trackingLimits.MaxPhotoBytes) + 1024 * 1024);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
+// Llaves que firman la cookie de sesión y el token CSRF. Guardarlas en una carpeta fija evita que un reinicio
+// del servidor cierre todas las sesiones (en Windows se protegen además con DPAPI de la máquina).
+if (config["DataProtection:KeysPath"] is { Length: > 0 } keysPath)
+{
+    var dataProtection = builder.Services.AddDataProtection().SetApplicationName("LBMethod").PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+    if (OperatingSystem.IsWindows()) dataProtection.ProtectKeysWithDpapi(protectToLocalMachine: true);
+}
 
 // ---------- Identidad ----------
 builder.Services.AddIdentityCore<AppUser>(o =>
@@ -124,6 +135,10 @@ if (!isDevOrTest)
     app.UseHttpsRedirection();
 }
 app.UseSecurityHeaders();
+// Build de React (carpeta con index.html). Por defecto, wwwroot junto a la API; si no existe, solo se publica la API.
+var frontendServed = app.TryUseFrontend(config["Frontend:Path"] is { Length: > 0 } frontendPath ? frontendPath : Path.Combine(app.Environment.ContentRootPath, "wwwroot"));
+// El enrutamiento va después de los archivos estáticos para que /assets y «/» se sirvan sin pasar por los endpoints.
+app.UseRouting();
 app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
@@ -132,6 +147,7 @@ app.UseRequirePasswordChange();
 app.UseAuthorization();
 app.MapControllers();
 
+app.Logger.LogInformation(frontendServed ? "Se sirve el frontend desde la API." : "Sin frontend compilado: solo se publica la API.");
 await app.RunAsync();
 return 0;
 

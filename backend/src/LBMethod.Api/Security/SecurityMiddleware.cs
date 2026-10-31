@@ -18,6 +18,10 @@ public static class SecurityMiddleware
         h["X-Frame-Options"] = "DENY";
         h["Referrer-Policy"] = "no-referrer";
         h["Cache-Control"] = "no-store";
+        // La aplicación solo carga código, estilos, imágenes y videos de su propio dominio (o generados en el navegador).
+        h["Content-Security-Policy"] =
+            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; " +
+            "connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
         await next();
     });
 
