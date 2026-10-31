@@ -48,6 +48,6 @@ if [ ! -f "$LB_KEYSTORE" ]; then
   echo "Llave de firma nueva creada en $LB_KEYSTORE (guárdala; sin ella no se puede actualizar la app)."
 fi
 apksigner sign --ks "$LB_KEYSTORE" --ks-pass "env:LB_KEYSTORE_PASS" --ks-key-alias lbmethod \
-  --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --out "$OUT" "$WORK/alineada.apk"
+  --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --v4-signing-enabled false --out "$OUT" "$WORK/alineada.apk"
 apksigner verify "$OUT"
 echo "APK lista: $OUT ($(wc -c < "$OUT") bytes) → abre $URL"
