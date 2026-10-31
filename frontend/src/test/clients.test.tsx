@@ -150,7 +150,7 @@ describe('clientes', () => {
     const user = userEvent.setup()
     renderApp('/entrenadora/clientes/10')
 
-    await user.click(await screen.findByRole('button', { name: 'Asignar rutina' }))
+    await user.click(await screen.findByRole('button', { name: 'Asignar rutina existente' }))
     const dialog = await screen.findByRole('dialog', { name: 'Asignar rutina a Mariana' })
     const routineSelect = within(dialog).getByLabelText(/^Rutina/)
     await waitFor(() => expect(within(routineSelect).getAllByRole('option')).toHaveLength(2))
@@ -166,6 +166,30 @@ describe('clientes', () => {
     await screen.findByText('Rutina asignada a Mariana.')
     const sent = JSON.parse(String(calls.find((c) => c.key === 'POST /api/trainer/assignments')!.init?.body))
     expect(sent).toEqual({ clientIds: [10], routineVersionId: 8, startDate: today, endDate: addDays(today, 41), notes: 'Calienta antes' })
+  })
+
+  it('desde la ficha crea una rutina personalizada para el cliente y abre el constructor ligado a él', async () => {
+    const calls = mockApi(
+      detailRoutes({
+        [`GET ${base}/10/assignments`]: () => ({ status: 200, body: [] }),
+        'GET /api/trainer/routines?kind=template&status=active': () => ({ status: 200, body: [] }),
+        'POST /api/trainer/routines': () => ({ status: 201, body: { id: 77 } }),
+        'POST /api/trainer/routines/77/draft': () => ({ status: 200, body: { id: 5 } }),
+      }),
+    )
+    const user = userEvent.setup()
+    renderApp('/entrenadora/clientes/10')
+
+    await user.click(await screen.findByRole('button', { name: 'Crear rutina para Mariana' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Nueva rutina para Mariana' })
+    expect(within(dialog).getByLabelText(/^Nombre/)).toHaveValue('Rutina de Mariana López')
+    await user.type(within(dialog).getByLabelText('Objetivo'), 'Glúteo y postura')
+    await user.click(within(dialog).getByRole('button', { name: 'Crear y abrir constructor' }))
+
+    await waitFor(() => expect(calls.some((c) => c.key === 'POST /api/trainer/routines/77/draft')).toBe(true))
+    const sent = JSON.parse(String(calls.find((c) => c.key === 'POST /api/trainer/routines')!.init?.body))
+    expect(sent).toEqual({ kind: 1, title: 'Rutina de Mariana López', goal: 'Glúteo y postura', description: null, durationWeeks: null })
+    expect(calls.filter((c) => c.key.startsWith('POST /api/trainer/assignments'))).toHaveLength(0)
   })
 
   it('terminar pide el último día y lo envía', async () => {

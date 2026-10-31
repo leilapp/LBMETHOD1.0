@@ -224,5 +224,6 @@ describe('clientes', () => {
     await user.type(within(dialog).getByLabelText(/Correo electrónico/), 'ana@test.local')
     await user.click(within(dialog).getByRole('button', { name: 'Crear cuenta' }))
     await waitFor(() => expect(screen.getByTestId('temporary-password')).toHaveTextContent('Tmp9xYzAb2CdEf'))
+    expect(screen.getByRole('button', { name: 'Crear su rutina' })).toBeInTheDocument()
   })
 })

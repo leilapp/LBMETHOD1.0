@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import { routinesApi, type RoutineDetail } from '../../api/routines'
 import {
@@ -129,11 +129,23 @@ export function RoutineListPage({ section }: { section: Section }) {
   )
 }
 
-function CreateRoutineModal({ section, onClose }: { section: Section; onClose: () => void }) {
+/**
+ * Nueva rutina o plantilla. Con `forClient` (desde la ficha de un cliente) es una rutina personalizada para ese cliente:
+ * la entrenadora la arma ejercicio por ejercicio y, al publicarla, se le ofrece asignársela. Nada se genera solo.
+ */
+export function CreateRoutineModal({
+  section,
+  onClose,
+  forClient,
+}: {
+  section: Section
+  onClose: () => void
+  forClient?: { id: number; firstName: string; lastName: string }
+}) {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const kind = section === 'rutinas' ? 1 : 2
-  const [title, setTitle] = useState('')
+  const [title, setTitle] = useState(forClient ? `Rutina de ${forClient.firstName} ${forClient.lastName}`.trim() : '')
   const [goal, setGoal] = useState('')
   const [weeks, setWeeks] = useState('')
   const [description, setDescription] = useState('')
@@ -152,7 +164,7 @@ function CreateRoutineModal({ section, onClose }: { section: Section; onClose: (
     },
     onSuccess: async ({ id }) => {
       await qc.invalidateQueries({ queryKey: routineKeys.all })
-      navigate(`/entrenadora/${section}/${id}/editar`)
+      navigate(`/entrenadora/${section}/${id}/editar${forClient ? `?cliente=${forClient.id}` : ''}`)
     },
     onError: (e) => {
       if (e instanceof ApiError) setErrors(Object.fromEntries(Object.entries(e.fieldErrors).map(([k, v]) => [k.charAt(0).toLowerCase() + k.slice(1), v[0]])))
@@ -169,7 +181,7 @@ function CreateRoutineModal({ section, onClose }: { section: Section; onClose: (
   }
 
   return (
-    <Modal title={section === 'rutinas' ? 'Nueva rutina' : 'Nueva plantilla'} onClose={onClose}>
+    <Modal title={forClient ? `Nueva rutina para ${forClient.firstName}` : section === 'rutinas' ? 'Nueva rutina' : 'Nueva plantilla'} onClose={onClose}>
       <form className="form" onSubmit={submit} noValidate>
         {create.error && !Object.keys(errors).length && <Alert kind="error">{create.error.message}</Alert>}
         {section === 'rutinas' && (templates.data?.length ?? 0) > 0 && (
@@ -226,7 +238,9 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
   const navigate = useNavigate()
   const [pending, setPending] = useState<Pending>(null)
   const [notice, setNotice] = useState<string | null>(null)
-  const [assigning, setAssigning] = useState(false)
+  const [params, setParams] = useSearchParams()
+  const assignTo = Number(params.get('asignar')) || null
+  const [assigning, setAssigning] = useState(() => assignTo !== null && routine.latestPublishedVersionId !== null)
   const latestId = routine.draftVersionId ?? routine.latestPublishedVersionId ?? routine.versions[0]?.id
   const [viewing, setViewing] = useState<number | undefined>(routine.latestPublishedVersionId ?? latestId)
   const version = useQuery({
@@ -343,9 +357,14 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
         <AssignModal
           routineId={routine.id}
           versionId={routine.latestPublishedVersionId ?? undefined}
-          onClose={() => setAssigning(false)}
+          clientId={assignTo ?? undefined}
+          onClose={() => {
+            setAssigning(false)
+            if (assignTo) setParams({}, { replace: true })
+          }}
           onAssigned={async (count) => {
             setAssigning(false)
+            if (assignTo) setParams({}, { replace: true })
             setNotice(count === 1 ? 'Rutina asignada a 1 cliente.' : `Rutina asignada a ${count} clientes.`)
             await qc.invalidateQueries({ queryKey: ['trainer', 'clients'] })
             await qc.invalidateQueries({ queryKey: ['routines', 'assignments', routine.id] })

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import { clientsApi, isCurrent, type Assignment, type ClientDetail, type ClientOptions } from '../../api/clients'
 import {
@@ -22,6 +22,7 @@ import { fromRoutineVersion } from '../../lib/routinePdf'
 import { formatDate, formatDateTime, todayInMexico } from '../../lib/format'
 import { isEmail } from '../../lib/validation'
 import { AssignModal } from './AssignModal'
+import { CreateRoutineModal } from '../routines/RoutinesPages'
 import { clientKeys, formFrom, toProfilePayload, type FormState } from './clientModel'
 import '../library/library.css'
 import './clients.css'
@@ -35,6 +36,9 @@ export function ClientDetailPage() {
   const profile = useQuery({ queryKey: clientKeys.profile(id), queryFn: () => clientsApi.profile(id) })
   const assignments = useQuery({ queryKey: clientKeys.assignments(id), queryFn: () => clientsApi.assignments(id) })
   const [assigning, setAssigning] = useState<{ routineId?: number; versionId?: number } | null>(null)
+  const [params, setParams] = useSearchParams()
+  // ?crearRutina=1: viene de «Crear su rutina» justo después de crear el cliente.
+  const [creatingRoutine, setCreatingRoutine] = useState(() => params.get('crearRutina') === '1')
   const [notice, setNotice] = useState<string | null>(null)
 
   if (profile.isPending) return <LoadingState label="Cargando cliente…" />
@@ -59,7 +63,12 @@ export function ClientDetailPage() {
             <Link className="btn btn--secondary" to={`/entrenadora/clientes/${id}/editar`}>
               Editar perfil
             </Link>
-            {active && <Button onClick={() => setAssigning({})}>Asignar rutina</Button>}
+            {active && (
+              <Button variant="secondary" onClick={() => setAssigning({})}>
+                Asignar rutina existente
+              </Button>
+            )}
+            {active && <Button onClick={() => setCreatingRoutine(true)}>Crear rutina para {c.firstName}</Button>}
           </div>
         }
       />
@@ -84,6 +93,16 @@ export function ClientDetailPage() {
         </div>
       </div>
 
+      {creatingRoutine && (
+        <CreateRoutineModal
+          section="rutinas"
+          forClient={{ id, firstName: c.firstName, lastName: c.lastName }}
+          onClose={() => {
+            setCreatingRoutine(false)
+            if (params.has('crearRutina')) setParams({}, { replace: true })
+          }}
+        />
+      )}
       {assigning && (
         <AssignModal
           clientId={id}
@@ -188,7 +207,7 @@ function AssignmentsCard({
       ) : (
         <>
           {current.length === 0 ? (
-            <EmptyState title="Sin rutina asignada" description={clientActive ? 'Usa «Asignar rutina» para darle un programa.' : undefined} />
+            <EmptyState title="Sin rutina asignada" description={clientActive ? 'Usa «Crear rutina» para armarle una personalizada, o «Asignar rutina existente».' : undefined} />
           ) : (
             <ul className="assignments" aria-label="Programa actual">
               {current.map((a) => (

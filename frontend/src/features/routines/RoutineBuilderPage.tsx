@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import { routinesApi, type RoutineOptions } from '../../api/routines'
+import { clientsApi } from '../../api/clients'
+import { clientKeys } from '../clients/clientModel'
 import {
   Alert,
   Button,
@@ -107,6 +109,9 @@ function Builder({
 }) {
   const qc = useQueryClient()
   const navigate = useNavigate()
+  // Rutina personalizada creada desde la ficha de un cliente: al publicarla se ofrece asignársela.
+  const forClient = Number(useSearchParams()[0].get('cliente')) || null
+  const client = useQuery({ queryKey: clientKeys.profile(forClient ?? 0), queryFn: () => clientsApi.profile(forClient!), enabled: forClient !== null })
   const [state, setState] = useState(initial)
   const [dirty, setDirty] = useState(false)
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -199,7 +204,7 @@ function Builder({
     onSuccess: async () => {
       setPublishing(false)
       await qc.invalidateQueries({ queryKey: routineKeys.all })
-      navigate(`/entrenadora/${section}/${routineId}`)
+      navigate(`/entrenadora/${section}/${routineId}${forClient ? `?asignar=${forClient}` : ''}`)
     },
     onError: (e) => {
       setPublishing(false)
@@ -336,6 +341,11 @@ function Builder({
       />
 
       <div className="stack builder">
+        {forClient && client.data && (
+          <Alert kind="info">
+            Rutina personalizada para {client.data.firstName} {client.data.lastName}. Al publicarla te pido confirmar las fechas para asignársela.
+          </Alert>
+        )}
         {notice && <Alert kind="success">{notice}</Alert>}
         {problem && problem.length > 0 && (
           <Alert kind="error">

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import { trainerApi, type ClientSummary, type TemporaryPassword } from '../../api/endpoints'
 import {
@@ -149,7 +149,8 @@ export function ClientsPage() {
   const { data: clients, isPending, error, refetch } = useClients()
   const [creating, setCreating] = useState(false)
   const [action, setAction] = useState<PendingAction | null>(null)
-  const [secret, setSecret] = useState<{ name: string; password: TemporaryPassword } | null>(null)
+  const [secret, setSecret] = useState<{ name: string; password: TemporaryPassword; isNew?: boolean } | null>(null)
+  const navigate = useNavigate()
   const [notice, setNotice] = useState<string | null>(null)
   const [filter, setFilter] = useState<'Active' | 'Inactive' | 'all'>('Active')
   const [search, setSearch] = useState('')
@@ -272,7 +273,7 @@ export function ClientsPage() {
           onClose={() => setCreating(false)}
           onCreated={async (name, password) => {
             setCreating(false)
-            setSecret({ name, password })
+            setSecret({ name, password, isNew: true })
             await qc.invalidateQueries({ queryKey: clientsKey })
           }}
         />
@@ -312,7 +313,15 @@ export function ClientsPage() {
         />
       )}
 
-      {secret && <TemporaryPasswordModal name={secret.name} password={secret.password.temporaryPassword} onClose={() => setSecret(null)} />}
+      {secret && (
+        <TemporaryPasswordModal
+          name={secret.name}
+          password={secret.password.temporaryPassword}
+          onClose={() => setSecret(null)}
+          // Cliente recién creado: puede pasar directo a armarle su rutina personalizada.
+          onCreateRoutine={secret.isNew ? () => navigate(`/entrenadora/clientes/${secret.password.clientId}?crearRutina=1`) : undefined}
+        />
+      )}
     </>
   )
 }
@@ -378,7 +387,17 @@ function CreateClientModal({
   )
 }
 
-function TemporaryPasswordModal({ name, password, onClose }: { name: string; password: string; onClose: () => void }) {
+function TemporaryPasswordModal({
+  name,
+  password,
+  onClose,
+  onCreateRoutine,
+}: {
+  name: string
+  password: string
+  onClose: () => void
+  onCreateRoutine?: () => void
+}) {
   const [copied, setCopied] = useState(false)
   return (
     <Modal title="Contraseña temporal" onClose={onClose}>
@@ -405,7 +424,16 @@ function TemporaryPasswordModal({ name, password, onClose }: { name: string; pas
           >
             Copiar
           </Button>
-          <Button onClick={onClose}>Listo</Button>
+          {onCreateRoutine ? (
+            <>
+              <Button variant="secondary" onClick={onClose}>
+                Listo
+              </Button>
+              <Button onClick={onCreateRoutine}>Crear su rutina</Button>
+            </>
+          ) : (
+            <Button onClick={onClose}>Listo</Button>
+          )}
         </div>
       </div>
     </Modal>
