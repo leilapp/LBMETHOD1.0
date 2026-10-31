@@ -10,11 +10,24 @@ import {
 } from 'react'
 
 /* ---------- Marca ---------- */
+/**
+ * Logo de LB METHOD (trazado del logo original: monograma LB caligráfico, «METHOD» y la pesa).
+ * - lg: el logo completo, en oro con un brillo que lo recorre (inicio de sesión).
+ * - md: monograma + «METHOD», para el menú.
+ * Las formas vienen de /brand/*.svg y se pintan con CSS (máscara), así el color y el brillo se cambian en global.css.
+ */
 export function Logo({ size = 'md' }: { size?: 'md' | 'lg' }) {
+  if (size === 'lg') {
+    return (
+      <span className="lb-brand lb-brand--lg" role="img" aria-label="LB METHOD">
+        <span className="lb-brand__shine lb-brand__lockup" />
+      </span>
+    )
+  }
   return (
-    <span className="lb-logo" style={{ fontSize: size === 'lg' ? '1.6rem' : '1.05rem' }} aria-label="LB METHOD">
-      <span>LB</span>
-      <span className="lb-logo__method">METHOD</span>
+    <span className="lb-brand" role="img" aria-label="LB METHOD">
+      <span className="lb-brand__shine lb-brand__mark" />
+      <span className="lb-brand__shine lb-brand__word" />
     </span>
   )
 }

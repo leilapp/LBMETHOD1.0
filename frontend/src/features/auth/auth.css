@@ -1,23 +1,33 @@
 .auth {
+  position: relative;
+  isolation: isolate;
   min-height: 100%;
   display: grid;
   place-items: center;
   padding: var(--lb-space-5) var(--lb-space-4);
   background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgb(59 37 102 / 0.45), transparent 70%),
+    radial-gradient(ellipse 70% 45% at 50% -5%, rgb(141 106 208 / 0.32), transparent 70%),
+    radial-gradient(ellipse 50% 35% at 15% 100%, rgb(227 183 192 / 0.1), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 95% 85%, rgb(212 176 106 / 0.12), transparent 70%),
     var(--lb-black);
+  overflow: hidden;
 }
 
+/* Panel de cristal oscuro con borde de oro que se desvanece */
 .auth__panel {
+  position: relative;
+  z-index: 1;
   width: min(420px, 100%);
   display: grid;
   gap: var(--lb-space-5);
   padding: var(--lb-space-6) var(--lb-space-5);
-  background: var(--lb-surface);
-  border: 1px solid var(--lb-border);
-  border-top: 2px solid var(--lb-gold);
-  border-radius: var(--lb-radius-lg);
-  box-shadow: var(--lb-shadow);
+  background:
+    linear-gradient(180deg, rgb(26 21 36 / 0.88), rgb(14 11 20 / 0.92)) padding-box,
+    linear-gradient(160deg, rgb(246 232 195 / 0.75), rgb(212 176 106 / 0.35) 25%, rgb(70 58 95 / 0.5) 60%, rgb(141 106 208 / 0.55)) border-box;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.55), 0 0 80px rgb(141 106 208 / 0.12);
+  backdrop-filter: blur(10px);
 }
 
 .auth__brand {
@@ -27,8 +37,19 @@
   text-align: center;
 }
 
+.auth__tagline {
+  font-size: var(--lb-text-xs);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--lb-gold-soft);
+  opacity: 0.85;
+}
+
 .auth__title {
   font-size: var(--lb-text-xl);
+  font-family: var(--lb-font-display);
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .auth__help {

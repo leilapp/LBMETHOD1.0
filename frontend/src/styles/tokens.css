@@ -1,16 +1,17 @@
 /*
  * LB METHOD · tokens de diseño
- * Paleta: negro profundo, violeta oscuro, lila, blanco y acentos dorados mate discretos.
+ * Paleta basada en el logo (monograma LB caligráfico, blanco sobre negro): negro de noche, oro champaña con brillo,
+ * amatista y un toque rosa suave para los resplandores.
  * Todos los componentes usan estas variables; cambiar la identidad se hace aquí.
  */
 :root {
   /* Superficies */
-  --lb-black: #0b0a10;
-  --lb-surface: #13111b;
-  --lb-surface-2: #1b1727;
-  --lb-surface-3: #241e35;
-  --lb-border: #2e2742;
-  --lb-border-strong: #43395e;
+  --lb-black: #07060b;
+  --lb-surface: #120f19;
+  --lb-surface-2: #1a1524;
+  --lb-surface-3: #241d33;
+  --lb-border: #2c2440;
+  --lb-border-strong: #463a5f;
 
   /* Marca */
   --lb-violet-900: #1e1233;
@@ -18,8 +19,16 @@
   --lb-violet-500: #5b3c94;
   --lb-lilac: #b9a3e3;
   --lb-lilac-soft: #d9cdf2;
-  --lb-gold: #b89b5e;
-  --lb-gold-soft: #cdb685;
+  --lb-gold: #d4b06a;
+  --lb-gold-soft: #e6cf9b;
+  --lb-gold-light: #f6e8c3;
+  --lb-gold-deep: #9d7638;
+  --lb-rose: #e3b7c0;
+  --lb-amethyst: #8d6ad0;
+  /* Oro con brillo: se usa en el logo, el botón principal y los detalles */
+  --lb-gold-gradient: linear-gradient(115deg, #9d7638 0%, #d4b06a 22%, #f6e8c3 38%, #fffaf0 45%, #e6cf9b 55%, #c49a52 75%, #9d7638 100%);
+  --lb-glow-gold: 0 0 18px rgb(212 176 106 / 0.35);
+  --lb-glow-violet: 0 0 40px rgb(141 106 208 / 0.25);
 
   /* Texto */
   --lb-text: #f4f1fa;
@@ -57,8 +66,8 @@
   --lb-radius-sm: 6px;
   --lb-radius: 10px;
   --lb-radius-lg: 14px;
-  --lb-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
-  --lb-focus: 0 0 0 3px rgb(185 163 227 / 0.45);
+  --lb-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
+  --lb-focus: 0 0 0 3px rgb(212 176 106 / 0.45);
 
   /* Controles cómodos para usar con el dedo durante el entrenamiento */
   --lb-touch: 44px;

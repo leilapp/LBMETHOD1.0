@@ -14,7 +14,11 @@ body,
 
 body {
   margin: 0;
-  background: var(--lb-black);
+  background:
+    radial-gradient(ellipse 70% 45% at 85% -5%, rgb(141 106 208 / 0.16), transparent 70%),
+    radial-gradient(ellipse 60% 40% at -10% 105%, rgb(212 176 106 / 0.08), transparent 70%),
+    var(--lb-black);
+  background-attachment: fixed;
   color: var(--lb-text);
   font-family: var(--lb-font);
   font-size: var(--lb-text-md);
@@ -35,7 +39,12 @@ p {
 }
 
 a {
-  color: var(--lb-lilac);
+  color: var(--lb-gold-soft);
+  text-decoration-color: rgb(230 207 155 / 0.45);
+  text-underline-offset: 3px;
+}
+a:hover {
+  color: var(--lb-gold-light);
 }
 
 :focus-visible {
@@ -53,18 +62,99 @@ a {
 }
 
 /* ---------- Marca ---------- */
-.lb-logo {
+/* Las formas del logo son máscaras; el relleno es oro con un brillo que se desliza. */
+.lb-brand {
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.4em;
-  font-family: var(--lb-font-display);
-  letter-spacing: 0.18em;
-  font-weight: 600;
-  color: var(--lb-text);
-  text-decoration: none;
+  align-items: center;
+  gap: 0.55rem;
+  filter: drop-shadow(0 0 6px rgb(212 176 106 / 0.35));
 }
-.lb-logo__method {
-  color: var(--lb-gold);
+.lb-brand__shine {
+  display: block;
+  background: var(--lb-gold-gradient);
+  background-size: 300% 100%;
+  animation: lb-shine 7s ease-in-out infinite;
+  -webkit-mask: var(--shape) center / contain no-repeat;
+  mask: var(--shape) center / contain no-repeat;
+}
+.lb-brand__mark {
+  --shape: url('/brand/lb-monograma.svg');
+  width: 3.1rem;
+  aspect-ratio: 1151 / 1095;
+}
+.lb-brand__word {
+  --shape: url('/brand/lb-method.svg');
+  width: 6.8rem;
+  aspect-ratio: 787 / 117;
+}
+.lb-brand--lg {
+  position: relative;
+  filter: drop-shadow(0 0 14px rgb(212 176 106 / 0.45)) drop-shadow(0 0 40px rgb(141 106 208 / 0.35));
+}
+.lb-brand__lockup {
+  --shape: url('/brand/lb-completo.svg');
+  width: min(52vw, 190px);
+  aspect-ratio: 1151 / 1434;
+}
+@keyframes lb-shine {
+  0%,
+  15% {
+    background-position: 100% 0;
+  }
+  60%,
+  100% {
+    background-position: 0% 0;
+  }
+}
+
+/* Destellos: pequeñas estrellas que parpadean (fondo del inicio de sesión) */
+.lb-sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.lb-sparkles::before,
+.lb-sparkles::after {
+  content: '';
+  position: absolute;
+  inset: -10%;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff8e6 50%, transparent 51%),
+    radial-gradient(1px 1px at 27% 72%, #f6e8c3 50%, transparent 51%),
+    radial-gradient(2px 2px at 44% 30%, #ffffff 50%, transparent 51%),
+    radial-gradient(1px 1px at 63% 12%, #e3b7c0 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 78% 58%, #f6e8c3 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 24%, #ffffff 50%, transparent 51%),
+    radial-gradient(2px 2px at 92% 84%, #e6cf9b 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 90%, #d9cdf2 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 52% 88%, #fff8e6 50%, transparent 51%);
+  animation: lb-twinkle 5s ease-in-out infinite alternate;
+}
+.lb-sparkles::after {
+  transform: rotate(180deg) scale(1.1);
+  animation-delay: -2.5s;
+  animation-duration: 6.5s;
+}
+@keyframes lb-twinkle {
+  0% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lb-brand__shine,
+  .lb-sparkles::before,
+  .lb-sparkles::after,
+  .btn--primary::after {
+    animation: none;
+  }
 }
 
 /* ---------- Botones ---------- */
@@ -90,11 +180,33 @@ a {
   cursor: not-allowed;
 }
 .btn--primary {
-  background: var(--lb-violet-500);
-  color: var(--lb-text);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e9d29c 0%, #d4b06a 45%, #b78f4c 100%);
+  color: #1d1505;
+  box-shadow: 0 4px 18px rgb(212 176 106 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.45);
+}
+/* Destello que cruza el botón de vez en cuando */
+.btn--primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.55) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: lb-sweep 5.5s ease-in-out infinite;
 }
 .btn--primary:hover:not(:disabled) {
-  background: var(--lb-violet-700);
+  background: linear-gradient(135deg, #f3e3b8 0%, #ddbb76 45%, #c49a52 100%);
+  box-shadow: 0 6px 24px rgb(212 176 106 / 0.4), inset 0 1px 0 rgb(255 255 255 / 0.5);
+}
+@keyframes lb-sweep {
+  0%,
+  70% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
 }
 .btn--secondary {
   background: transparent;
@@ -102,7 +214,8 @@ a {
   color: var(--lb-text);
 }
 .btn--secondary:hover:not(:disabled) {
-  border-color: var(--lb-lilac);
+  border-color: var(--lb-gold);
+  box-shadow: var(--lb-glow-gold);
 }
 .btn--ghost {
   background: transparent;
@@ -152,7 +265,7 @@ a {
   font: inherit;
 }
 .input:focus {
-  border-color: var(--lb-lilac);
+  border-color: var(--lb-gold);
 }
 .input[aria-invalid='true'] {
   border-color: var(--lb-danger);
@@ -181,8 +294,11 @@ a {
   justify-items: start;
 }
 .card {
-  background: var(--lb-surface);
-  border: 1px solid var(--lb-border);
+  /* Borde con un brillo dorado y amatista muy suave */
+  background:
+    linear-gradient(var(--lb-surface), var(--lb-surface)) padding-box,
+    linear-gradient(145deg, rgb(212 176 106 / 0.45), var(--lb-border) 35%, var(--lb-border) 70%, rgb(141 106 208 / 0.4)) border-box;
+  border: 1px solid transparent;
   border-radius: var(--lb-radius-lg);
   padding: var(--lb-space-5);
 }
@@ -222,6 +338,14 @@ a {
 .stat__value {
   font-size: var(--lb-text-2xl);
   font-weight: 600;
+  font-family: var(--lb-font-display);
+  width: fit-content;
+  background: var(--lb-gold-gradient);
+  background-size: 250% 100%;
+  background-position: 30% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .stat__label {
   color: var(--lb-text-muted);

@@ -16,14 +16,17 @@
   flex-direction: column;
   gap: var(--lb-space-5);
   padding: var(--lb-space-5) var(--lb-space-4);
-  background: var(--lb-surface);
-  border-right: 1px solid var(--lb-border);
+  background:
+    radial-gradient(ellipse 120% 30% at 50% 0%, rgb(141 106 208 / 0.14), transparent 70%),
+    linear-gradient(180deg, #14101d, #0d0a13);
+  border-right: 1px solid transparent;
+  border-image: linear-gradient(180deg, rgb(212 176 106 / 0.5), var(--lb-border) 30%, var(--lb-border) 70%, rgb(141 106 208 / 0.35)) 1;
   overflow-y: auto;
 }
 
 .shell__brand {
   display: grid;
-  gap: var(--lb-space-1);
+  gap: var(--lb-space-2);
   padding: 0 var(--lb-space-2) var(--lb-space-4);
   border-bottom: 1px solid var(--lb-border);
 }
@@ -61,9 +64,10 @@
   color: var(--lb-text);
 }
 .shell__link.active {
-  background: var(--lb-violet-900);
-  color: var(--lb-text);
+  background: linear-gradient(90deg, rgb(212 176 106 / 0.16), rgb(141 106 208 / 0.12) 70%, transparent);
+  color: var(--lb-gold-light);
   border-left-color: var(--lb-gold);
+  box-shadow: inset 0 0 0 1px rgb(212 176 106 / 0.12);
 }
 .shell__soon {
   font-size: 0.68rem;
@@ -115,8 +119,9 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--lb-space-2) var(--lb-space-4);
-    background: var(--lb-surface);
-    border-bottom: 1px solid var(--lb-border);
+    background: rgb(13 10 19 / 0.88);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgb(212 176 106 / 0.25);
   }
   .shell__menu-button {
     width: var(--lb-touch);

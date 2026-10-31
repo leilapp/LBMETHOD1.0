@@ -44,10 +44,11 @@ export function LoginPage() {
 
   return (
     <div className="auth">
+      <div className="lb-sparkles" aria-hidden="true" />
       <div className="auth__panel">
         <div className="auth__brand">
           <Logo size="lg" />
-          <p className="muted">Plataforma de entrenamiento personal</p>
+          <p className="auth__tagline">Entrenamiento personal</p>
         </div>
         <form className="form" onSubmit={onSubmit} noValidate>
           <h1 className="auth__title">Iniciar sesión</h1>
@@ -195,6 +196,7 @@ export function ChangePasswordPage() {
 
   return (
     <div className="auth">
+      <div className="lb-sparkles" aria-hidden="true" />
       <div className="auth__panel">
         <div className="auth__brand">
           <Logo size="lg" />
