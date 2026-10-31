@@ -2,7 +2,8 @@
 // Así todo vive en el mismo dominio, como se aprobó desde la Fase 1 (cookie SameSite=Strict + token CSRF, sin CORS).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "lbmethod",
+  // Mismo nombre que el Worker que creó tu conexión de Git en Cloudflare, para que publique sobre ese Worker.
+  "name": "lbmethod1-0",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
   "assets": {
@@ -16,9 +17,9 @@
     {
       "binding": "DB",
       "database_name": "lbmethod",
-      // Al crear la base en tu cuenta (wrangler d1 create lbmethod), pega aquí el id que te devuelve.
-      // No es un secreto. En local (wrangler dev) se usa una copia en .wrangler/ y este valor no importa.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Base creada en tu cuenta el 31/10/2026 (región oeste de Norteamérica). El id no es un secreto.
+      // En local (wrangler dev) se usa una copia en .wrangler/ y este valor no importa.
+      "database_id": "54fa22c6-f532-45a0-9143-db0afa9f03e8",
       "migrations_dir": "migrations"
     }
   ],

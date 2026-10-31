@@ -1,6 +1,6 @@
 # LB METHOD en Cloudflare · Plan y avance por etapas
 
-Estado: **etapas 1 a 6 entregadas** (cuentas y clientes, biblioteca, constructor de rutinas, perfil del cliente y asignaciones, portal y registro de entrenamientos, seguimiento y calendario). Por tu indicación del 31/10/2026, sigo con las siguientes etapas sin pedir autorización entre una y otra; al terminar cada una dejo un informe corto.
+Estado: **etapas 1 a 8 entregadas, salvo el PDF de la etapa 7**, que espera que elijas la biblioteca. Toda la aplicación de la Fase 10 funciona en Cloudflare con las mismas pantallas; faltan los pasos de publicación que solo tú puedes hacer en tu cuenta ([cloudflare-publicacion.md](cloudflare-publicacion.md)).
 
 ## 1. La decisión
 
@@ -388,6 +388,20 @@ Las pantallas de Seguimiento, la ficha de progreso, el Calendario, tu inicio y, 
 
 Con tu inicio ya disponible, repetí los recorridos en navegador del portal (**36 de 36**) y de clientes (**21 de 21**): ya no queda ninguna falla esperada.
 
+## 4.5 Qué incluye la etapa 7 (Fase 10: exportaciones)
+
+- **Excel, listo:** clientes (perfil y asignaciones; nunca las observaciones privadas), rutinas (resumen y detalle de cada ejercicio y serie) y evaluaciones (una fila por medida). Fechas y números como fechas y números reales; todo texto queda como texto, así que nada que parezca fórmula se ejecuta. Cada exportación queda en la bitácora y solo incluye datos de la entrenadora que la pide.
+- **PDF, pendiente de tu decisión:** te presenté tres opciones de biblioteca (no está en la guía maestra). Hasta que elijas, los 3 endpoints de PDF responden «no disponible» y nada más cambia.
+- Pruebas: **2 nuevas** en `test/exportaciones.test.mjs` (contenido real leyendo el .xlsx, separación entre entrenadoras, sin fórmulas, cliente sin acceso). El recorrido en navegador de exportaciones se detiene en el PDF, como se espera.
+
+## 4.6 Qué incluye la etapa 8 (auditoría, respaldos y publicación)
+
+- **Auditoría de todos los endpoints** (`test/auditoria.test.mjs`): `scripts/endpoints-dotnet.mjs` lee los controladores de la versión .NET y saca la lista completa (**101 endpoints**). La prueba comprueba que cada uno existe en Cloudflare, que sin sesión responde 401, que un cliente recibe 403 en los de la entrenadora y la entrenadora 403 en los del portal, y que ninguno falla con error interno. Resultado: **todos presentes y protegidos**, salvo los 3 de PDF, que la prueba marca como pendientes y avisará en cuanto existan.
+- **Respaldo y restauración** (`npm run backup` y `npm run restore`): base completa con historial y todos los archivos privados, con manifiesto de filas y huellas SHA-256. La restauración solo escribe en una base vacía y comprueba que todo quedó idéntico. `npm run db:migrate:remote` respalda antes de migrar.
+- **Tu cuenta:** creé la base D1 `lbmethod` (vacía) y ajusté `wrangler.jsonc` al Worker `lbmethod1-0` que creó tu conexión de Git. R2 no está activado en tu cuenta y el secreto, las tablas y tu cuenta de entrenadora requieren tu inicio de sesión: los pasos están en [cloudflare-publicacion.md](cloudflare-publicacion.md).
+- Pruebas automáticas de la API (`npm test`): **59 de 59 correctas** (53 anteriores, 2 de exportaciones y 4 de auditoría). Revisión de tipos sin errores.
+- Si ya tenías una copia local de pruebas, vuelve a correr `npm run db:migrate:local`: la copia local depende del id de la base y empieza vacía con el id nuevo.
+
 ---
 
 ## 5. Etapas siguientes (cada una con tu aprobación)
@@ -399,8 +413,8 @@ Con tu inicio ya disponible, repetí los recorridos en navegador del portal (**3
 | 4 ✓ | Perfil completo del cliente, observaciones privadas, asignaciones (varias vigentes a la vez) (**entregada**, sección 4.2) | Fase 7 |
 | 5 ✓ | Portal del cliente y registro de entrenamientos serie por serie (**entregada**, sección 4.3) | Fase 8 |
 | 6 ✓ | Medidas, evaluaciones, fotos privadas, gráficas y calendario (**entregada**, sección 4.4) | Fase 9 |
-| 7 | PDF y Excel | Fase 10 |
-| 8 | Auditoría completa (pruebas de todos los endpoints), respaldos, publicación en tu cuenta y guía | Fase 10 |
+| 7 (Excel ✓, PDF pendiente) | Excel entregado; PDF espera que elijas la biblioteca (sección 4.5) | Fase 10 |
+| 8 ✓ | Auditoría de los 101 endpoints, respaldos y guía de publicación (**entregada**, sección 4.6; faltan los pasos en tu cuenta que solo tú puedes hacer) | Fase 10 |
 
 En cada etapa se trasladan también las pruebas de la versión .NET correspondientes, y la regresión en navegador debe pasar completa al final.
 
@@ -433,16 +447,4 @@ npm run dev                                   # abre http://localhost:8787
 npm test                                      # pruebas automáticas
 ```
 
-**En tu cuenta de Cloudflare.** Todavía no lo hice: espera tu aprobación. Requiere iniciar sesión en tu cuenta.
-1. `npx wrangler login`
-2. `npx wrangler d1 create lbmethod`. Copia el `database_id` que devuelve en `wrangler.jsonc`.
-   Después crea el espacio privado de archivos: `npx wrangler r2 bucket create lbmethod-media`.
-3. `npx wrangler secret put APP_SECRET`. Escribe un valor largo y aleatorio.
-4. `npm run db:migrate:remote`
-5. `npm run create-trainer -- tu-correo@dominio.com "Leilani" --remote`
-6. **Publicar.** Hay dos formas:
-   - con `npm run deploy`;
-   - con la conexión a Git de un proyecto de Workers, configurado así:
-     - directorio raíz `cloudflare`;
-     - comando de compilación `npm ci && npm run build`;
-     - comando de publicación `npx wrangler deploy`.
+**En tu cuenta de Cloudflare:** la guía completa, con lo que ya hice (la base D1 creada) y los pasos que te tocan, está en [cloudflare-publicacion.md](cloudflare-publicacion.md).
