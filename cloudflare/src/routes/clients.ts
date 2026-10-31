@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { audit } from '../audit'
 import { hashPassword, temporaryPassword } from '../crypto'
 import { email, notFound, nowIso, problem, readJson, text, validation } from '../http'
+import { localDate } from '../dates'
 import { currentUser } from '../session'
 import type { AppBindings } from '../types'
 
@@ -21,26 +22,36 @@ interface ClientRow {
   created_at: string
 }
 
-const summary = (r: ClientRow) => ({
+const summary = (r: ClientRow, currentProgram: string | null = null) => ({
   id: r.id,
   firstName: r.first_name,
   lastName: r.last_name,
   email: r.email,
   status: r.status,
   hasAccount: r.user_id !== null,
-  // Las asignaciones de rutinas llegan en una etapa siguiente; hasta entonces no hay programa vigente que mostrar.
-  currentProgram: null,
+  currentProgram,
   registeredAt: r.created_at,
 })
 
+/** Clientes de la entrenadora, con los programas que tienen vigentes hoy (puede haber varios a la vez). */
 clients.get('/', async (c) => {
-  const { results } = await c.env.DB.prepare(
-    `SELECT id, first_name, last_name, email, status, user_id, created_at
-       FROM clients WHERE trainer_id = ? ORDER BY last_name, first_name`,
-  )
-    .bind(currentUser(c).id)
-    .all<ClientRow>()
-  return c.json(results.map(summary))
+  const trainerId = currentUser(c).id
+  const today = localDate()
+  const [list, current] = await c.env.DB.batch([
+    c.env.DB.prepare(
+      `SELECT id, first_name, last_name, email, status, user_id, created_at
+         FROM clients WHERE trainer_id = ? ORDER BY last_name, first_name`,
+    ).bind(trainerId),
+    c.env.DB.prepare(
+      `SELECT a.client_id, v.title FROM routine_assignments a
+         JOIN clients c ON c.id = a.client_id JOIN routine_versions v ON v.id = a.routine_version_id
+        WHERE c.trainer_id = ?1 AND a.status NOT IN (3, 4, 5) AND a.start_date <= ?2 AND (a.end_date IS NULL OR a.end_date >= ?2)
+        ORDER BY a.start_date DESC, a.id DESC`,
+    ).bind(trainerId, today),
+  ])
+  const programs = new Map<number, string[]>()
+  for (const r of current.results as { client_id: number; title: string }[]) programs.set(r.client_id, [...(programs.get(r.client_id) ?? []), r.title])
+  return c.json((list.results as ClientRow[]).map((r) => summary(r, programs.get(r.id)?.join(' · ') ?? null)))
 })
 
 clients.get('/:clientId{[0-9]+}', async (c) => {
@@ -111,7 +122,12 @@ clients.post('/:clientId{[0-9]+}/access', async (c) => {
   const enabled = body.enabled
   await c.env.DB.batch([
     c.env.DB.prepare('UPDATE users SET is_enabled = ? WHERE id = ?').bind(enabled ? 1 : 0, row.user_id),
-    c.env.DB.prepare('UPDATE clients SET status = ?, updated_at = ? WHERE id = ?').bind(enabled ? 'Active' : 'Inactive', nowIso(), clientId),
+    c.env.DB.prepare('UPDATE clients SET status = ?, deactivated_at = ?, updated_at = ? WHERE id = ?').bind(
+      enabled ? 'Active' : 'Inactive',
+      enabled ? null : nowIso(),
+      nowIso(),
+      clientId,
+    ),
     ...(enabled ? [] : [c.env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(row.user_id)]),
   ])
   await audit(c, enabled ? 'ClientAccessEnabled' : 'ClientAccessDisabled', 'Client', clientId)

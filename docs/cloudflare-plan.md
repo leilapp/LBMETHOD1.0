@@ -1,6 +1,6 @@
 # LB METHOD en Cloudflare · Plan y avance por etapas
 
-Estado: **etapas 1, 2 y 3 entregadas** (cuentas y clientes, biblioteca, constructor de rutinas). Por tu indicación del 31/10/2026, sigo con las siguientes etapas sin pedir autorización entre una y otra; al terminar cada una dejo un informe corto.
+Estado: **etapas 1 a 4 entregadas** (cuentas y clientes, biblioteca, constructor de rutinas, perfil del cliente y asignaciones). Por tu indicación del 31/10/2026, sigo con las siguientes etapas sin pedir autorización entre una y otra; al terminar cada una dejo un informe corto.
 
 ## 1. La decisión
 
@@ -245,13 +245,61 @@ Las pantallas de Rutinas y Plantillas funcionan sin cambios: la API responde igu
 
 ---
 
+## 4.2 Qué incluye la etapa 4 (Fase 7: clientes y asignaciones)
+
+Las pantallas de Clientes, la ficha del cliente, «Asignar a clientes» y el perfil del portal funcionan sin cambios.
+
+- **Base D1** (`migrations/0004_perfil_y_asignaciones.sql`): solo agrega columnas y tablas. No cambia ni borra nada de lo existente.
+- **Perfil completo del cliente:**
+  - teléfono, fecha de nacimiento, estatura, peso, experiencia, objetivo, lugar, días disponibles, duración de sesión y limitaciones;
+  - solo nombre, apellidos y correo son obligatorios;
+  - estatura y peso en centésimas exactas;
+  - cambiar el correo cambia también el correo para entrar al portal, y no se permiten correos repetidos.
+- **Observaciones privadas:**
+  - solo tú las ves; el cliente nunca las recibe;
+  - no se editan ni se borran: **la base misma lo impide**.
+- **Asignaciones:**
+  - una versión publicada a uno o varios clientes, sin copiar los ejercicios;
+  - fecha de inicio, fecha de fin opcional e indicaciones para el cliente;
+  - estado calculado con la fecha de hoy en Guanajuato: programada, vigente o terminada;
+  - terminar o cambiar la fecha de fin, y cancelar una asignación que aún no empieza;
+  - **varias rutinas vigentes a la vez**; la lista de clientes las muestra juntas (por ejemplo, «Casa · Gimnasio»);
+  - una versión nueva no cambia la asignación, y la ficha avisa que hay una más nueva.
+- **Protecciones en la base:** solo se asignan versiones publicadas, la versión de una asignación no cambia y las asignaciones nunca se borran.
+- **Portal:** el cliente ve su perfil y sus programas, sin lo cancelado ni las observaciones privadas.
+- **Bitácora:** cambios de perfil, cambio de correo y cada asignación, término y cancelación.
+
+### Pruebas realizadas
+
+| Prueba | Resultado |
+|---|---|
+| Pruebas automáticas de la API (`npm test`) | **41 de 41 correctas** (31 anteriores y 10 nuevas) |
+| Recorrido en navegador de la Fase 7 (`frontend/e2e/clientes.cjs`) contra el Worker | **20 de 21 correctas** |
+| Revisión de tipos (TypeScript) | Sin errores |
+
+**Las pruebas nuevas cubren:**
+- perfil completo guardado y recuperado, con errores por campo exacto;
+- cambio de correo: entra con el nuevo y no con el anterior; no se permite un correo repetido;
+- observaciones privadas: el cliente no las recibe y la base impide borrarlas;
+- una versión asignada a dos clientes sin copiar ejercicios;
+- varias rutinas vigentes a la vez;
+- rechazos: borrador, plantilla, rutina archivada, cliente inactivo, fechas al revés o inexistentes;
+- versión nueva sin alterar la asignación; cambio de programa con historial;
+- cancelar una asignación futura;
+- desactivar un cliente conserva todo;
+- privacidad entre entrenadoras y bloqueo para clientes.
+
+**La única falla del recorrido en navegador es esperada.** El inicio de la entrenadora y el inicio del portal piden datos de las etapas 5 y 6, que por ahora responden 501. Todo lo de clientes y asignaciones pasó, incluido el portal en celular.
+
+---
+
 ## 5. Etapas siguientes (cada una con tu aprobación)
 
 | Etapa | Contenido | Equivale a |
 |---|---|---|
 | 2 ✓ | Biblioteca de ejercicios bilingüe, grupos musculares, equipo, medios privados en **R2**, importación y exportación Excel (**entregada**, sección 4) | Fase 5 |
 | 3 ✓ | Constructor manual de rutinas, borradores, versiones inmutables y plantillas (**entregada**, sección 4.1) | Fase 6 |
-| 4 | Perfil completo del cliente, observaciones privadas, asignaciones (varias vigentes a la vez) | Fase 7 |
+| 4 ✓ | Perfil completo del cliente, observaciones privadas, asignaciones (varias vigentes a la vez) (**entregada**, sección 4.2) | Fase 7 |
 | 5 | Portal del cliente y registro de entrenamientos serie por serie | Fase 8 |
 | 6 | Medidas, evaluaciones, fotos privadas, gráficas y calendario | Fase 9 |
 | 7 | PDF y Excel | Fase 10 |
