@@ -20,7 +20,14 @@ const hash = (password) => {
   const salt = randomBytes(16)
   return `pbkdf2-sha256$100000$${salt.toString('base64')}$${pbkdf2Sync(password, salt, 100_000, 32, 'sha256').toString('base64')}`
 }
-export const sql = (statement) => JSON.parse(wrangler('d1', 'execute', 'lbmethod', '--local', '--json', '--command', statement).toString())[0].results
+export const sql = (statement) => {
+  try {
+    return JSON.parse(wrangler('d1', 'execute', 'lbmethod', '--local', '--json', '--command', statement).toString())[0].results
+  } catch (err) {
+    // El motivo del rechazo (por ejemplo, un disparador de la base) viene en la salida del comando.
+    throw new Error(`${err.stdout ?? ''}${err.stderr ?? ''}`.trim() || String(err))
+  }
+}
 
 /** Registra el arranque y el cierre del Worker para el archivo de pruebas que lo importa. */
 export function useServer() {
@@ -77,7 +84,15 @@ export class Session {
     }
     if (this.cookies.size) headers.Cookie = [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; ')
     const payload = method === 'GET' ? undefined : form ? body : JSON.stringify(body ?? {})
-    const res = await fetch(BASE + path, { method, headers, body: payload, redirect: 'manual' })
+    const send = () => fetch(BASE + path, { method, headers, body: payload, redirect: 'manual' })
+    let res
+    try {
+      res = await send()
+    } catch (err) {
+      // Tras una pausa larga, el servidor de pruebas cierra la conexión guardada; la petición no llegó y se repite.
+      if (!/other side closed/.test(String(err.cause ?? err))) throw err
+      res = await send()
+    }
     for (const cookie of res.headers.getSetCookie()) {
       const [pair] = cookie.split(';')
       const [name, value] = pair.split('=')

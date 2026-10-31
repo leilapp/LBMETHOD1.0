@@ -1,6 +1,6 @@
-# LB METHOD en Cloudflare · Plan, etapas 1 y 2
+# LB METHOD en Cloudflare · Plan y avance por etapas
 
-Estado: **etapa 2 entregada** (biblioteca de ejercicios, igual que la Fase 5). Me detengo aquí hasta tu aprobación para la etapa 3 (constructor de rutinas).
+Estado: **etapas 1, 2 y 3 entregadas** (cuentas y clientes, biblioteca, constructor de rutinas). Por tu indicación del 31/10/2026, sigo con las siguientes etapas sin pedir autorización entre una y otra; al terminar cada una dejo un informe corto.
 
 ## 1. La decisión
 
@@ -145,7 +145,7 @@ La API responde igual que la versión .NET, así que las pantallas de la bibliot
 
 | Prueba | Resultado |
 |---|---|
-| Pruebas automáticas de la API (`npm test`, D1 y R2 locales nuevos en cada ejecución) | **22 de 22 correctas** (11 de la etapa 1 y 11 nuevas) |
+| Pruebas automáticas de la API (`npm test`, D1 y R2 locales nuevos en cada ejecución) | **22 de 22 correctas** (11 de la etapa 1 y 11 nuevas; con la etapa 3 son 31) |
 | Recorrido en navegador de la Fase 5 (`frontend/e2e/biblioteca.cjs`) contra el Worker | **23 de 24 correctas** |
 | Revisión de tipos (TypeScript) y revisión de dependencias (`npm audit`) | Sin errores ni vulnerabilidades |
 
@@ -198,12 +198,59 @@ La API responde igual que la versión .NET, así que las pantallas de la bibliot
 
 ---
 
+## 4.1 Qué incluye la etapa 3 (Fase 6: constructor manual de rutinas)
+
+Las pantallas de Rutinas y Plantillas funcionan sin cambios: la API responde igual que la versión .NET.
+
+- **Tablas nuevas en D1** (`migrations/0003_rutinas.sql`): rutinas y plantillas, versiones, días, ejercicios de cada día y detalle serie por serie.
+- **Nada se genera automáticamente.** Tú eliges cada día, ejercicio, orden y parámetro. Un ejercicio agregado llega vacío y el sistema no propone valores.
+- **Constructor:**
+  - borrador que se guarda completo, aunque esté incompleto;
+  - series, repeticiones, peso con unidad, descanso, tempo, RIR, RPE, tipo de serie, superserie y notas;
+  - detalle serie por serie;
+  - errores junto al campo exacto (por ejemplo, el máximo de repeticiones del segundo ejercicio del día 1).
+- **Publicar:** exige que cada día tenga ejercicios, que ningún ejercicio esté desactivado en la biblioteca y que cada superserie tenga al menos dos ejercicios.
+- **Versiones:**
+  - una versión publicada queda fija para siempre;
+  - editar crea un borrador con el siguiente número (v2, v3…);
+  - descartar un borrador no toca lo publicado.
+- **Duplicar, guardar como plantilla, crear desde plantilla, archivar y restaurar.** Archivar no borra nada.
+- **Privacidad:** cada entrenadora ve solo sus rutinas; para cualquier otra responden 404. Un cliente recibe 403.
+- **Bitácora:** creación, borradores, publicación, descarte, archivo y restauración quedan registrados.
+
+**Mejora respecto a la versión .NET.** La versión publicada ahora está protegida **en la base misma**. Unos disparadores de D1 (*triggers*) rechazan cualquier cambio, borrado o agregado en una versión publicada, aunque venga de un error del programa o de una consulta manual. En .NET esa protección vivía en el programa.
+
+**Pesos sin perder decimales:** se guardan en centésimas exactas (60.25 kg se guarda como 6025).
+
+### Pruebas realizadas
+
+| Prueba | Resultado |
+|---|---|
+| Pruebas automáticas de la API (`npm test`) | **31 de 31 correctas** (22 anteriores y 9 nuevas) |
+| Recorrido en navegador de la Fase 6 (`frontend/e2e/rutinas.cjs`) contra el Worker | **25 de 26 correctas** |
+| Revisión de tipos (TypeScript) | Sin errores |
+
+**Las pruebas nuevas cubren:**
+- armar, guardar, recargar y reordenar, sin modificar el ejercicio de la biblioteca;
+- el error en el campo exacto, también para valores con el tipo equivocado y listas demasiado largas;
+- publicar, editar como v2 y comprobar que la v1 sigue intacta;
+- **intentos de modificar directamente en la base una versión publicada**, que se rechazan;
+- un ejercicio desactivado que impide publicar;
+- descartar un borrador sin perder lo publicado;
+- duplicar, plantillas, búsqueda sin acentos;
+- archivar y restaurar;
+- privacidad entre entrenadoras y bloqueo para clientes.
+
+**La única falla del recorrido en navegador es esperada.** La ficha de la rutina pide la sección «Asignada a» y el inicio pide el panel de resumen. Las dos llegan en la etapa 4 y por ahora responden 501. El recorrido completo del constructor pasó, incluido publicar v1 y v2, plantillas, archivar y la vista en celular.
+
+---
+
 ## 5. Etapas siguientes (cada una con tu aprobación)
 
 | Etapa | Contenido | Equivale a |
 |---|---|---|
 | 2 ✓ | Biblioteca de ejercicios bilingüe, grupos musculares, equipo, medios privados en **R2**, importación y exportación Excel (**entregada**, sección 4) | Fase 5 |
-| 3 | Constructor manual de rutinas, borradores, versiones inmutables y plantillas | Fase 6 |
+| 3 ✓ | Constructor manual de rutinas, borradores, versiones inmutables y plantillas (**entregada**, sección 4.1) | Fase 6 |
 | 4 | Perfil completo del cliente, observaciones privadas, asignaciones (varias vigentes a la vez) | Fase 7 |
 | 5 | Portal del cliente y registro de entrenamientos serie por serie | Fase 8 |
 | 6 | Medidas, evaluaciones, fotos privadas, gráficas y calendario | Fase 9 |
