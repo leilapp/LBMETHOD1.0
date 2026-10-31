@@ -17,6 +17,7 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const canInstall = useCanInstall()
+  const offerApk = isAndroidBrowser()
 
   if (isPending) return <LoadingState label="Verificando sesión…" />
   if (session) return <Navigate to={homeFor(session)} replace />
@@ -72,6 +73,20 @@ export function LoginPage() {
           </Button>
           <p className="auth__help">¿Olvidaste tu contraseña? Pide a tu entrenadora que la restablezca.</p>
         </form>
+        {(canInstall || offerApk) && (
+          <div className="auth__install">
+            {offerApk && (
+              <>
+                <a className="btn btn--primary btn--block" href="/descargar/lbmethod.apk" download="LB-METHOD.apk">
+                  Descargar app para Android (APK)
+                </a>
+                <p className="auth__help">
+                  Al abrir el archivo, Android te pedirá permitir instalar apps de Chrome. Es normal: la app no viene de la Play Store.
+                </p>
+              </>
+            )}
+          </div>
+        )}
         {canInstall && (
           <div className="auth__install">
             <Button type="button" variant="secondary" block onClick={() => void installApp()}>
@@ -83,6 +98,12 @@ export function LoginPage() {
       </div>
     </div>
   )
+}
+
+/** Teléfono Android en el navegador (no dentro de la app ya instalada, que agrega «LBMETHODAndroid»). */
+function isAndroidBrowser() {
+  const ua = navigator.userAgent
+  return /Android/i.test(ua) && !/LBMETHODAndroid/.test(ua)
 }
 
 export function ChangePasswordForm({ onDone }: { onDone?: () => void }) {

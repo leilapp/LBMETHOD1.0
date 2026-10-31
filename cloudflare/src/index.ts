@@ -56,6 +56,14 @@ api.all('*', requireRole(), (c) =>
 app.route('/api', api)
 
 // Todo lo demás son las pantallas compiladas; las rutas de la aplicación devuelven index.html.
+// La APK de Android se descarga como archivo (no se intenta abrir en el navegador).
+app.get('/descargar/lbmethod.apk', async (c) => {
+  const res = await c.env.ASSETS.fetch(c.req.raw)
+  if (!res.ok) return res
+  const download = new Response(res.body, res)
+  download.headers.set('Content-Disposition', 'attachment; filename="LB-METHOD.apk"')
+  return download
+})
 app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw))
 
 export default {

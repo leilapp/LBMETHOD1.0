@@ -28,3 +28,7 @@ backend/src/LBMethod.Api/wwwroot/
 
 # Respaldos de la base y de los archivos (datos personales de las clientas): nunca en Git
 cloudflare/respaldos/
+
+# Llave de firma de la APK de Android: nunca en Git
+*.keystore
+*.jks

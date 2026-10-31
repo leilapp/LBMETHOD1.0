@@ -4,6 +4,7 @@
  * - Envía el token CSRF en cada operación que modifica datos.
  * - Convierte las respuestas de error (ProblemDetails) en mensajes en español.
  */
+import { saveBlob } from '../lib/saveFile'
 
 export class ApiError extends Error {
   readonly status: number
@@ -107,14 +108,7 @@ async function download(path: string, fallbackName: string): Promise<void> {
   if (!res.ok) throw await toError(res)
   const disposition = res.headers.get('Content-Disposition') ?? ''
   const name = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1] ?? /filename="?([^";]+)"?/i.exec(disposition)?.[1]
-  const url = URL.createObjectURL(await res.blob())
-  const link = document.createElement('a')
-  link.href = url
-  link.download = name ? decodeURIComponent(name) : fallbackName
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
+  await saveBlob(await res.blob(), name ? decodeURIComponent(name) : fallbackName, 0)
 }
 
 export const api = {

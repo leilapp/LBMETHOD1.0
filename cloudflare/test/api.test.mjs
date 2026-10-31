@@ -163,6 +163,14 @@ describe('clientes y separación de datos', () => {
 })
 
 describe('sitio único y cabeceras', () => {
+  test('la APK de Android se descarga como archivo, sin sesión', async () => {
+    const res = await fetch(`${BASE}/descargar/lbmethod.apk`)
+    assert.equal(res.status, 200)
+    assert.equal(res.headers.get('content-type'), 'application/vnd.android.package-archive')
+    assert.equal(res.headers.get('content-disposition'), 'attachment; filename="LB-METHOD.apk"')
+    assert.equal(Buffer.from(await res.arrayBuffer()).subarray(0, 2).toString('latin1'), 'PK', 'es un archivo ZIP/APK')
+  })
+
   test('las rutas de la aplicación devuelven la página con CSP; /api nunca devuelve la página', async () => {
     for (const path of ['/', '/iniciar-sesion', '/entrenadora/clientes', '/portal/progreso']) {
       const res = await fetch(BASE + path)

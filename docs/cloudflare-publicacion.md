@@ -15,9 +15,10 @@ Guía de la etapa 8, actualizada el 31/10/2026 para el **plan gratuito**: no nec
 ## 2. Abrir la app
 
 1. Cada cambio que llega a la rama `claude/project-thread-wllv8a` se publica solo en tu Worker (unos 2 minutos).
-2. Abre `https://lbmethod1-0.<tu-subdominio>.workers.dev`. El link exacto está en el panel: *Workers & Pages → lbmethod1-0*, arriba a la derecha («Visit» o «Domains & Routes»).
+2. Abre **https://lbmethod1-0.le1.workers.dev/** (también está en el panel: *Workers & Pages → lbmethod1-0 → Visit*).
 3. Entra con tu correo y la contraseña temporal, y crea la tuya.
-4. **Instalar la app:** en Chrome (Android o computadora) aparece el botón «Instalar la app en este dispositivo» debajo del inicio de sesión. También puedes usar el menú ⋮ → «Instalar app» o «Agregar a pantalla de inicio». En iPhone: Compartir → «Agregar a inicio». Queda con su ícono, como una app más, sin tienda.
+4. **App de Android (APK):** en un teléfono Android, debajo del inicio de sesión aparece «Descargar app para Android (APK)». Baja `LB-METHOD.apk`; al abrirlo, Android pide permitir instalar apps de Chrome (es normal: no viene de la Play Store). Detalles en [android/LEEME.md](../android/LEEME.md).
+5. **Instalar sin APK:** en Chrome (Android o computadora) también puede aparecer el botón «Instalar la app en este dispositivo». También puedes usar el menú ⋮ → «Instalar app» o «Agregar a pantalla de inicio». En iPhone: Compartir → «Agregar a inicio». Queda con su ícono, como una app más, sin tienda.
 
 **Si el link no abre o muestra un error de Cloudflare**, revisa la conexión de Git: *Workers & Pages → lbmethod1-0 → Settings → Build*:
 - Directorio raíz: `cloudflare`

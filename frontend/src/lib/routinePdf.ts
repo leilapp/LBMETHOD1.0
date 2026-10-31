@@ -1,5 +1,6 @@
 import type { PortalProgram } from '../api/portal'
 import type { RoutineVersion } from '../api/routines'
+import { saveBlob } from './saveFile'
 
 /**
  * PDF de una rutina generado en el navegador (jsPDF + jspdf-autotable), con el mismo diseño que tenía el PDF del
@@ -470,16 +471,7 @@ export async function buildRoutinePdf(data: RoutinePdfData, now = new Date(), { 
 
 /** Guarda el PDF en el equipo. Funciona en computadoras y en Chrome de Android (lo deja en Descargas). */
 export function savePdf(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = fileName
-  link.rel = 'noopener'
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  // Algunos navegadores de teléfono leen el archivo después del clic: se libera la memoria un poco más tarde.
-  setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  return saveBlob(blob, fileName)
 }
 
 export const routinePdfName = (data: RoutinePdfData) =>

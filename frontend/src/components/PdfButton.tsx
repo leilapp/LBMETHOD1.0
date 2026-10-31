@@ -33,7 +33,7 @@ export function PdfButton({
           setError(null)
           try {
             const data = await getData()
-            savePdf(await buildRoutinePdf(data), routinePdfName(data))
+            await savePdf(await buildRoutinePdf(data), routinePdfName(data))
           } catch (e) {
             // Los errores de la API ya traen un mensaje para la persona; los demás (por ejemplo, sin memoria) no.
             setError(e instanceof ApiError ? e.message : 'No se pudo generar el PDF. Inténtalo de nuevo.')

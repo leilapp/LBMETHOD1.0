@@ -68,6 +68,20 @@ describe('inicio de sesión', () => {
     await waitFor(() => expect(screen.queryByRole('button', { name: /Instalar la app/ })).not.toBeInTheDocument())
   })
 
+  it('en un teléfono Android ofrece descargar la APK; dentro de la app ya instalada, no', async () => {
+    mockApi({ 'GET /api/auth/me': () => ({ status: 401 }) })
+    const ua = vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14; Pixel 7) Chrome/130 Mobile')
+    renderApp('/login')
+    const link = await screen.findByRole('link', { name: 'Descargar app para Android (APK)' })
+    expect(link).toHaveAttribute('href', '/descargar/lbmethod.apk')
+    cleanup()
+    ua.mockReturnValue('Mozilla/5.0 (Linux; Android 14; Pixel 7) Chrome/130 Mobile LBMETHODAndroid/1.0')
+    renderApp('/login')
+    await screen.findByRole('heading', { name: 'Iniciar sesión' })
+    expect(screen.queryByRole('link', { name: /Descargar app/ })).not.toBeInTheDocument()
+    ua.mockRestore()
+  })
+
   it('sin sesión redirige al inicio de sesión', async () => {
     mockApi({ 'GET /api/auth/me': () => ({ status: 401 }) })
     renderApp('/entrenadora/clientes')
