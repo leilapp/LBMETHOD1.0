@@ -11,6 +11,8 @@ export interface Env {
   LOGIN_REQUESTS_PER_MINUTE: string
   MAX_IMAGE_BYTES: string
   MAX_VIDEO_BYTES: string
+  /** Tamaño máximo de una foto de progreso (10 MB, como en .NET). */
+  MAX_PHOTO_BYTES: string
 }
 
 export type Role = 'TRAINER' | 'CLIENT'

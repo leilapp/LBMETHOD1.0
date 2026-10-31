@@ -14,6 +14,8 @@ const state = mkdtempSync(join(tmpdir(), 'lbmethod-d1-'))
 export const TRAINER = { email: 'entrenadora@prueba.local', password: 'Entrena2026Segura' }
 export const OTHER = { email: 'otra@prueba.local', password: 'Otra2026Segura1' }
 let server
+/** Límite de foto pequeño en las pruebas, para probar el rechazo por tamaño sin subir megas (como en .NET). */
+export const MAX_PHOTO_BYTES = 200 * 1024
 
 const wrangler = (...args) => execFileSync('npx', ['wrangler', ...args, '--persist-to', state], { stdio: 'pipe' })
 const hash = (password) => {
@@ -42,7 +44,7 @@ export function useServer() {
         .join('\n'),
     )
     wrangler('d1', 'execute', 'lbmethod', '--local', '--file', file)
-    server = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'APP_SECRET:secreto-solo-para-pruebas'], {
+    server = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'APP_SECRET:secreto-solo-para-pruebas', '--var', `MAX_PHOTO_BYTES:${MAX_PHOTO_BYTES}`], {
       stdio: 'ignore',
       detached: true,
     })

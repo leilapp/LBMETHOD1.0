@@ -1,6 +1,6 @@
 # LB METHOD en Cloudflare · Plan y avance por etapas
 
-Estado: **etapas 1 a 5 entregadas** (cuentas y clientes, biblioteca, constructor de rutinas, perfil del cliente y asignaciones, portal del cliente y registro de entrenamientos). Por tu indicación del 31/10/2026, sigo con las siguientes etapas sin pedir autorización entre una y otra; al terminar cada una dejo un informe corto.
+Estado: **etapas 1 a 6 entregadas** (cuentas y clientes, biblioteca, constructor de rutinas, perfil del cliente y asignaciones, portal y registro de entrenamientos, seguimiento y calendario). Por tu indicación del 31/10/2026, sigo con las siguientes etapas sin pedir autorización entre una y otra; al terminar cada una dejo un informe corto.
 
 ## 1. La decisión
 
@@ -339,6 +339,57 @@ Las pantallas del portal (inicio, mi rutina, entrenar, historial y detalle) func
 
 ---
 
+## 4.4 Qué incluye la etapa 6 (Fase 9: seguimiento, progreso y calendario)
+
+Las pantallas de Seguimiento, la ficha de progreso, el Calendario, tu inicio y, en el portal, «Mi progreso» y «Mi calendario» funcionan sin cambios.
+
+- **Base D1** (`migrations/0006_seguimiento.sql`): solo agrega tablas y una columna. No cambia ni borra nada de lo existente.
+- **Tipos de medida:**
+  - vienen los 7 de la guía (peso corporal, cintura, cadera, glúteos, muslo, brazo, pantorrilla) y puedes agregar más;
+  - cada tipo solo acepta unidades coherentes (el peso corporal nunca en centímetros);
+  - en cuanto hay medidas, su unidad ya no cambia, para no mezclar unidades en el historial (**la base misma lo impide**).
+- **Evaluaciones y medidas:**
+  - fecha (no futura), notas y medidas, con rangos para atrapar errores de captura (por ejemplo, 625 en lugar de 62.5 kg);
+  - valores en centésimas exactas;
+  - una medida mal capturada se corrige y el valor anterior queda en la bitácora; nada se borra;
+  - si había una evaluación programada ese día en el calendario, queda como hecha y enlazada.
+- **Fotos de progreso:**
+  - en R2, privadas, sin dirección pública; solo las ven la clienta y su entrenadora;
+  - se revisa el tipo real del archivo (JPG, PNG o WEBP) y el tamaño (10 MB).
+- **Progreso (solo datos reales):**
+  - una gráfica por tipo de medida, sin rellenar huecos;
+  - cargas de los entrenamientos finalizados: la mejor serie de cada día, en la unidad más usada; lo registrado en otra unidad se convierte y se marca, conservando el valor original;
+  - el peso corporal y las cargas nunca se mezclan;
+  - frecuencia por semana (lunes a domingo) de las últimas 12 semanas.
+- **Calendario:**
+  - tus eventos (entrenamiento, descanso, evaluación, otro), con hora opcional; se marcan como hechos o se cancelan, nunca se borran;
+  - inicio y fin de cada programa, los días de rutina y, cuando todos los días tienen día de la semana, los descansos;
+  - los entrenamientos registrados y las evaluaciones;
+  - la clienta ve solo lo suyo, sin cancelados ni eventos generales.
+- **Tu inicio:** próximas evaluaciones (14 días) y actividad reciente real (entrenamientos y evaluaciones).
+- **Tu seguimiento:** por clienta, programa vigente, última y próxima evaluación, último entrenamiento y entrenamientos de los últimos 30 días; puedes abrir cada entrenamiento con lo indicado y lo hecho.
+
+### Pruebas realizadas
+
+| Prueba | Resultado |
+|---|---|
+| Pruebas automáticas de la API (`npm test`) | **53 de 53 correctas** (47 anteriores y 6 nuevas) |
+| Recorrido en navegador de la Fase 9 (`frontend/e2e/seguimiento.cjs`) contra el Worker | **47 de 47 correctas** |
+| Revisión de tipos (TypeScript) | Sin errores |
+
+**Las pruebas nuevas cubren:**
+- tipos de medida con unidades coherentes, unidad fija con historial, desactivar sin perder historial;
+- evaluaciones: fecha futura, valores fuera de rango, repetidas, más de dos decimales; corrección con bitácora («74.00 cm → 75 cm»);
+- fotos: archivo falso, tamaño excesivo, fecha futura; acceso solo de la clienta y su entrenadora;
+- progreso: peso corporal y cargas separados, conversión de lb marcada, entrenamientos sin terminar fuera de las cargas, frecuencia semanal;
+- calendario: eventos, programas, días de rutina, descansos, entrenamientos y evaluaciones; permisos entre clientas y entrenadoras;
+- inicio y resumen de seguimiento con las próximas evaluaciones;
+- la base impide borrar medidas, evaluaciones, fotos y eventos.
+
+Con tu inicio ya disponible, repetí los recorridos en navegador del portal (**36 de 36**) y de clientes (**21 de 21**): ya no queda ninguna falla esperada.
+
+---
+
 ## 5. Etapas siguientes (cada una con tu aprobación)
 
 | Etapa | Contenido | Equivale a |
@@ -347,7 +398,7 @@ Las pantallas del portal (inicio, mi rutina, entrenar, historial y detalle) func
 | 3 ✓ | Constructor manual de rutinas, borradores, versiones inmutables y plantillas (**entregada**, sección 4.1) | Fase 6 |
 | 4 ✓ | Perfil completo del cliente, observaciones privadas, asignaciones (varias vigentes a la vez) (**entregada**, sección 4.2) | Fase 7 |
 | 5 ✓ | Portal del cliente y registro de entrenamientos serie por serie (**entregada**, sección 4.3) | Fase 8 |
-| 6 | Medidas, evaluaciones, fotos privadas, gráficas y calendario | Fase 9 |
+| 6 ✓ | Medidas, evaluaciones, fotos privadas, gráficas y calendario (**entregada**, sección 4.4) | Fase 9 |
 | 7 | PDF y Excel | Fase 10 |
 | 8 | Auditoría completa (pruebas de todos los endpoints), respaldos, publicación en tu cuenta y guía | Fase 10 |
 
