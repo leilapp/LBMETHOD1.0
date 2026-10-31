@@ -2,6 +2,10 @@ import { Hono } from 'hono'
 import { problem, securityHeaders } from './http'
 import { auth } from './routes/auth'
 import { clients } from './routes/clients'
+import { catalogs } from './library/catalogs'
+import { exercises } from './library/exercises'
+import { importExport } from './library/import-export'
+import { exerciseMedia, mediaContent } from './library/media'
 import { loadSession, requireCsrf, requireRole } from './session'
 import type { AppBindings } from './types'
 
@@ -19,6 +23,12 @@ api.route('/auth', auth)
 api.use('/trainer/*', requireRole('TRAINER'))
 api.use('/portal/*', requireRole('CLIENT'))
 api.route('/trainer/clients', clients)
+api.route('/trainer/library', catalogs)
+// Importación y exportación antes que /:id para que «export» e «import/...» no se confundan con un ejercicio.
+api.route('/trainer/library/exercises', importExport)
+api.route('/trainer/library/exercises', exerciseMedia)
+api.route('/trainer/library/exercises', exercises)
+api.route('/trainer/library/media', mediaContent)
 
 // Lo que aún no se migra responde 501 con un mensaje claro (con la misma regla de sesión y rol que tendrá).
 api.all('*', requireRole(), (c) =>

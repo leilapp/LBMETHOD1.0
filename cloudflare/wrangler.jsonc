@@ -22,11 +22,16 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Fotos, imágenes y videos privados. El bucket no tiene acceso público: los archivos solo salen por la API.
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "lbmethod-media" }],
   "vars": {
     "SESSION_HOURS": "8",
     "MAX_FAILED_LOGINS": "5",
     "LOCKOUT_MINUTES": "15",
-    "LOGIN_REQUESTS_PER_MINUTE": "10"
+    "LOGIN_REQUESTS_PER_MINUTE": "10",
+    // 5 MB por imagen. Videos: 90 MB (Cloudflare limita cada petición a 100 MB en los planes Free y Pro).
+    "MAX_IMAGE_BYTES": "5242880",
+    "MAX_VIDEO_BYTES": "94371840"
   },
   "observability": { "enabled": true }
 }

@@ -20,7 +20,7 @@ El desarrollo avanza por fases según la guía maestra del proyecto; cada fase r
 - [Fase 10: exportaciones, auditoría y entrega](docs/fase-10-entrega.md) (sin migración nueva; incluye limitaciones conocidas y decisiones pendientes)
 
 Versión Cloudflare (en construcción por etapas, por decisión del 31/10/2026):
-- [Plan y etapa 1: Workers + D1](docs/cloudflare-plan.md) (carpeta `cloudflare/`; la versión .NET + SQL Server sigue en `backend/`)
+- [Plan y etapas 1 y 2: Workers + D1 + R2](docs/cloudflare-plan.md) (carpeta `cloudflare/`; la versión .NET + SQL Server sigue en `backend/`)
 
 Guías de operación (versión .NET + SQL Server):
 - [Instalación y ejecución en Windows](docs/instalacion.md)

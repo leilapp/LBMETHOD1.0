@@ -1,104 +1,11 @@
-// Pruebas de la etapa 1 contra el Worker real (wrangler dev) y una base D1 local nueva, creada para cada ejecución.
+// Pruebas de la etapa 1 (cuentas, sesiones y clientes) contra el Worker real y una base D1 local nueva.
 //   npm test
 // Requiere haber ejecutado «npm run build» (pantallas en ./public).
 import assert from 'node:assert/strict'
-import { execFileSync, spawn } from 'node:child_process'
-import { pbkdf2Sync, randomBytes } from 'node:crypto'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { after, before, describe, test } from 'node:test'
+import { describe, test } from 'node:test'
+import { BASE, OTHER, Session, sql, TRAINER, trainer, useServer } from './helpers.mjs'
 
-const PORT = 8800 + Math.floor(Math.random() * 100)
-const BASE = `http://127.0.0.1:${PORT}`
-const state = mkdtempSync(join(tmpdir(), 'lbmethod-d1-'))
-const TRAINER = { email: 'entrenadora@prueba.local', password: 'Entrena2026Segura' }
-const OTHER = { email: 'otra@prueba.local', password: 'Otra2026Segura1' }
-let server
-
-const wrangler = (...args) => execFileSync('npx', ['wrangler', ...args, '--persist-to', state], { stdio: 'pipe' })
-const hash = (password) => {
-  const salt = randomBytes(16)
-  return `pbkdf2-sha256$100000$${salt.toString('base64')}$${pbkdf2Sync(password, salt, 100_000, 32, 'sha256').toString('base64')}`
-}
-const sql = (statement) => JSON.parse(wrangler('d1', 'execute', 'lbmethod', '--local', '--json', '--command', statement).toString())[0].results
-
-before(async () => {
-  wrangler('d1', 'migrations', 'apply', 'lbmethod', '--local')
-  const now = new Date().toISOString()
-  const file = join(state, 'seed.sql')
-  writeFileSync(
-    file,
-    [TRAINER, OTHER]
-      .map((t) => `INSERT INTO users (email, display_name, password_hash, role, created_at) VALUES ('${t.email}', 'Entrenadora', '${hash(t.password)}', 'TRAINER', '${now}');`)
-      .join('\n'),
-  )
-  wrangler('d1', 'execute', 'lbmethod', '--local', '--file', file)
-  server = spawn('npx', ['wrangler', 'dev', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'APP_SECRET:secreto-solo-para-pruebas'], {
-    stdio: 'ignore',
-    detached: true,
-  })
-  for (let i = 0; i < 60; i++) {
-    try {
-      if ((await fetch(`${BASE}/api/auth/me`)).status === 401) return
-    } catch {
-      /* todavía arrancando */
-    }
-    await new Promise((r) => setTimeout(r, 1000))
-  }
-  throw new Error('wrangler dev no arrancó')
-})
-
-after(() => {
-  try {
-    process.kill(-server.pid)
-  } catch {
-    /* ya terminó */
-  }
-  rmSync(state, { recursive: true, force: true })
-})
-
-/** Sesión de navegador mínima: guarda cookies y envía el token CSRF como lo hacen las pantallas. */
-class Session {
-  cookies = new Map()
-  csrf = null
-  constructor(ip = `10.0.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`) {
-    this.ip = ip
-  }
-  async request(method, path, body, { csrf = true } = {}) {
-    const headers = { 'CF-Connecting-IP': this.ip, Accept: 'application/json' }
-    if (method !== 'GET') {
-      headers['Content-Type'] = 'application/json'
-      if (csrf) headers['X-CSRF-TOKEN'] = this.csrf ?? (await this.refreshCsrf())
-    }
-    if (this.cookies.size) headers.Cookie = [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; ')
-    const res = await fetch(BASE + path, { method, headers, body: method === 'GET' ? undefined : JSON.stringify(body ?? {}), redirect: 'manual' })
-    for (const cookie of res.headers.getSetCookie()) {
-      const [pair] = cookie.split(';')
-      const [name, value] = pair.split('=')
-      if (/Max-Age=0|Expires=Thu, 01 Jan 1970/i.test(cookie) || value === '') this.cookies.delete(name)
-      else this.cookies.set(name, value)
-    }
-    return res
-  }
-  async refreshCsrf() {
-    this.csrf = (await (await this.request('GET', '/api/auth/csrf')).json()).token
-    return this.csrf
-  }
-  get = (path) => this.request('GET', path)
-  post = (path, body, opts) => this.request('POST', path, body, opts)
-  async login({ email, password }) {
-    const res = await this.post('/api/auth/login', { email, password })
-    this.csrf = null // el token queda ligado a la identidad: se pide de nuevo, como hacen las pantallas
-    return res
-  }
-}
-
-const trainer = async (who = TRAINER) => {
-  const s = new Session()
-  assert.equal((await s.login(who)).status, 200)
-  return s
-}
+useServer()
 
 describe('inicio de sesión y sesiones', () => {
   test('la entrenadora inicia sesión; la cookie es HttpOnly, Secure y SameSite=Strict; la base guarda solo huellas', async () => {
