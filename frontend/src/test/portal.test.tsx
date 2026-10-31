@@ -161,27 +161,28 @@ describe('mi rutina', () => {
     expect(screen.getByRole('button', { name: 'Empezar Día A · Glúteo' })).toBeInTheDocument()
   })
 
-  it('descarga el PDF de su rutina y, si no está autorizado, lo explica', async () => {
-    let allowed = true
+  it('genera el PDF de su rutina en el navegador con los datos que ya tiene, sin pedir nada más al servidor', async () => {
     const calls = mockApi({
       ...me,
       'GET /api/portal/program': () => ({ status: 200, body: [program] }),
       'GET /api/portal/home': () => ({ status: 200, body: home() }),
-      'GET /api/portal/program/5/pdf': () => (allowed ? { status: 200, body: 'pdf' } : { status: 404, body: { title: 'No se encontró el recurso solicitado.' } }),
     })
-    const created = vi.fn(() => 'blob:rutina')
+    const blobs: Blob[] = []
+    const created = vi.fn((b: Blob) => {
+      blobs.push(b)
+      return 'blob:rutina'
+    })
     vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: created, revokeObjectURL: vi.fn() }))
     const user = userEvent.setup()
     renderApp('/portal/rutina')
     const button = await screen.findByRole('button', { name: 'Descargar en PDF: Glúteo 6 semanas' })
+    const before = calls.length
     await user.click(button)
-    await waitFor(() => expect(created).toHaveBeenCalledTimes(1))
-    expect(calls.some((c) => c.key === 'GET /api/portal/program/5/pdf')).toBe(true)
-
-    allowed = false
-    await user.click(button)
-    expect(await screen.findByRole('alert')).toBeInTheDocument()
-    expect(created).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(created).toHaveBeenCalledTimes(1), { timeout: 5000 })
+    expect(blobs[0].type).toBe('application/pdf')
+    expect((await blobs[0].text()).startsWith('%PDF-')).toBe(true)
+    expect(calls.slice(before).filter((c) => c.key.includes('/pdf'))).toEqual([])
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })
 

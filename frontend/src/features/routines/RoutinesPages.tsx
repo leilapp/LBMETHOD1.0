@@ -16,6 +16,8 @@ import {
   TextField,
 } from '../../components/ui'
 import { DownloadButton } from '../../components/DownloadButton'
+import { PdfButton } from '../../components/PdfButton'
+import { fromRoutineVersion } from '../../lib/routinePdf'
 import { formatDate, formatDateTime } from '../../lib/format'
 import { clientsApi, isCurrent } from '../../api/clients'
 import { AssignModal } from '../clients/AssignModal'
@@ -327,13 +329,9 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
               <ErrorState message={version.error.message} onRetry={() => version.refetch()} />
             ) : (
               <div className="stack">
-                <DownloadButton
-                  path={`/api/trainer/routines/${routine.id}/versions/${version.data!.id}/pdf`}
-                  fileName="rutina-lbmethod.pdf"
-                  label={`Descargar la versión ${version.data!.versionNumber} en PDF`}
-                >
+                <PdfButton getData={() => fromRoutineVersion(version.data!)} label={`Descargar la versión ${version.data!.versionNumber} en PDF`}>
                   Descargar versión {version.data!.versionNumber} en PDF
-                </DownloadButton>
+                </PdfButton>
                 <RoutinePreview version={version.data!} />
               </div>
             )}

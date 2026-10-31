@@ -16,7 +16,9 @@ import {
   TextAreaField,
   TextField,
 } from '../../components/ui'
-import { DownloadButton } from '../../components/DownloadButton'
+import { PdfButton } from '../../components/PdfButton'
+import { routinesApi } from '../../api/routines'
+import { fromRoutineVersion } from '../../lib/routinePdf'
 import { formatDate, formatDateTime, todayInMexico } from '../../lib/format'
 import { isEmail } from '../../lib/validation'
 import { AssignModal } from './AssignModal'
@@ -205,9 +207,9 @@ function AssignmentsCard({
                     )}
                   </div>
                   <div className="list-item__actions">
-                    <DownloadButton path={`/api/trainer/assignments/${a.id}/pdf`} fileName="rutina-lbmethod.pdf" label={`Descargar en PDF: ${a.routineName}`}>
+                    <PdfButton getData={async () => fromRoutineVersion(await routinesApi.version(a.routineId, a.routineVersionId), a)} label={`Descargar en PDF: ${a.routineName}`}>
                       PDF
-                    </DownloadButton>
+                    </PdfButton>
                     {a.latestVersionNumber !== null && a.latestVersionNumber > a.versionNumber && clientActive && (
                       <Button variant="secondary" onClick={() => onChangeVersion(a)}>
                         Cambiar a versión {a.latestVersionNumber}

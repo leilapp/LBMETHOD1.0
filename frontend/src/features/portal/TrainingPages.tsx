@@ -11,7 +11,9 @@ import {
   type SessionSummary,
 } from '../../api/portal'
 import { Alert, Button, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader } from '../../components/ui'
-import { DownloadButton } from '../../components/DownloadButton'
+import { PdfButton } from '../../components/PdfButton'
+import { useSession } from '../../app/session'
+import { fromPortalProgram } from '../../lib/routinePdf'
 import { formatDate, formatDateTime, todayInMexico } from '../../lib/format'
 import { summarize } from '../routines/routineModel'
 import '../library/library.css'
@@ -225,6 +227,7 @@ function ExerciseInfo({ e }: { e: PortalExercise }) {
 
 function ProgramView({ program, canStart }: { program: PortalProgram; canStart: boolean }) {
   const start = useStartWorkout()
+  const { data: session } = useSession()
   const active = program.status === 'Active'
   return (
     <section className="card stack" aria-label={program.routineName}>
@@ -238,9 +241,9 @@ function ProgramView({ program, canStart }: { program: PortalProgram; canStart: 
         </p>
         {program.notes && <p className="portal-program__notes">{program.notes}</p>}
       </div>
-      <DownloadButton path={`/api/portal/program/${program.assignmentId}/pdf`} fileName="rutina-lbmethod.pdf" label={`Descargar en PDF: ${program.routineName}`}>
+      <PdfButton getData={() => fromPortalProgram(program, session?.displayName ?? null)} label={`Descargar en PDF: ${program.routineName}`}>
         Descargar en PDF
-      </DownloadButton>
+      </PdfButton>
       {start.error && <Alert kind="error">{start.error.message}</Alert>}
       {program.days.map((d) => (
         <details key={d.id} className="program-day" open={program.days.length <= 2}>

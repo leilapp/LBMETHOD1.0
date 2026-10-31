@@ -1,6 +1,6 @@
 # LB METHOD en Cloudflare · Plan y avance por etapas
 
-Estado: **etapas 1 a 8 entregadas, salvo el PDF de la etapa 7**, que espera que elijas la biblioteca. Toda la aplicación de la Fase 10 funciona en Cloudflare con las mismas pantallas; faltan los pasos de publicación que solo tú puedes hacer en tu cuenta ([cloudflare-publicacion.md](cloudflare-publicacion.md)).
+Estado: **etapas 1 a 8 entregadas**. El PDF ahora se genera en el navegador (jsPDF) y espera tu autorización. Toda la aplicación de la Fase 10 funciona en Cloudflare con las mismas pantallas; faltan los pasos de publicación que solo tú puedes hacer en tu cuenta ([cloudflare-publicacion.md](cloudflare-publicacion.md)).
 
 ## 1. La decisión
 
@@ -391,7 +391,7 @@ Con tu inicio ya disponible, repetí los recorridos en navegador del portal (**3
 ## 4.5 Qué incluye la etapa 7 (Fase 10: exportaciones)
 
 - **Excel, listo:** clientes (perfil y asignaciones; nunca las observaciones privadas), rutinas (resumen y detalle de cada ejercicio y serie) y evaluaciones (una fila por medida). Fechas y números como fechas y números reales; todo texto queda como texto, así que nada que parezca fórmula se ejecuta. Cada exportación queda en la bitácora y solo incluye datos de la entrenadora que la pide.
-- **PDF, pendiente de tu decisión:** te presenté tres opciones de biblioteca (no está en la guía maestra). Hasta que elijas, los 3 endpoints de PDF responden «no disponible» y nada más cambia.
+- **PDF:** elegiste generarlo en el navegador con jsPDF y jspdf-autotable (31/10/2026). Hecho y probado en la rama, en espera de tu autorización; detalle en [pdf-navegador.md](pdf-navegador.md). Funciona igual con la versión .NET y con la de Cloudflare, porque solo usa datos que la API ya entrega.
 - Pruebas: **2 nuevas** en `test/exportaciones.test.mjs` (contenido real leyendo el .xlsx, separación entre entrenadoras, sin fórmulas, cliente sin acceso). El recorrido en navegador de exportaciones se detiene en el PDF, como se espera.
 
 ## 4.6 Qué incluye la etapa 8 (auditoría, respaldos y publicación)
@@ -413,7 +413,7 @@ Con tu inicio ya disponible, repetí los recorridos en navegador del portal (**3
 | 4 ✓ | Perfil completo del cliente, observaciones privadas, asignaciones (varias vigentes a la vez) (**entregada**, sección 4.2) | Fase 7 |
 | 5 ✓ | Portal del cliente y registro de entrenamientos serie por serie (**entregada**, sección 4.3) | Fase 8 |
 | 6 ✓ | Medidas, evaluaciones, fotos privadas, gráficas y calendario (**entregada**, sección 4.4) | Fase 9 |
-| 7 (Excel ✓, PDF pendiente) | Excel entregado; PDF espera que elijas la biblioteca (sección 4.5) | Fase 10 |
+| 7 ✓ | Excel entregado; PDF en el navegador con jsPDF, esperando tu autorización (sección 4.5) | Fase 10 |
 | 8 ✓ | Auditoría de los 101 endpoints, respaldos y guía de publicación (**entregada**, sección 4.6; faltan los pasos en tu cuenta que solo tú puedes hacer) | Fase 10 |
 
 En cada etapa se trasladan también las pruebas de la versión .NET correspondientes, y la regresión en navegador debe pasar completa al final.

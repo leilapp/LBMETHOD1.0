@@ -1,8 +1,9 @@
 // Uso: con la API y 'npm run dev' en marcha → node e2e/exportaciones.cjs <carpeta-salida>
-// PDF de rutinas y exportaciones a Excel (Fase 10): descarga real desde los botones de la interfaz y revisión del contenido
+// PDF de rutinas (generado en el navegador con jsPDF) y exportaciones a Excel (Fase 10): descarga real desde los botones
+// de la interfaz y revisión del contenido
 // con pdftotext/pdfinfo (poppler) y unzip. Frontend (Vite) + API real + SQL Server real.
 // Requiere LBMETHOD_E2E_EMAIL, LBMETHOD_E2E_PASSWORD (cuenta de PRUEBA) y LBMETHOD_E2E_TAG (texto único por ejecución).
-const { chromium } = require('playwright')
+const { chromium, devices } = require('playwright')
 const path = require('path')
 const { execFileSync } = require('child_process')
 
@@ -19,10 +20,12 @@ let current = null
 const check = (name, ok) => { results.push(`${ok ? 'OK  ' : 'FAIL'} ${name}`); if (!ok) process.exitCode = 1 }
 const shot = (page, name) => page.screenshot({ path: path.join(OUT, `${name}.png`), fullPage: true })
 const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City' }).format(new Date())
-const phone = { viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }
+// Teléfono Android (Chrome en un Pixel 7: pantalla, toque y agente de usuario de Android).
+const phone = { ...devices['Pixel 7'], acceptDownloads: true }
 const pdfText = (file) => execFileSync('pdftotext', ['-layout', file, '-']).toString()
 const pdfPages = (file) => Number(/Pages:\s+(\d+)/.exec(execFileSync('pdfinfo', [file]).toString())[1])
-const xlsxText = (file) => execFileSync('unzip', ['-p', file, 'xl/sharedStrings.xml', 'xl/workbook.xml']).toString()
+// Todo el XML del libro: textos compartidos (ClosedXML, versión .NET) o en línea dentro de cada hoja (versión Cloudflare).
+const xlsxText = (file) => execFileSync('unzip', ['-p', file, 'xl/*.xml']).toString()
 
 async function csrf(page) {
   return (await (await page.request.get(`${BASE}/api/auth/csrf`)).json()).token
@@ -144,15 +147,20 @@ async function download(page, button, name) {
   await shot(cp, '04-mi-rutina-pdf')
   const clientPdf = await download(cp, portalButton, 'cliente')
   check('el cliente descarga el PDF de su rutina vigente', pdfText(clientPdf).includes(`Begoña Muñoz ${TAG}`))
-  check('el cliente no puede descargar exportaciones de la entrenadora (403)', (await cp.request.get(`${BASE}/api/trainer/exports/clients`)).status() === 403 && (await cp.request.get(`${BASE}/api/trainer/assignments/${assignmentId}/pdf`)).status() === 403)
+  check('el PDF del celular es un PDF válido de la rutina completa', pdfPages(clientPdf) >= 2 && pdfText(clientPdf).includes('Serie 2 · Efectiva · 8 reps · 100 lb · 2 min descanso'))
+  // El PDF se arma en el navegador con los datos que la API ya autorizó: un cliente no obtiene los de la entrenadora.
+  check('el cliente no puede leer rutinas ni exportaciones de la entrenadora (403)', (await cp.request.get(`${BASE}/api/trainer/exports/clients`)).status() === 403 && (await cp.request.get(`${BASE}/api/trainer/routines/${routine.id}/versions/${draft.id}`)).status() === 403)
   await phoneCtx.close()
 
   const { ctx: bctx, page: bp } = await firstLogin(browser, emailB, clientB.temporaryPassword, 'InesSegura2026')
   current = bp
-  check('otro cliente no puede descargar el PDF ajeno (404)', (await bp.request.get(`${BASE}/api/portal/program/${assignmentId}/pdf`)).status() === 404)
+  const otherPrograms = await (await bp.request.get(`${BASE}/api/portal/program`)).json()
+  await bp.goto(`${BASE}/portal/rutina`)
+  await bp.getByRole('heading', { name: 'Mi rutina' }).waitFor()
+  check('otro cliente no recibe la rutina ajena ni ve su botón de PDF', Array.isArray(otherPrograms) && !JSON.stringify(otherPrograms).includes(ROUTINE) && (await bp.getByRole('button', { name: `Descargar en PDF: ${ROUTINE}` }).count()) === 0)
   await bctx.close()
   const anon = await browser.newContext()
-  check('sin sesión no se descarga nada (401)', (await anon.request.get(`${BASE}/api/portal/program/${assignmentId}/pdf`)).status() === 401 && (await anon.request.get(`${BASE}/api/trainer/exports/clients`)).status() === 401)
+  check('sin sesión no se obtiene ningún dato (401)', (await anon.request.get(`${BASE}/api/portal/program`)).status() === 401 && (await anon.request.get(`${BASE}/api/trainer/routines/${routine.id}/versions/${draft.id}`)).status() === 401 && (await anon.request.get(`${BASE}/api/trainer/exports/clients`)).status() === 401)
   await anon.close()
 
   check('sin errores inesperados en la consola', errors.filter((e) => !/401|403|404|Unauthorized|Not Found|Forbidden/.test(e)).length === 0)
