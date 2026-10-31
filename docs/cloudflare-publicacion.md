@@ -7,49 +7,23 @@ Guía de la etapa 8. Explica qué ya está listo en tu cuenta, los pasos que sol
 | Pieza | Estado |
 |---|---|
 | Worker `lbmethod1-0` | Ya existía: lo creó tu conexión de Git. `cloudflare/wrangler.jsonc` usa ahora ese mismo nombre para publicar sobre él. |
-| Base de datos D1 `lbmethod` | **Creada el 31/10/2026**, vacía, en la región oeste de Norteamérica (la más cercana a Guanajuato). Su id ya está en `wrangler.jsonc`. |
+| Base de datos D1 `lbmethod` | **Creada y lista el 31/10/2026**, en la región oeste de Norteamérica (la más cercana a Guanajuato). Tiene las 7 migraciones aplicadas, idéntica a la base probada (32 tablas, 25 índices, 37 protecciones del historial y los catálogos iniciales). |
+| Tu cuenta de entrenadora | **Creada** en esa base con tu correo y una contraseña temporal. Al entrar por primera vez, la app te pide crear la tuya. |
+| Llave de seguridad (`APP_SECRET`) | **Ya no hace falta configurarla.** Si no existe, el Worker genera una llave al azar la primera vez y la guarda en la base. Si algún día quieres definirla tú, `npx wrangler secret put APP_SECRET` tiene prioridad. |
 | Espacio de archivos R2 `lbmethod-media` | **Falta.** R2 no está activado en tu cuenta (Cloudflare responde «Please enable R2 through the Cloudflare Dashboard»). |
-| Secreto `APP_SECRET` | **Falta.** Solo tú debes conocerlo; no se guarda en Git. |
-| Tablas y cuenta de entrenadora | **Faltan.** Se crean con los pasos de la sección 2. |
 
-## 2. Pasos que solo tú puedes hacer (una sola vez)
-
-Necesitas Node 22 y el proyecto descargado en tu computadora (Windows, PowerShell).
+## 2. Lo único que falta y solo tú puedes hacer
 
 1. **Plan de pago de Workers** (unos 5 USD al mes; confirma el precio vigente). En el plan gratuito cada petición tiene unos 10 ms de procesador, y verificar una contraseña de forma segura tarda más: el inicio de sesión fallaría. En el panel: *Workers & Pages → Plans*.
-2. **Activar R2.** En el panel: *R2 Object Storage → Activar*. Cloudflare pide un medio de pago aunque los primeros 10 GB son gratis.
-3. **Preparar la carpeta e iniciar sesión:**
-   ```powershell
-   cd cloudflare
-   npm ci
-   npx wrangler login
-   ```
-4. **Crear el espacio privado de archivos:**
-   ```powershell
-   npx wrangler r2 bucket create lbmethod-media
-   ```
-   No le actives acceso público ni dominio: los archivos solo salen por la aplicación, con permisos.
-5. **Guardar el secreto.** Genera un valor aleatorio y pégalo cuando te lo pida:
-   ```powershell
-   node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
-   npx wrangler secret put APP_SECRET
-   ```
-6. **Crear las tablas** (antes de migrar hace un respaldo automático en `cloudflare\respaldos\`):
-   ```powershell
-   npm run db:migrate:remote
-   ```
-7. **Crear tu cuenta de entrenadora** (la contraseña se escribe oculta y solo se guarda su huella):
-   ```powershell
-   npm run create-trainer -- tu-correo@dominio.com "Leilani" --remote
-   ```
-8. **Configurar la conexión de Git del Worker** `lbmethod1-0`. En el panel: *Workers & Pages → lbmethod1-0 → Settings → Build*:
+2. **Activar R2.** En el panel: *R2 Object Storage → Activar*. Cloudflare pide un medio de pago aunque los primeros 10 GB son gratis. En cuanto lo actives, el espacio privado `lbmethod-media` se crea desde aquí (o tú con `npx wrangler r2 bucket create lbmethod-media`). No le actives acceso público ni dominio.
+3. **Revisar la conexión de Git del Worker** `lbmethod1-0`. En el panel: *Workers & Pages → lbmethod1-0 → Settings → Build*:
    - Directorio raíz: `cloudflare`
    - Comando de compilación: `npm ci && npm run build`
    - Comando de publicación: `npx wrangler deploy`
-   - Rama de producción: la que tenga este código. Hoy es `claude/project-thread-wllv8a`; cuando la unas a `main`, cambia a `main`.
+   - Rama: la que tenga este código. Hoy es `claude/project-thread-wllv8a`; cuando la unas a `main`, cambia a `main`.
+4. **Entrar.** Abre la dirección del Worker (`https://lbmethod1-0.<tu-subdominio>.workers.dev`), entra con tu correo y la contraseña temporal, y crea la tuya. Si algo falla, en el panel *lbmethod1-0 → Logs* se ve el error (sin datos de las clientas).
 
-   Si prefieres publicar a mano desde tu computadora: `npm run deploy`.
-9. **Comprobar.** Abre la dirección del Worker (`https://lbmethod1-0.<tu-subdominio>.workers.dev`), entra con tu cuenta, crea un cliente de prueba y sube una foto. Si algo falla, en el panel *lbmethod1-0 → Logs* se ve el error (sin datos de las clientas).
+**Sin la terminal:** ya no necesitas `wrangler login`, ni el secreto, ni crear tablas o la cuenta a mano. Esos comandos siguen sirviendo para respaldos y para migraciones futuras (sección 3).
 
 ## 3. Publicar cambios después
 

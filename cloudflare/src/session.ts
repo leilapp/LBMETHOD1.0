@@ -74,6 +74,24 @@ export async function endSession(c: Context<AppBindings>) {
   deleteCookie(c, SESSION_COOKIE, cookieOptions)
 }
 
+let storedSecret: string | null = null
+
+/**
+ * Llave para firmar los tokens CSRF: el secreto APP_SECRET si está configurado; si no, una llave aleatoria que se
+ * genera una sola vez y se guarda en D1. Nunca está en Git ni se muestra en ninguna respuesta.
+ */
+async function appSecret(c: Context<AppBindings>) {
+  if (c.env.APP_SECRET) return c.env.APP_SECRET
+  if (storedSecret) return storedSecret
+  // INSERT OR IGNORE: si dos peticiones llegan a la vez, ambas terminan leyendo la misma llave.
+  await c.env.DB.prepare("INSERT OR IGNORE INTO app_settings (key, value, created_at) VALUES ('csrf_secret', ?, ?)")
+    .bind(randomToken() + randomToken(), new Date().toISOString())
+    .run()
+  const row = await c.env.DB.prepare("SELECT value FROM app_settings WHERE key = 'csrf_secret'").first<{ value: string }>()
+  storedSecret = row!.value
+  return storedSecret
+}
+
 /**
  * Token CSRF ligado a la identidad: firma (HMAC con APP_SECRET) de una cookie aleatoria y de la sesión actual.
  * Al iniciar o cerrar sesión el token anterior deja de servir; las pantallas ya lo piden de nuevo en ese momento.
@@ -84,7 +102,7 @@ export async function issueCsrfToken(c: Context<AppBindings>) {
     secret = randomToken()
     setCookie(c, CSRF_COOKIE, secret, cookieOptions)
   }
-  return hmac(c.env.APP_SECRET, `${secret}|${c.get('user')?.sessionId ?? 'anonimo'}`)
+  return hmac(await appSecret(c), `${secret}|${c.get('user')?.sessionId ?? 'anonimo'}`)
 }
 
 /** Toda operación que modifica datos en /api (incluido el inicio de sesión) exige el token CSRF. */
@@ -92,7 +110,7 @@ export const requireCsrf: MiddlewareHandler<AppBindings> = async (c, next) => {
   if (!['GET', 'HEAD', 'OPTIONS'].includes(c.req.method)) {
     const secret = getCookie(c, CSRF_COOKIE)
     const sent = c.req.header(CSRF_HEADER)
-    const expected = secret ? await hmac(c.env.APP_SECRET, `${secret}|${c.get('user')?.sessionId ?? 'anonimo'}`) : null
+    const expected = secret ? await hmac(await appSecret(c), `${secret}|${c.get('user')?.sessionId ?? 'anonimo'}`) : null
     if (!sent || !expected || !sameText(sent, expected)) {
       return problem(c, 400, 'Solicitud no válida', 'Falta o no es válido el token de seguridad (CSRF). Vuelve a cargar la página.')
     }

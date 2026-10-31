@@ -1,3 +1,4 @@
-# Copia este archivo como .dev.vars (no se sube a Git) y pon un valor largo y aleatorio.
-# En Cloudflare: npx wrangler secret put APP_SECRET
+# Opcional. Copia este archivo como .dev.vars (no se sube a Git) y pon un valor largo y aleatorio.
+# Si no existe APP_SECRET, el Worker genera una llave al azar y la guarda en la base D1 (tabla app_settings).
+# En Cloudflare (opcional): npx wrangler secret put APP_SECRET
 APP_SECRET=cambia-esto-por-un-valor-largo-y-aleatorio

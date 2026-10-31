@@ -3,8 +3,11 @@ export interface Env {
   ASSETS: Fetcher
   /** Archivos privados (fotos, imágenes y videos). Nunca se publica: todo pasa por la API con permisos. */
   MEDIA: R2Bucket
-  /** Llave para firmar los tokens CSRF. Secreto: `wrangler secret put APP_SECRET` (en local, .dev.vars). */
-  APP_SECRET: string
+  /**
+   * Llave para firmar los tokens CSRF. Opcional: `wrangler secret put APP_SECRET` (en local, .dev.vars).
+   * Si no existe, el Worker genera una al azar y la guarda en D1 (tabla app_settings).
+   */
+  APP_SECRET?: string
   SESSION_HOURS: string
   MAX_FAILED_LOGINS: string
   LOCKOUT_MINUTES: string
