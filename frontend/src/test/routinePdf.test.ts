@@ -70,6 +70,21 @@ describe('PDF de rutinas en el navegador', () => {
     expect(routinePdfName(data)).toBe('gluteo-y-pierna-fase-2-begona-nunez.pdf')
   })
 
+  it('arriba de la rutina lleva las series de trabajo por músculo a la semana', async () => {
+    const days = version.days.map((d) => ({ ...d, exercises: d.exercises.map((e, i) => ({ ...e, primaryMuscleGroup: i === 0 ? 'Glúteo' : i < 5 ? 'Isquiotibiales' : 'Cuádriceps' })) }))
+    const data = fromRoutineVersion({ ...version, days })
+    // Por día: glúteo 4; isquios 3 + 1 (sin calentamiento) + 3 + 3 = 10; cuádriceps 5 × 3 = 15. Tres días.
+    expect(data.weeklyVolume).toEqual([
+      { muscle: 'Cuádriceps', sets: 45 },
+      { muscle: 'Isquiotibiales', sets: 30 },
+      { muscle: 'Glúteo', sets: 12 },
+    ])
+    const { text } = await pdfStrings(await buildRoutinePdf(data, new Date(), { compress: false }))
+    for (const expected of ['Series por músculo a la semana', '87 series de trabajo en total', 'Músculo', 'Cuádriceps', '45', 'Isquiotibiales', '30', 'Glúteo', '12'])
+      expect(text, expected).toContain(expected)
+    expect(text.indexOf('Series por músculo a la semana')).toBeLessThan(text.indexOf('Hip thrust con barra'))
+  })
+
   it('la versión de una plantilla o borrador no lleva datos de cliente', async () => {
     const data = fromRoutineVersion({ ...version, status: 'Draft', days: [] })
     const { text } = await pdfStrings(await buildRoutinePdf(data, new Date(), { compress: false }))
@@ -92,6 +107,8 @@ describe('PDF de rutinas en el navegador', () => {
     const { text } = await pdfStrings(await buildRoutinePdf(fromPortalProgram(program, 'Ana López'), new Date(), { compress: false }))
     for (const expected of ['Ana López', 'Glúteo 6 semanas', 'Versión 3', 'Desde el 1 de octubre de 2026 (sin fecha de fin)', 'Vigente', 'Sentadilla', 'Squat', '100 lb', '150 s'])
       expect(text, expected).toContain(expected)
+    // La versión .NET no manda el músculo: el PDF sale sin el resumen en lugar de mostrar números incompletos.
+    expect(text).not.toContain('Series por músculo a la semana')
   })
 
   it('el texto se adapta a las fuentes del PDF sin perder el español', () => {

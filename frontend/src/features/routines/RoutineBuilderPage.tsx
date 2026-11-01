@@ -19,6 +19,8 @@ import {
 } from '../../components/ui'
 import { useCatalogs, useExercises } from '../library/libraryQueries'
 import { RoutinePreview } from './RoutinePreview'
+import { WeeklyVolume } from './WeeklyVolume'
+import { volumeFromBuilder } from '../../lib/weeklyVolume'
 import {
   cloneDay,
   cloneExercise,
@@ -356,6 +358,8 @@ function Builder({
             </div>
           </Alert>
         )}
+
+        <WeeklyVolume rows={volumeFromBuilder(state)} />
 
         <section className="card stack" aria-labelledby="general-title">
           <h2 className="card__title" id="general-title">

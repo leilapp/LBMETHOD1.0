@@ -1,6 +1,7 @@
 import type { PortalProgram } from '../api/portal'
 import type { RoutineVersion } from '../api/routines'
 import { saveBlob } from './saveFile'
+import { volumeFromVersion, type MuscleVolume } from './weeklyVolume'
 
 /**
  * PDF de una rutina generado en el navegador (jsPDF + jspdf-autotable), con el mismo diseño que tenía el PDF del
@@ -60,6 +61,8 @@ export interface RoutinePdfData {
   endDate: string | null
   assignmentStatus: string | null
   assignmentNotes: string | null
+  /** Series de trabajo por músculo a la semana (null si la API no manda el músculo). */
+  weeklyVolume?: MuscleVolume[] | null
   days: PdfDay[]
 }
 
@@ -125,6 +128,7 @@ export function fromRoutineVersion(
     endDate: assignment?.endDate ?? null,
     assignmentStatus: assignment?.statusLabel ?? null,
     assignmentNotes: blank(assignment?.notes),
+    weeklyVolume: volumeFromVersion(version),
     days: version.days.map((d) => ({
       position: d.position,
       name: d.name,
@@ -173,6 +177,7 @@ export function fromPortalProgram(program: PortalProgram, clientName: string | n
     endDate: program.endDate,
     assignmentStatus: program.statusLabel,
     assignmentNotes: blank(program.notes),
+    weeklyVolume: volumeFromVersion(program),
     days: program.days.map((d) => ({
       position: d.position,
       name: d.name,
@@ -345,6 +350,38 @@ export async function buildRoutinePdf(data: RoutinePdfData, now = new Date(), { 
     columnStyles: { 0: { cellWidth: 34, fillColor: BAND, textColor: VIOLET, fontStyle: 'bold' }, 1: { cellWidth: CONTENT_W - 34 } },
   })
   y = lastY() + 6
+
+  // Series por músculo a la semana: músculo principal de cada ejercicio, sin calentamiento. Dos pares por fila.
+  const volume = data.weeklyVolume ?? []
+  if (volume.length > 0) {
+    const total = volume.reduce((sum, r) => sum + r.sets, 0)
+    ensure(lineH(13) + lineH(8.5) + 20)
+    paragraph('Series por músculo a la semana', 13, VIOLET, 'times', 'bold')
+    paragraph(`${total} series de trabajo en total · cuenta el músculo principal de cada ejercicio, sin calentamiento.`, 8.5, MUTED)
+    y += 1.5
+    const half = Math.ceil(volume.length / 2)
+    const rows = Array.from({ length: half }, (_, i) => {
+      const a = volume[i]
+      const b = volume[i + half]
+      return [pdfText(a.muscle), String(a.sets), b ? pdfText(b.muscle) : '', b ? String(b.sets) : '']
+    })
+    const nameW = CONTENT_W / 2 - 20
+    autoTable(doc, {
+      startY: y,
+      margin: MARGIN,
+      theme: 'grid',
+      head: [['Músculo', 'Series', 'Músculo', 'Series']],
+      body: rows,
+      rowPageBreak: 'avoid',
+      styles: { font: 'helvetica', fontSize: 9.5, textColor: INK, lineColor: RULE, lineWidth: 0.5 * PT, cellPadding: { top: 3 * PT, bottom: 3 * PT, left: 6 * PT, right: 6 * PT } },
+      headStyles: { fillColor: VIOLET, textColor: WHITE, fontStyle: 'bold', fontSize: 8.5 },
+      columnStyles: { 0: { cellWidth: nameW }, 1: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }, 2: { cellWidth: nameW }, 3: { cellWidth: 20, halign: 'center', fontStyle: 'bold' } },
+      didParseCell: (hook) => {
+        if (hook.section === 'head' && (hook.column.index === 1 || hook.column.index === 3)) hook.cell.styles.halign = 'center'
+      },
+    })
+    y = lastY() + 6
+  }
 
   if (data.days.length === 0) paragraph('Esta rutina todavía no tiene días.', 9.5, MUTED)
 

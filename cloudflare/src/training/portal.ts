@@ -91,7 +91,10 @@ portalTraining.get('/program', async (c) => {
     db.prepare('SELECT id, routine_version_id, position, name, day_of_week, notes FROM routine_days WHERE routine_version_id IN (SELECT value FROM json_each(?)) ORDER BY position').bind(versionIds),
     db
       .prepare(
-        `SELECT e.*, x.name_es, x.name_en, x.instructions, x.technical_tips FROM routine_exercises e
+        `SELECT e.*, x.name_es, x.name_en, x.instructions, x.technical_tips,
+                (SELECT mg.name_es FROM exercise_muscles em JOIN muscle_groups mg ON mg.id = em.muscle_group_id
+                  WHERE em.exercise_id = x.id AND em.role = 1) AS primary_muscle
+           FROM routine_exercises e
            JOIN routine_days d ON d.id = e.routine_day_id JOIN exercises x ON x.id = e.exercise_id
           WHERE d.routine_version_id IN (SELECT value FROM json_each(?)) ORDER BY e.position`,
       )
@@ -140,6 +143,7 @@ portalTraining.get('/program', async (c) => {
           exerciseId: e.exercise_id,
           nameEs: s(e.name_es),
           nameEn: s(e.name_en),
+          primaryMuscleGroup: s(e.primary_muscle),
           supersetGroup: s(e.superset_group),
           sets: n(e.sets),
           repsMin: n(e.reps_min),
@@ -150,12 +154,14 @@ portalTraining.get('/program', async (c) => {
           tempo: s(e.tempo),
           rir: n(e.rir),
           rpe: n(e.rpe),
+          setType: n(e.set_type) ?? 1,
           setTypeLabel: SET_TYPES[n(e.set_type) ?? 1] ?? 'Otra',
           notes: s(e.notes),
           instructions: s(e.instructions),
           technicalTips: s(e.technical_tips),
           setDetails: (setsOf.get(e.id) ?? []).map((x) => ({
             setNumber: n(x.set_number),
+            setType: n(x.set_type) ?? 1,
             setTypeLabel: SET_TYPES[n(x.set_type) ?? 1] ?? 'Otra',
             repsMin: n(x.reps_min),
             repsMax: n(x.reps_max),

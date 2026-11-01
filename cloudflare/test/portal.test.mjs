@@ -91,6 +91,9 @@ describe('portal del cliente', () => {
     )
     assert.equal(first.instructions, 'Apoya la espalda alta en el banco')
     assert.deepEqual(p.days[0].exercises[1].setDetails.map((s) => [s.setTypeLabel, s.suggestedWeight, s.weightUnit]), [['Calentamiento', 20, 'kg'], ['Efectiva', 50, 'kg']])
+    // Para «series por músculo a la semana»: músculo principal y tipo de serie (numérico) de cada ejercicio y serie.
+    assert.deepEqual([first.primaryMuscleGroup, first.setType], ['Glúteos', 1])
+    assert.deepEqual(p.days[0].exercises[1].setDetails.map((s) => s.setType), [2, 1])
 
     // La imagen del ejercicio asignado se entrega (privada, sin caché); la de un ejercicio no asignado no existe.
     assert.equal(first.media.length, 1)

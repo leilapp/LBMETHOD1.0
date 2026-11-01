@@ -983,3 +983,75 @@ a.tile:hover {
 .portal-home__cards {
   margin-top: var(--lb-space-5);
 }
+
+/* =====================================================================
+   Series por músculo a la semana (arriba de la rutina)
+   ===================================================================== */
+.weekly-volume {
+  margin-bottom: var(--lb-space-4);
+}
+.weekly-volume__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--lb-space-3);
+}
+.weekly-volume__title {
+  font-size: var(--lb-text-lg);
+  font-weight: 650;
+  margin: 0;
+}
+.weekly-volume__note {
+  margin: 2px 0 0;
+  font-size: var(--lb-text-sm);
+  color: var(--lb-text-muted);
+}
+.weekly-volume__list {
+  list-style: none;
+  margin: var(--lb-space-4) 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.weekly-volume__row {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 11rem) 1fr 2.5rem;
+  align-items: center;
+  gap: var(--lb-space-3);
+}
+.weekly-volume__muscle {
+  font-size: var(--lb-text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.weekly-volume__track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--lb-surface-2);
+  overflow: hidden;
+}
+.weekly-volume__bar {
+  display: block;
+  height: 100%;
+  min-width: 8px;
+  border-radius: 999px;
+  background: var(--lb-chip-violet-fg);
+}
+.weekly-volume__value {
+  text-align: right;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.weekly-volume--compact .weekly-volume__title {
+  font-size: var(--lb-text-md);
+}
+.weekly-volume--compact .weekly-volume__list {
+  gap: 8px;
+  margin-top: var(--lb-space-3);
+}
+@media (max-width: 600px) {
+  .weekly-volume__row {
+    grid-template-columns: minmax(6rem, 40%) 1fr 2rem;
+    gap: var(--lb-space-2);
+  }
+}

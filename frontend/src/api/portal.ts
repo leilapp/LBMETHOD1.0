@@ -13,6 +13,7 @@ export interface PortalMedia {
 
 export interface PortalSet {
   setNumber: number
+  setType?: number
   setTypeLabel: string
   repsMin: number | null
   repsMax: number | null
@@ -30,6 +31,8 @@ export interface PortalExercise {
   exerciseId: number
   nameEs: string
   nameEn: string | null
+  /** Músculo principal (la versión .NET no lo manda). */
+  primaryMuscleGroup?: string | null
   supersetGroup: string | null
   sets: number
   repsMin: number | null
@@ -40,6 +43,7 @@ export interface PortalExercise {
   tempo: string | null
   rir: number | null
   rpe: number | null
+  setType?: number
   setTypeLabel: string
   notes: string | null
   instructions: string | null

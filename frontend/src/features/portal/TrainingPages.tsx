@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { WeeklyVolume } from '../routines/WeeklyVolume'
+import { volumeFromVersion } from '../../lib/weeklyVolume'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '../../api/client'
@@ -241,6 +243,7 @@ function ProgramView({ program, canStart }: { program: PortalProgram; canStart: 
         </p>
         {program.notes && <p className="portal-program__notes">{program.notes}</p>}
       </div>
+      <WeeklyVolume rows={volumeFromVersion(program)} compact />
       <PdfButton getData={() => fromPortalProgram(program, session?.displayName ?? null)} label={`Descargar en PDF: ${program.routineName}`}>
         Descargar en PDF
       </PdfButton>

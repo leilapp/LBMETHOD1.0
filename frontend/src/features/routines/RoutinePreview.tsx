@@ -1,5 +1,7 @@
 import type { RoutineExercise, RoutineVersion } from '../../api/routines'
 import { summarize } from './routineModel'
+import { WeeklyVolume } from './WeeklyVolume'
+import { volumeFromVersion } from '../../lib/weeklyVolume'
 
 const unitLabel = (u: number | null) => (u === 2 ? 'lb' : 'kg')
 
@@ -16,6 +18,7 @@ export function RoutinePreview({ version }: { version: RoutineVersion }) {
         </p>
         {version.description && <p className="pre-line">{version.description}</p>}
       </header>
+      {version.days.length > 0 && <WeeklyVolume rows={volumeFromVersion(version)} compact />}
       {version.days.length === 0 && <p className="muted">Esta rutina aún no tiene días.</p>}
       {version.days.map((d) => (
         <section key={d.id} className="preview-day" aria-label={d.name}>
