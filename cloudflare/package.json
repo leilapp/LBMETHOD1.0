@@ -16,7 +16,11 @@
     "test": "node --test --test-concurrency=1 --test-reporter=spec test/api.test.mjs test/biblioteca.test.mjs test/rutinas.test.mjs test/clientes.test.mjs test/portal.test.mjs test/seguimiento.test.mjs test/exportaciones.test.mjs test/auditoria.test.mjs test/ejercicios-base.test.mjs test/configuraciones.test.mjs",
     "typecheck": "tsc --noEmit",
     "db:seed:ejercicios:local": "node scripts/ejercicios-base.mjs && wrangler d1 execute lbmethod --local --file seeds/ejercicios-base.sql",
-    "db:seed:ejercicios:remote": "node scripts/ejercicios-base.mjs && node scripts/backup.mjs && wrangler d1 execute lbmethod --remote --file seeds/ejercicios-base.sql"
+    "db:seed:ejercicios:remote": "node scripts/ejercicios-base.mjs && node scripts/backup.mjs && wrangler d1 execute lbmethod --remote --file seeds/ejercicios-base.sql",
+    "db:seed:ampliacion:local": "node scripts/ejercicios-ampliacion.mjs && wrangler d1 execute lbmethod --local --file seeds/ejercicios-ampliacion.sql",
+    "db:seed:ampliacion:remote": "node scripts/ejercicios-ampliacion.mjs && node scripts/backup.mjs && wrangler d1 execute lbmethod --remote --file seeds/ejercicios-ampliacion.sql",
+    "db:seed:ampliacion-catalogo:local": "node scripts/ejercicios-ampliacion.mjs && wrangler d1 execute lbmethod --local --file seeds/ejercicios-ampliacion-catalogo.sql",
+    "db:seed:ampliacion-catalogo:remote": "node scripts/ejercicios-ampliacion.mjs && node scripts/backup.mjs && wrangler d1 execute lbmethod --remote --file seeds/ejercicios-ampliacion-catalogo.sql"
   },
   "dependencies": {
     "fflate": "^0.8.3",
