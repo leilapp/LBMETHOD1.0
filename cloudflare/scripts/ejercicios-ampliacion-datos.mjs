@@ -954,3 +954,42 @@ export const RENOMBRADOS = [
   ['Pájaros en máquina + Elevación posterior en máquina', 'Aperturas invertidas en máquina (uno solo)'],
   ['Elevación posterior en polea', 'Aperturas invertidas en polea'],
 ]
+
+// 03/11/2026: Leilani pidió «haz lo que mejor convenga» con los casos de REVISAR. Se agregan 3 y el resto se omite.
+export const REVISION_EXERCISES = [
+  x('Prensa horizontal', 'Seated leg press', 1, 1, 'sentadilla', 'cuadriceps', ['gluteos', 'aductores'], ['maquina'], 'Prensa de piernas',
+    'Prensa sentado empujando la plataforma en horizontal; se puede hacer con una o dos piernas.',
+    ['Ajusta el asiento para que las rodillas queden a unos 90° al inicio.', 'Apoya los pies en la plataforma al ancho de la cadera.', 'Empuja hasta extender las piernas sin bloquear las rodillas.', 'Regresa controlado sin despegar la espalda baja del respaldo.'],
+    ['Bloquear las rodillas al final.', 'Despegar la cadera del asiento al regresar.'],
+    ['Si se hace a una pierna, anótalo en la rutina y reduce la carga.']),
+  x('Aducción de cadera en máquina de pie', 'Standing machine hip adduction', 1, 1, 'aduccion', 'aductores', [], ['maquina'], 'Aducción de cadera en máquina',
+    'Aducción de pie en máquina multicadera, una pierna a la vez.',
+    ['Ajusta el rodillo por dentro del muslo, cerca de la rodilla, y sujétate de las agarraderas.', 'Con el tronco erguido, lleva la pierna hacia la línea media.', 'Pausa breve.', 'Regresa controlado y cambia de lado.'],
+    ['Inclinar el tronco para mover más la pierna.', 'Usar impulso.'],
+    ['Mantén una leve flexión en la rodilla de apoyo.']),
+  x('Caminata o trote en caminadora', 'Treadmill walk or run', 3, 1, 'locomocion', 'cuadriceps', ['gluteos', 'pantorrillas'], ['caminadora'], 'Caminata inclinada en caminadora',
+    'Caminata o trote en caminadora sin inclinación especial; velocidad, inclinación e intervalos se indican en la rutina.',
+    ['Sube a la caminadora con la banda detenida y colócate el clip de seguridad si lo tiene.', 'Empieza a velocidad baja y súbela poco a poco.', 'Mantén el tronco erguido sin sujetarte de los barandales.', 'Baja la velocidad unos minutos antes de terminar.'],
+    ['Sujetarse de los barandales todo el tiempo.', 'Bajarse con la banda en movimiento.'],
+    ['Anota en la rutina si es a ritmo constante o por intervalos.']),
+]
+
+/** Cómo quedó cada caso de REVISAR: [nombre propuesto, decisión]. */
+export const DECISIONES = [
+  ['Extensión de cadera en máquina de glúteos', 'No se agrega: ya cubierto por Patada de glúteo en máquina y Extensión de cadera en máquina de pie.'],
+  ['Abducción de cadera en polea inclinada', 'No se agrega: es un ajuste de técnica de Abducción de cadera en polea.'],
+  ['Prensa inclinada con pies bajos', 'No se agrega: la posición de los pies se anota en la rutina (Prensa de piernas).'],
+  ['Prensa horizontal unilateral', 'Agregado como «Prensa horizontal» (máquina distinta); hacerla a una pierna se anota en la rutina.'],
+  ['Zancada caminando en Smith', 'No se agrega: no es posible en la Smith; usar Zancada caminando.'],
+  ['Aducción de cadera en máquina unilateral', 'Agregado como «Aducción de cadera en máquina de pie» (multicadera).'],
+  ['Elevación de talones unilateral sentado', 'No se agrega: igual a Elevación de talones sentado.'],
+  ['Elevación lateral en polea detrás del cuerpo', 'No se agrega: posición del cable de Elevación lateral en polea.'],
+  ['Elevación lateral parcial', 'No se agrega: técnica de intensidad que se anota en la rutina.'],
+  ['Extensión de tríceps unilateral en polea', 'No se agrega: igual a Extensión de tríceps en polea.'],
+  ['Aperturas en polea alta', 'No se agrega: cubierto por Cruce de poleas.'],
+  ['Plancha con rueda abdominal', 'No se agrega: igual a Rueda abdominal.'],
+  ['Caminadora a velocidad constante / Caminadora con intervalos', 'Agregado uno solo: «Caminata o trote en caminadora»; ritmo e intervalos van en la rutina.'],
+  ['Estiramiento de glúteo en posición supina', 'No se agrega: igual a Estiramiento de glúteo en figura 4.'],
+  ['Estiramiento de isquiotibiales en banco', 'No se agrega: igual a Estiramiento de femoral acostado.'],
+  ['Movilidad escapular en pared', 'No se agrega: igual a Deslizamientos de brazos en pared.'],
+]

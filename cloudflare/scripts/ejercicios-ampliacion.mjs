@@ -14,7 +14,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { EQUIPMENT, EXERCISES as BASE, PATTERNS, normalize } from './ejercicios-base.mjs'
-import { NEW_EQUIPMENT, NEW_EXERCISES, NEW_MUSCLES, OMITIDOS, RENOMBRADOS, REVISAR } from './ejercicios-ampliacion-datos.mjs'
+import { NEW_EQUIPMENT, NEW_EXERCISES, NEW_MUSCLES, OMITIDOS, RENOMBRADOS, REVISAR, REVISION_EXERCISES, DECISIONES } from './ejercicios-ampliacion-datos.mjs'
 
 const MUSCLES = ['gluteos', 'femoral', 'cuadriceps', 'abductores', 'aductores', 'pantorrillas', 'espalda', 'pecho', 'hombros', 'biceps', 'triceps', 'abdomen']
 const muscleKey = (k) => (MUSCLES.includes(k) ? k : NEW_MUSCLES[k] ? normalize(NEW_MUSCLES[k][0]) : null)
@@ -22,14 +22,16 @@ const equipmentKey = (k) => normalize((EQUIPMENT[k] ?? NEW_EQUIPMENT[k])[0])
 /** ¿Usa algún valor de catálogo que hoy no existe? */
 const needsCatalog = (e) => e.equipment.some((k) => NEW_EQUIPMENT[k]) || [e.primary, ...e.secondary].some((k) => NEW_MUSCLES[k])
 
+const ALL = [...NEW_EXERCISES, ...REVISION_EXERCISES]
+
 export function validate() {
   const problems = []
   const existing = new Set(BASE.flatMap(([es, en]) => [normalize(es), normalize(en)]))
   const seen = new Set()
   const allNames = new Set([...existing])
-  for (const e of NEW_EXERCISES) for (const n of [e.es, e.en]) allNames.add(normalize(n))
+  for (const e of ALL) for (const n of [e.es, e.en]) allNames.add(normalize(n))
   const groupA = new Set(NEW_EXERCISES.filter((e) => !needsCatalog(e)).map((e) => normalize(e.es)))
-  for (const e of NEW_EXERCISES) {
+  for (const e of ALL) {
     const keys = [normalize(e.es), normalize(e.en)]
     for (const k of new Set(keys)) {
       if (existing.has(k)) problems.push(`${e.es}: el nombre «${k}» ya existe en la biblioteca`)
@@ -50,6 +52,8 @@ export function validate() {
     for (const [field, max] of [['description', 2000], ['instructions', 4000], ['mistakes', 2000], ['tips', 2000]])
       if (!e[field] || e[field].length > max) problems.push(`${e.es}: ${field} vacío o de más de ${max} caracteres`)
   }
+  if (DECISIONES.length !== REVISAR.length) problems.push('Falta decidir algún caso de REVISAR')
+  for (const e of REVISION_EXERCISES) if (needsCatalog(e)) problems.push(`${e.es}: la revisión no debe requerir catálogo nuevo`)
   for (const [name] of [...OMITIDOS, ...REVISAR]) if (seen.has(normalize(name))) problems.push(`${name}: está agregado y también omitido`)
   if (problems.length) throw new Error(problems.join('\n'))
 }
@@ -120,7 +124,7 @@ export function build() {
   validate()
   const a = NEW_EXERCISES.filter((e) => !needsCatalog(e))
   const b = NEW_EXERCISES.filter(needsCatalog)
-  return { a, b, sqlA: exerciseStatements(a), sqlB: [...catalogStatements(), ...exerciseStatements(b)] }
+  return { a, b, c: REVISION_EXERCISES, sqlA: exerciseStatements(a), sqlB: [...catalogStatements(), ...exerciseStatements(b)], sqlC: exerciseStatements(REVISION_EXERCISES) }
 }
 
 const TYPES = { 1: 'Fuerza', 2: 'Movilidad', 3: 'Cardio', 4: 'Pliométrico', 5: 'Isométrico', 6: 'Estiramiento' }
@@ -128,7 +132,7 @@ const DIFF = { 1: 'Principiante', 2: 'Intermedio', 3: 'Avanzado' }
 const muscleName = (k) => (NEW_MUSCLES[k] ? `${NEW_MUSCLES[k][0]} (nuevo)` : { gluteos: 'Glúteos', femoral: 'Femoral', cuadriceps: 'Cuádriceps', abductores: 'Abductores', aductores: 'Aductores', pantorrillas: 'Pantorrillas', espalda: 'Espalda', pecho: 'Pecho', hombros: 'Hombros', biceps: 'Bíceps', triceps: 'Tríceps', abdomen: 'Abdomen' }[k])
 const equipName = (k) => (NEW_EQUIPMENT[k] ? `${NEW_EQUIPMENT[k][0]} (nuevo)` : EQUIPMENT[k][0])
 
-function report({ a, b }) {
+function report({ a, b, c }) {
   const row = (e) => `| ${e.es}${e.active ? '' : ' *(inactivo)*'} | ${e.en} | ${muscleName(e.primary)} | ${e.secondary.map(muscleName).join(', ') || '—'} | ${e.equipment.map(equipName).join(', ')} | ${TYPES[e.type]} | ${e.pattern ? PATTERNS[e.pattern][0] : '—'} | ${DIFF[e.diff]} | ${e.base ?? '—'} |`
   const head = '| Nombre | Inglés | Principal | Secundarios | Equipamiento | Tipo | Patrón | Dificultad | Variante de |\n|---|---|---|---|---|---|---|---|---|'
   return `# Ampliación de la biblioteca de ejercicios
@@ -137,7 +141,8 @@ Generado por \`scripts/ejercicios-ampliacion.mjs\`. Biblioteca actual: ${BASE.le
 
 - **Parte 1 — solo catálogos existentes:** ${a.length} ejercicios (\`seeds/ejercicios-ampliacion.sql\`).
 - **Parte 2 — necesita valores de catálogo nuevos:** ${b.length} ejercicios (\`seeds/ejercicios-ampliacion-catalogo.sql\`).
-- **Omitidos por duplicado:** ${OMITIDOS.length}.  **Por revisar (no se agregan):** ${REVISAR.length}.
+- **Parte 3 — casos revisados el 03/11:** ${c.length} ejercicios (\`seeds/ejercicios-ampliacion-revision.sql\`).
+- **Omitidos por duplicado:** ${OMITIDOS.length}.  **Casos revisados:** ${REVISAR.length} (${c.length} agregados).
 
 ## Valores de catálogo nuevos (parte 2, requieren aprobación)
 
@@ -167,11 +172,16 @@ ${RENOMBRADOS.map(([n, m]) => `| ${n} | ${m} |`).join('\n')}
 |---|---|
 ${OMITIDOS.map(([n, m]) => `| ${n} | ${m} |`).join('\n')}
 
-## Requieren revisión manual (${REVISAR.length})
+## Parte 3: casos revisados agregados (${c.length})
 
-| Propuesto | Duda |
+${head}
+${c.map(row).join('\n')}
+
+## Casos revisados (${REVISAR.length}) — Leilani pidió decidir lo que mejor convenga (03/11/2026)
+
+| Propuesto | Decisión |
 |---|---|
-${REVISAR.map(([n, m]) => `| ${n} | ${m} |`).join('\n')}
+${DECISIONES.map(([n, m]) => `| ${n} | ${m} |`).join('\n')}
 `
 }
 
@@ -183,6 +193,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 -- Se puede correr varias veces: no duplica, no borra y no cambia ejercicios existentes.\n\n`
   writeFileSync(join(dir, 'ejercicios-ampliacion.sql'), header(`Parte 1: ${built.a.length} ejercicios con catálogos existentes.`) + built.sqlA.map((s) => `${s};\n`).join('\n'))
   writeFileSync(join(dir, 'ejercicios-ampliacion-catalogo.sql'), header(`Parte 2: catálogo nuevo + ${built.b.length} ejercicios. Correr DESPUÉS de la parte 1.`) + built.sqlB.map((s) => `${s};\n`).join('\n'))
+  writeFileSync(join(dir, 'ejercicios-ampliacion-revision.sql'), header(`Parte 3: ${built.c.length} ejercicios de los casos revisados.`) + built.sqlC.map((s) => `${s};\n`).join('\n'))
   writeFileSync(join(dir, 'ejercicios-ampliacion-reporte.md'), report(built))
-  console.log(`Listo: parte 1 = ${built.a.length}, parte 2 = ${built.b.length}, omitidos = ${OMITIDOS.length}, por revisar = ${REVISAR.length}`)
+  console.log(`Listo: parte 1 = ${built.a.length}, parte 2 = ${built.b.length}, omitidos = ${OMITIDOS.length}, revisión = ${built.c.length}`)
 }

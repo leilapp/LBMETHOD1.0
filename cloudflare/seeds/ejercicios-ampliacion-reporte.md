@@ -4,7 +4,8 @@ Generado por `scripts/ejercicios-ampliacion.mjs`. Biblioteca actual: 129 ejercic
 
 - **Parte 1 — solo catálogos existentes:** 131 ejercicios (`seeds/ejercicios-ampliacion.sql`).
 - **Parte 2 — necesita valores de catálogo nuevos:** 30 ejercicios (`seeds/ejercicios-ampliacion-catalogo.sql`).
-- **Omitidos por duplicado:** 41.  **Por revisar (no se agregan):** 16.
+- **Parte 3 — casos revisados el 03/11:** 3 ejercicios (`seeds/ejercicios-ampliacion-revision.sql`).
+- **Omitidos por duplicado:** 41.  **Casos revisados:** 16 (3 agregados).
 
 ## Valores de catálogo nuevos (parte 2, requieren aprobación)
 
@@ -242,23 +243,31 @@ Grupos musculares: Antebrazos (Forearms), Tibial anterior (Tibialis anterior).
 | Movilidad de cadera 90/90 | Rotaciones de cadera 90/90 |
 | Estiramiento de pectoral en marco de puerta | Estiramiento de pecho en pared |
 
-## Requieren revisión manual (16)
+## Parte 3: casos revisados agregados (3)
 
-| Propuesto | Duda |
+| Nombre | Inglés | Principal | Secundarios | Equipamiento | Tipo | Patrón | Dificultad | Variante de |
+|---|---|---|---|---|---|---|---|---|
+| Prensa horizontal | Seated leg press | Cuádriceps | Glúteos, Aductores | Máquina | Fuerza | Sentadilla | Principiante | Prensa de piernas |
+| Aducción de cadera en máquina de pie | Standing machine hip adduction | Aductores | — | Máquina | Fuerza | Aducción de cadera | Principiante | Aducción de cadera en máquina |
+| Caminata o trote en caminadora | Treadmill walk or run | Cuádriceps | Glúteos, Pantorrillas | Caminadora | Cardio | Locomoción | Principiante | Caminata inclinada en caminadora |
+
+## Casos revisados (16) — Leilani pidió decidir lo que mejor convenga (03/11/2026)
+
+| Propuesto | Decisión |
 |---|---|
-| Extensión de cadera en máquina de glúteos | Ambiguo: puede ser Patada de glúteo en máquina (ya existe) o Extensión de cadera en máquina de pie (nuevo). |
-| Abducción de cadera en polea inclinada | No queda claro si cambia el ejercicio respecto a Abducción de cadera en polea. |
-| Prensa inclinada con pies bajos | La posición de los pies se anota en la rutina; ¿lo quieres como ejercicio aparte de Prensa de piernas? |
-| Prensa horizontal unilateral | ¿Distinto de Prensa a una pierna? Depende de si tu gimnasio tiene prensa horizontal aparte. |
-| Zancada caminando en Smith | En la Smith la barra no se desplaza, así que no se puede caminar; ¿te refieres a otra cosa? |
-| Aducción de cadera en máquina unilateral | ¿Máquina multicadera de pie? La aductora sentada es de dos piernas. |
-| Elevación de talones unilateral sentado | Casi igual a Elevación de talones sentado. |
-| Elevación lateral en polea detrás del cuerpo | Es un ajuste de posición de Elevación lateral en polea. |
-| Elevación lateral parcial | Las parciales son una técnica de intensidad; se pueden anotar en la rutina. |
-| Extensión de tríceps unilateral en polea | Casi igual a Extensión de tríceps en polea. |
-| Aperturas en polea alta | Ambiguo: puede ser Cruce de poleas (ya existe) o aperturas acostado en banco con poleas. |
-| Plancha con rueda abdominal | Parece igual a Rueda abdominal; ¿es otra cosa? |
-| Caminadora a velocidad constante / Caminadora con intervalos | Velocidad, inclinación e intervalos se anotan en la rutina; ya existe Caminata inclinada en caminadora. ¿Quieres un «Caminata en caminadora» genérico? |
-| Estiramiento de glúteo en posición supina | Parece igual a Estiramiento de glúteo en figura 4. |
-| Estiramiento de isquiotibiales en banco | Parece igual a Estiramiento de femoral acostado (mismo músculo y acción). |
-| Movilidad escapular en pared | Parece igual a Deslizamientos de brazos en pared (nuevo). |
+| Extensión de cadera en máquina de glúteos | No se agrega: ya cubierto por Patada de glúteo en máquina y Extensión de cadera en máquina de pie. |
+| Abducción de cadera en polea inclinada | No se agrega: es un ajuste de técnica de Abducción de cadera en polea. |
+| Prensa inclinada con pies bajos | No se agrega: la posición de los pies se anota en la rutina (Prensa de piernas). |
+| Prensa horizontal unilateral | Agregado como «Prensa horizontal» (máquina distinta); hacerla a una pierna se anota en la rutina. |
+| Zancada caminando en Smith | No se agrega: no es posible en la Smith; usar Zancada caminando. |
+| Aducción de cadera en máquina unilateral | Agregado como «Aducción de cadera en máquina de pie» (multicadera). |
+| Elevación de talones unilateral sentado | No se agrega: igual a Elevación de talones sentado. |
+| Elevación lateral en polea detrás del cuerpo | No se agrega: posición del cable de Elevación lateral en polea. |
+| Elevación lateral parcial | No se agrega: técnica de intensidad que se anota en la rutina. |
+| Extensión de tríceps unilateral en polea | No se agrega: igual a Extensión de tríceps en polea. |
+| Aperturas en polea alta | No se agrega: cubierto por Cruce de poleas. |
+| Plancha con rueda abdominal | No se agrega: igual a Rueda abdominal. |
+| Caminadora a velocidad constante / Caminadora con intervalos | Agregado uno solo: «Caminata o trote en caminadora»; ritmo e intervalos van en la rutina. |
+| Estiramiento de glúteo en posición supina | No se agrega: igual a Estiramiento de glúteo en figura 4. |
+| Estiramiento de isquiotibiales en banco | No se agrega: igual a Estiramiento de femoral acostado. |
+| Movilidad escapular en pared | No se agrega: igual a Deslizamientos de brazos en pared. |
