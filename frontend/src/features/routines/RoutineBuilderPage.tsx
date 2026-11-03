@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ChevronDown, ChevronsDownUp, ChevronsUpDown } from 'lucide-react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import { routinesApi, type RoutineOptions } from '../../api/routines'
@@ -459,6 +460,33 @@ function Builder({
             <TextField label="Notas del día" maxLength={1000} value={day.notes} onChange={(e) => { const v = e.target.value; setDay(day.key, (d) => ({ ...d, notes: v })) }} />
             {err(`days[${di}].exercises`) && <Alert kind="error">{err(`days[${di}].exercises`)}</Alert>}
 
+            {day.exercises.length > 1 && (() => {
+              const allOpen = day.exercises.every((x) => expanded.has(x.key))
+              return (
+                <div className="ex-list__bar">
+                  <span className="muted">
+                    {day.exercises.length} ejercicios
+                  </span>
+                  <Button
+                    variant="ghost"
+                    aria-label={`${allOpen ? 'Plegar' : 'Desplegar'} todos los ejercicios de ${day.name}`}
+                    onClick={() =>
+                      setExpanded((cur) => {
+                        const next = new Set(cur)
+                        for (const x of day.exercises) {
+                          if (allOpen) next.delete(x.key)
+                          else next.add(x.key)
+                        }
+                        return next
+                      })
+                    }
+                  >
+                    {allOpen ? <ChevronsDownUp size={18} aria-hidden="true" /> : <ChevronsUpDown size={18} aria-hidden="true" />}
+                    {allOpen ? 'Plegar todos' : 'Desplegar todos'}
+                  </Button>
+                </div>
+              )
+            })()}
             <ol className="ex-list" aria-label={`Ejercicios de ${day.name}`}>
               {day.exercises.map((ex, xi) => (
                 <ExerciseCard
@@ -666,6 +694,7 @@ function ExerciseCard({
     },
   })
   const superset = ex.supersetGroup.trim().toUpperCase()
+  const bodyId = `ex-body-${ex.key}`
 
   return (
     <li className={`ex-card${superset ? ' ex-card--superset' : ''}${dropping ? ' ex-card--drop' : ''}${hasErrors ? ' ex-card--error' : ''}`} {...dropProps}>
@@ -673,38 +702,40 @@ function ExerciseCard({
         <span className="handle" {...dragProps} title="Arrastra para mover" aria-hidden="true">
           ⠿
         </span>
-        <span className="ex-card__index">{index + 1}</span>
-        <div className="ex-card__main">
-          <span className="ex-card__name">
-            {ex.nameEs}
-            {superset && <span className="badge badge--lilac">Superserie {superset}</span>}
-            {ex.setType !== '1' && !ex.details && <span className="badge badge--pending">{options.setTypes.find((o) => String(o.value) === ex.setType)?.label}</span>}
-            {!ex.isActive && <span className="badge badge--danger">Desactivado en la biblioteca</span>}
+        <button
+          type="button"
+          className="ex-card__toggle"
+          aria-expanded={open}
+          aria-controls={bodyId}
+          aria-label={`${open ? 'Plegar' : 'Desplegar'} ${ex.nameEs}`}
+          onClick={onToggle}
+        >
+          <span className="ex-card__index">{index + 1}</span>
+          <span className="ex-card__main">
+            <span className="ex-card__name">
+              {ex.nameEs}
+              {superset && <span className="badge badge--lilac">Superserie {superset}</span>}
+              {ex.setType !== '1' && !ex.details && <span className="badge badge--pending">{options.setTypes.find((o) => String(o.value) === ex.setType)?.label}</span>}
+              {!ex.isActive && <span className="badge badge--danger">Desactivado en la biblioteca</span>}
+            </span>
+            <span className={`list-item__meta${summary ? '' : ' ex-card__missing'}`}>{summary || 'Faltan los parámetros'}</span>
+            {hasErrors && !open && <span className="field__error">Revisa los parámetros de este ejercicio.</span>}
           </span>
-          <span className={`list-item__meta${summary ? '' : ' ex-card__missing'}`}>{summary || 'Faltan los parámetros'}</span>
-          {superset && supersetSiblings < 2 && <span className="field__hint">Agrega otro ejercicio con la etiqueta {superset} para completar la superserie.</span>}
-        </div>
-        <div className="ex-card__actions">
-          <Button variant="secondary" aria-expanded={open} onClick={onToggle}>
-            {open ? 'Cerrar' : 'Parámetros'}
-          </Button>
+          <ChevronDown className="ex-card__chevron" size={20} aria-hidden="true" />
+        </button>
+        <div className="ex-card__move">
           <Button variant="ghost" aria-label={`Subir ${ex.nameEs}`} disabled={index === 0} onClick={() => onMove(-1)}>
             ↑
           </Button>
           <Button variant="ghost" aria-label={`Bajar ${ex.nameEs}`} disabled={index === count - 1} onClick={() => onMove(1)}>
             ↓
           </Button>
-          <Button variant="ghost" aria-label={`Duplicar ${ex.nameEs}`} onClick={onDuplicate}>
-            Duplicar
-          </Button>
-          <Button variant="ghost" aria-label={`Quitar ${ex.nameEs}`} onClick={onRemove}>
-            Quitar
-          </Button>
         </div>
+        {superset && supersetSiblings < 2 && <span className="field__hint ex-card__hint">Agrega otro ejercicio con la etiqueta {superset} para completar la superserie.</span>}
       </div>
 
       {open && (
-        <div className="ex-card__body" role="group" aria-label={`Parámetros de ${ex.nameEs}`}>
+        <div className="ex-card__body" id={bodyId} role="group" aria-label={`Parámetros de ${ex.nameEs}`}>
           <div className="params">
             {!ex.details && <TextField label="Series" required inputMode="numeric" {...field('sets', 'sets')} />}
             {ex.details && errors[`${path}.sets`] && <span className="field__error">{errors[`${path}.sets`]}</span>}
@@ -763,6 +794,18 @@ function ExerciseCard({
                 onStructure={(details) => onStructure((x) => ({ ...x, details }))}
               />
             )}
+          </div>
+
+          <div className="ex-card__actions">
+            <Button variant="secondary" aria-label={`Duplicar ${ex.nameEs}`} onClick={onDuplicate}>
+              Duplicar
+            </Button>
+            <Button variant="ghost" aria-label={`Quitar ${ex.nameEs}`} onClick={onRemove}>
+              Quitar
+            </Button>
+            <Button variant="secondary" onClick={onToggle}>
+              Listo
+            </Button>
           </div>
         </div>
       )}

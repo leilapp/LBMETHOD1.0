@@ -209,10 +209,36 @@
 }
 .ex-card__head {
   display: flex;
-  gap: var(--lb-space-2);
+  gap: var(--lb-space-1);
   align-items: center;
-  padding: var(--lb-space-2) var(--lb-space-3);
+  padding: var(--lb-space-1) var(--lb-space-2);
   flex-wrap: wrap;
+}
+.ex-card__toggle {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--lb-touch);
+  display: flex;
+  align-items: center;
+  gap: var(--lb-space-2);
+  padding: var(--lb-space-2);
+  border: 0;
+  border-radius: calc(var(--lb-radius) - 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .ex-card__toggle:hover {
+    background: var(--lb-active-bg);
+  }
+}
+.ex-card__toggle:focus-visible {
+  outline: 2px solid var(--lb-gold);
+  outline-offset: 1px;
 }
 .ex-card__index {
   flex: none;
@@ -227,7 +253,7 @@
   font-weight: 600;
 }
 .ex-card__main {
-  flex: 1 1 220px;
+  flex: 1 1 auto;
   display: grid;
   gap: 2px;
   min-width: 0;
@@ -238,14 +264,67 @@
   flex-wrap: wrap;
   gap: var(--lb-space-2);
   align-items: center;
+  overflow-wrap: anywhere;
 }
 .ex-card__missing {
   color: var(--lb-warning);
 }
+.ex-card__chevron {
+  flex: none;
+  color: var(--lb-text-subtle);
+  transition: transform 0.2s ease;
+}
+.ex-card__toggle[aria-expanded='true'] .ex-card__chevron {
+  transform: rotate(180deg);
+}
+.ex-card__move {
+  flex: none;
+  display: flex;
+  gap: 2px;
+}
+.ex-card__move .btn {
+  min-width: var(--lb-touch);
+  padding: 0;
+  font-size: 1.1rem;
+}
+/* Teléfono: más ancho para el nombre; ↑ ↓ en columna y sin la manija (arrastrar no funciona con el dedo). */
+@media (max-width: 560px) {
+  .ex-card__move {
+    flex-direction: column;
+  }
+}
+@media (pointer: coarse) {
+  .ex-card__head > .handle {
+    display: none;
+  }
+}
+.ex-card__hint {
+  flex-basis: 100%;
+  padding: 0 var(--lb-space-2) var(--lb-space-1);
+}
 .ex-card__actions {
   display: flex;
-  gap: var(--lb-space-1);
+  gap: var(--lb-space-2);
   flex-wrap: wrap;
+  justify-content: flex-end;
+  border-top: 1px dashed var(--lb-border);
+  padding-top: var(--lb-space-3);
+}
+.ex-list__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lb-space-2);
+}
+.ex-list__bar .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lb-space-1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ex-card__chevron {
+    transition: none;
+  }
 }
 .ex-card__body {
   display: grid;
