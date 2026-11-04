@@ -27,6 +27,12 @@ async function createExercise(page, nameEs) {
   if (res.status() !== 201) throw new Error(`No se creó ${nameEs}: ${res.status()}`)
 }
 
+/** Despliega la tarjeta del ejercicio si está plegada. */
+async function openCard(scope, name) {
+  const toggle = scope.getByRole('button', { name: `Desplegar ${name}`, exact: true }).first()
+  if (await toggle.count()) await toggle.click()
+}
+
 const exerciseNames = async (day) =>
   (await day.locator('.ex-card__name').allTextContents()).map((t) => t.replace(/(Superserie|Dropset|Calentamiento).*/, '').trim())
 
@@ -110,8 +116,9 @@ const exerciseNames = async (day) =>
   await p.getByLabel('Tipo de serie').selectOption({ label: 'Dropset' })
   await shot(page, '03-parametros')
 
-  // Cerrar tarjetas para ver la lista compacta.
-  for (let i = 0; i < 3; i++) await day1.getByRole('button', { name: 'Cerrar' }).first().click()
+  // Plegar las tarjetas para ver la lista compacta.
+  for (let i = 0; i < 3; i++) await day1.getByRole('button', { name: 'Listo' }).first().click()
+  check('las tarjetas plegadas ocultan los parámetros', (await day1.getByRole('group', { name: /^Parámetros de / }).count()) === 0)
 
   // Arrastrar Abducción antes de Hip thrust.
   const handleOf = (name) => day1.locator('.ex-card', { hasText: name }).locator('.handle')
@@ -129,11 +136,13 @@ const exerciseNames = async (day) =>
   day2 = page.getByRole('region', { name: 'Día 2: Día 2 - Pierna' })
   await day2.getByLabel('Día de la semana').selectOption({ label: 'Jueves' })
   check('duplicar día copia sus ejercicios', (await day2.locator('.ex-card').count()) === 3)
+  await openCard(day2, BSS)
   await day2.getByRole('button', { name: `Quitar ${BSS}` }).click()
+  await openCard(day2, HIP)
   await day2.getByRole('button', { name: `Duplicar ${HIP}` }).click()
   check('duplicar y quitar ejercicios', (await day2.locator('.ex-card').count()) === 3)
   // Detallar serie por serie el primer Hip thrust del día 2.
-  await day2.getByRole('button', { name: 'Parámetros' }).first().click()
+  await openCard(day2, HIP)
   const detail = day2.getByRole('group', { name: `Parámetros de ${HIP}` }).first()
   await detail.getByLabel(/Detallar serie por serie/).check()
   await detail.getByLabel('Tipo de la serie 1').selectOption({ label: 'Calentamiento' })
@@ -171,7 +180,7 @@ const exerciseNames = async (day) =>
   await day2.getByText('La superserie A del día «Día 2 - Pierna» tiene un solo ejercicio.').waitFor()
   check('no se publica una superserie incompleta', /\/editar$/.test(page.url()))
   const abdCard = day2.locator('.ex-card', { hasText: ABD })
-  await abdCard.getByRole('button', { name: 'Parámetros' }).click()
+  await openCard(abdCard, ABD)
   await abdCard.getByLabel('Superserie').fill('')
   await page.getByRole('button', { name: 'Publicar' }).click()
   dialog = page.getByRole('dialog', { name: 'Publicar versión 1' })
@@ -185,7 +194,7 @@ const exerciseNames = async (day) =>
   await page.getByRole('link', { name: 'Editar' }).click()
   await page.getByText('Borrador · versión 2', { exact: false }).waitFor()
   day1 = page.getByRole('region', { name: 'Día 1: Día 1 - Glúteo' })
-  await day1.getByRole('button', { name: 'Parámetros' }).first().click()
+  await openCard(day1, HIP)
   await day1.getByRole('group', { name: `Parámetros de ${HIP}` }).getByLabel('Series').fill('5')
   await page.getByRole('button', { name: 'Publicar' }).click()
   dialog = page.getByRole('dialog', { name: 'Publicar versión 2' })
