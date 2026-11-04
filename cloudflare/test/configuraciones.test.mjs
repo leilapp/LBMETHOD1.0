@@ -17,6 +17,7 @@ const essentials = (cfg, prefix) => ({
   kv: cfg.kv_namespaces,
   r2: cfg.r2_buckets ?? [],
   vars: cfg.vars,
+  previews: cfg.previews,
 })
 
 test('las configuraciones de la raíz y de frontend/ coinciden con cloudflare/wrangler.jsonc', () => {
@@ -25,5 +26,15 @@ test('las configuraciones de la raíz y de frontend/ coinciden con cloudflare/wr
     const cfg = read(path)
     assert.deepEqual(essentials(cfg, prefix), main, path)
     assert.match(cfg.build.command, /npm ci && npm run build$/, `${path}: arma las pantallas antes de publicar`)
+  }
+})
+
+test('las vistas previas tienen su bloque «previews» y no usan la base ni los archivos reales', () => {
+  for (const path of ['cloudflare/wrangler.jsonc', 'wrangler.jsonc', 'frontend/wrangler.jsonc']) {
+    const { previews, vars } = read(path)
+    assert.ok(previews, `${path}: «wrangler preview» exige el bloque previews`)
+    assert.equal(previews.d1_databases, undefined, `${path}: la vista previa no se conecta a la base real`)
+    assert.equal(previews.kv_namespaces, undefined, `${path}: la vista previa no se conecta a los archivos reales`)
+    assert.deepEqual(previews.vars, vars, `${path}: mismas variables que producción`)
   }
 })
