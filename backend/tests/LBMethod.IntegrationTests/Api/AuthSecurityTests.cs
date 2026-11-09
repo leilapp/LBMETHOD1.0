@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using LBMethod.Api.Contracts;
+using LBMethod.Application.Accounts;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LBMethod.IntegrationTests.Api;
 
@@ -119,6 +121,33 @@ public class AuthSecurityTests(ApiFactory api) : IClassFixture<ApiFactory>
         for (var i = 0; i < 4; i++) await s.LoginAsync(email, "Incorrecta123");
         // Tras 5 intentos fallidos, ni la contraseña correcta funciona durante el bloqueo.
         Assert.Equal(HttpStatusCode.Unauthorized, (await s.LoginAsync(email, ApiFactory.TrainerPassword)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Trainer_password_reset_unlocks_reactivates_and_replaces_the_old_password()
+    {
+        var email = await api.CreateTrainerAsync();
+        using var s = api.NewSession();
+        for (var i = 0; i < 5; i++) await s.LoginAsync(email, "Incorrecta123");
+        await using (var db = api.NewDbContext())
+        {
+            db.Users.Single(u => u.Email == email).IsActive = false;
+            await db.SaveChangesAsync();
+        }
+
+        await using var scope = api.Services.CreateAsyncScope();
+        var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
+        const string newPassword = "OtraClaveSegura2026";
+        Assert.True((await accounts.ResetTrainerPasswordAsync(email, newPassword)).Succeeded);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await s.LoginAsync(email, ApiFactory.TrainerPassword)).StatusCode);
+        var login = await s.LoginAsync(email, newPassword);
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        Assert.False((await login.Content.ReadFromJsonAsync<SessionResponse>())!.MustChangePassword);
+
+        // Solo aplica a entrenadoras: un correo desconocido o una política no cumplida no cambian nada.
+        Assert.Equal(AccountError.NotFound, (await accounts.ResetTrainerPasswordAsync("nadie@test.local", newPassword)).Error);
+        Assert.Equal(AccountError.InvalidData, (await accounts.ResetTrainerPasswordAsync(email, "corta")).Error);
     }
 
     [Fact]

@@ -42,7 +42,7 @@ public static class CreateTrainerCommand
         return 0;
     }
 
-    private static string ReadPassword(string prompt)
+    internal static string ReadPassword(string prompt)
     {
         Console.Write(prompt);
         if (Console.IsInputRedirected) return Console.ReadLine() ?? string.Empty;

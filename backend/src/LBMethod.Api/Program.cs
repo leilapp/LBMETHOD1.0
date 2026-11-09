@@ -125,6 +125,8 @@ var app = builder.Build();
 
 if (args.Length > 0 && args[0] == CreateTrainerCommand.Name)
     return await CreateTrainerCommand.RunAsync(app.Services, args);
+if (args.Length > 0 && args[0] == ResetTrainerPasswordCommand.Name)
+    return await ResetTrainerPasswordCommand.RunAsync(app.Services, args);
 
 // Nunca se muestran detalles internos (pila, SQL) al usuario; el detalle queda solo en el log.
 app.UseExceptionHandler();

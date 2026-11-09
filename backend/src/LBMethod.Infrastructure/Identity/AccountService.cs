@@ -113,6 +113,27 @@ public class AccountService(LBMethodDbContext db, UserManager<AppUser> users, Ti
         return AccountResult.Ok();
     }
 
+    public async Task<AccountResult> ResetTrainerPasswordAsync(string email, string password, CancellationToken ct = default)
+    {
+        var user = await users.FindByEmailAsync(email);
+        if (user is null || !await users.IsInRoleAsync(user, Roles.Trainer)) return new AccountResult(AccountError.NotFound);
+
+        var token = await users.GeneratePasswordResetTokenAsync(user);
+        var reset = await users.ResetPasswordAsync(user, token, password);
+        if (!reset.Succeeded) return new AccountResult(AccountError.InvalidData, Errors(reset));
+
+        user.IsActive = true;
+        user.MustChangePassword = false;
+        await users.UpdateAsync(user);
+        // Cierra cualquier sesión abierta y desbloquea la cuenta si estaba bloqueada por intentos fallidos.
+        await users.UpdateSecurityStampAsync(user);
+        await users.SetLockoutEndDateAsync(user, null);
+        await users.ResetAccessFailedCountAsync(user);
+        Audit(user.Id, "TrainerPasswordReset", null);
+        await db.SaveChangesAsync(ct);
+        return AccountResult.Ok();
+    }
+
     private async Task<AppUser?> FindClientUserAsync(int trainerId, int clientId, CancellationToken ct)
     {
         var userId = await db.Clients.Where(c => c.Id == clientId && c.TrainerId == trainerId)

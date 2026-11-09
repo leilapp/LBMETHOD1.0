@@ -35,4 +35,9 @@ public interface IAccountService
     /// <summary>Cambia el correo (que también es el usuario para entrar) de la cuenta del cliente.</summary>
     Task<AccountResult> ChangeClientEmailAsync(int trainerId, int clientId, string email, CancellationToken ct = default);
     Task<AccountResult> CreateTrainerAsync(string email, string displayName, string password, CancellationToken ct = default);
+    /// <summary>
+    /// Restablece la contraseña de la entrenadora desde la terminal (si la olvidó). También la reactiva,
+    /// la desbloquea y cierra sus sesiones abiertas. Devuelve NotFound si el correo no es de una entrenadora.
+    /// </summary>
+    Task<AccountResult> ResetTrainerPasswordAsync(string email, string password, CancellationToken ct = default);
 }

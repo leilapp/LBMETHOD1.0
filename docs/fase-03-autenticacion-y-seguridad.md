@@ -107,6 +107,14 @@ dotnet run --project src/LBMethod.Api -- create-trainer tu-correo@dominio.com "L
 dotnet run --project src/LBMethod.Api
 ```
 
+**¿Olvidaste tu contraseña de entrenadora?** Desde la carpeta `backend`:
+
+```powershell
+dotnet run --project src/LBMethod.Api -- reset-trainer-password tu-correo@dominio.com
+```
+
+Te pide la nueva contraseña de forma oculta (dos veces). Además reactiva la cuenta, quita el bloqueo por intentos fallidos y cierra las sesiones abiertas. No hace falta tocar la base de datos a mano.
+
 Si tu servidor no es `localhost\SQLEXPRESS`, cambia esa parte por el nombre de tu instancia (por ejemplo `localhost`).
 Todavía no hay pantallas: la API se usará desde el frontend de la Fase 4.
 
