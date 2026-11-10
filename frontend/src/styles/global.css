@@ -1055,3 +1055,33 @@ a.tile:hover {
     gap: var(--lb-space-2);
   }
 }
+
+/* Músculo principal de cada día (etiqueta informativa arriba del día) */
+.day-muscle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 0 var(--lb-space-2);
+  max-width: 100%;
+}
+.day-muscle__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px 3px 9px;
+  border-radius: 999px;
+  background: var(--lb-chip-violet-bg);
+  color: var(--lb-chip-violet-fg);
+  font-size: var(--lb-text-sm);
+  font-weight: 700;
+  line-height: 1.4;
+}
+.day-muscle__pill svg {
+  flex: none;
+}
+.day-muscle__meta {
+  font-size: var(--lb-text-xs, 0.75rem);
+  font-weight: 400;
+  color: var(--lb-text-muted);
+}

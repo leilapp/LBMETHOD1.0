@@ -20,7 +20,8 @@ import {
 import { useCatalogs, useExercises } from '../library/libraryQueries'
 import { RoutinePreview } from './RoutinePreview'
 import { WeeklyVolume } from './WeeklyVolume'
-import { volumeFromBuilder } from '../../lib/weeklyVolume'
+import { mainMuscleFromBuilderDay, volumeFromBuilder } from '../../lib/weeklyVolume'
+import { DayMainMuscle } from './DayMainMuscle'
 import {
   cloneDay,
   cloneExercise,
@@ -408,6 +409,7 @@ function Builder({
             onDragOver={allowDrop(`day:${day.key}`, 'day')}
             onDrop={dropDay(day.key)}
           >
+            <DayMainMuscle main={mainMuscleFromBuilderDay(day)} />
             <div className="day__head">
               <span
                 className="handle"

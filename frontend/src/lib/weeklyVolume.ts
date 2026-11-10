@@ -82,3 +82,71 @@ export function volumeFromBuilder(state: BuilderLike): MuscleVolume[] {
     ),
   )
 }
+
+/* ---------- Músculo principal de cada día (pedido por Leilani el 10/11/2026) ---------- */
+
+/**
+ * Músculo principal de un día: el músculo principal (de la biblioteca) que suma más series
+ * de trabajo ese día, con la misma regla de conteo que «Series por músculo a la semana».
+ * - Empate: se muestran todos los empatados («Pecho y Espalda»).
+ * - Los ejercicios sin músculo no cuentan; si el día no tiene series con músculo, no hay etiqueta.
+ * Es solo una etiqueta informativa: no cambia ni sugiere nada de la rutina.
+ */
+export interface DayMainMuscle {
+  muscles: string[]
+  /** Series de trabajo del músculo principal (de cada uno, si hay empate). */
+  sets: number
+  /** Series de trabajo de todo el día. */
+  total: number
+}
+
+export function dayMainMuscle(items: VolumeItem[]): DayMainMuscle | null {
+  const rows = weeklyVolume(items)
+  const total = rows.reduce((sum, r) => sum + r.sets, 0)
+  const named = rows.filter((r) => r.muscle !== NO_MUSCLE)
+  if (named.length === 0) return null
+  const top = named[0].sets
+  return { muscles: named.filter((r) => r.sets === top).map((r) => r.muscle), sets: top, total }
+}
+
+/** «Pecho», «Pecho y Espalda», «Pecho, Espalda y Hombros». */
+export function joinMuscles(muscles: string[]) {
+  if (muscles.length <= 1) return muscles[0] ?? ''
+  return `${muscles.slice(0, -1).join(', ')} y ${muscles[muscles.length - 1]}`
+}
+
+/** Texto corto para el PDF: «Músculo principal: Pecho (9 de 14 series)». */
+export function mainMuscleText(m: DayMainMuscle) {
+  const label = m.muscles.length > 1 ? 'Músculos principales' : 'Músculo principal'
+  const each = m.muscles.length > 1 ? ' cada uno' : ''
+  return `${label}: ${joinMuscles(m.muscles)} (${m.sets} de ${m.total} series${each})`
+}
+
+type VersionDayLike = VersionLike['days'][number]
+
+/** Día de una rutina guardada o del programa del cliente. Si la API no manda el músculo, devuelve null. */
+export function mainMuscleFromVersionDay(day: VersionDayLike): DayMainMuscle | null {
+  if (day.exercises.some((e) => e.primaryMuscleGroup === undefined)) return null
+  return dayMainMuscle(
+    day.exercises.map((e) => ({
+      muscle: e.primaryMuscleGroup ?? null,
+      sets: e.sets,
+      setType: e.setType ?? 1,
+      detailTypes: e.setDetails.map((s) => s.setType ?? 1),
+    })),
+  )
+}
+
+type BuilderDayLike = BuilderLike['days'][number]
+
+/** Día del constructor: se recalcula mientras la entrenadora escribe. */
+export function mainMuscleFromBuilderDay(day: BuilderDayLike): DayMainMuscle | null {
+  return dayMainMuscle(
+    day.exercises.map((e) => ({
+      muscle: e.primaryMuscle,
+      sets: Number(e.sets) || 0,
+      setType: Number(e.setType) || 1,
+      detailTypes: (e.details ?? []).map((s) => Number(s.setType) || 1),
+    })),
+  )
+}
