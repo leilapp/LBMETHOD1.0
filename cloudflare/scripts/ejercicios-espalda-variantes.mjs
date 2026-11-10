@@ -15,15 +15,17 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { EQUIPMENT, PATTERNS, normalize } from './ejercicios-base.mjs'
 
-const MUSCLES = { espalda: 'espalda', biceps: 'biceps', triceps: 'triceps', pecho: 'pecho', hombros: 'hombros', abdomen: 'abdomen', femoral: 'femoral' }
+export const MUSCLES = { espalda: 'espalda', biceps: 'biceps', triceps: 'triceps', pecho: 'pecho', hombros: 'hombros', abdomen: 'abdomen', femoral: 'femoral', cuadriceps: 'cuadriceps', gluteos: 'gluteos', aductores: 'aductores' }
 
-const x = (es, en, diff, pattern, secondary, equipment, base, description, instructions, mistakes, tips) => ({
-  es, en, type: 1, diff, pattern, primary: 'espalda', secondary, equipment, base,
+export const ficha = (primary) => (es, en, diff, pattern, secondary, equipment, base, description, instructions, mistakes, tips) => ({
+  es, en, type: 1, diff, pattern, primary, secondary, equipment, base,
   description,
   instructions: instructions.map((s, i) => `${i + 1}. ${s}`).join('\n'),
   mistakes: mistakes.join('\n'),
   tips: tips.join('\n'),
 })
+
+const x = ficha('espalda')
 
 export const EXERCISES = [
   // Familia pullover / brazos rectos (base: Jalón con brazos rectos)
@@ -104,7 +106,7 @@ export const VINCULOS = [
   ['Pullover en polea con barra, agarre abierto', 'Pullover en polea con barra corta, agarre abierto', 'Misma técnica con barra corta'],
 ]
 
-export function validate() {
+export function validate(EXERCISES = module.EXERCISES) {
   const problems = []
   const seen = new Set()
   for (const e of EXERCISES) {
@@ -122,13 +124,14 @@ export function validate() {
   if (problems.length) throw new Error(problems.join('\n'))
 }
 
+const module = { get EXERCISES() { return EXERCISES }, get VINCULOS() { return VINCULOS } }
 const q = (t) => (t === null || t === undefined ? 'NULL' : `'${String(t).replace(/'/g, "''")}'`)
 const NOW = "strftime('%Y-%m-%dT%H:%M:%fZ', 'now')"
 const values = (rows) => rows.map((r) => `  (${r.join(', ')})`).join(',\n')
 const ONLY_NEW = 'NOT EXISTS (SELECT 1 FROM exercise_muscles x WHERE x.exercise_id = e.id)'
 
-export function statements() {
-  validate()
+export function statements(EXERCISES = module.EXERCISES, VINCULOS = module.VINCULOS) {
+  validate(EXERCISES)
   const out = []
   out.push(`INSERT INTO exercises (name_es, name_en, name_es_key, name_en_key, description, instructions, common_mistakes, technical_tips, type, difficulty, movement_pattern_id, is_active, deactivated_at, created_at, updated_at)
 SELECT v.column1, v.column2, v.column3, v.column4, v.column5, v.column6, v.column7, v.column8, v.column9, v.column10,
