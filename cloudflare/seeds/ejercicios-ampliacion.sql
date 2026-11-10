@@ -214,26 +214,26 @@ Bloquear las rodillas.', 'Empieza con poca carga hasta dominar el recorrido.', 1
 2. Apoya el empeine trasero en el banco.
 3. Baja la rodilla trasera en vertical.
 4. Sube empujando con el pie delantero.', 'Pie delantero muy cerca del banco.
-Empujar con la pierna trasera.', 'Encuentra la posición sin peso antes de cargar.', 1, 2, 'zancada', 1),
+Empujar con la pierna trasera.', 'Encuentra la posición sin peso antes de cargar.', 1, 2, 'desplante', 1),
   ('Sentadilla búlgara con pie delantero elevado', 'Front-foot-elevated Bulgarian split squat', 'sentadilla bulgara con pie delantero elevado', 'front-foot-elevated bulgarian split squat', 'Búlgara con el pie delantero sobre un step bajo para aumentar el recorrido.', '1. Coloca el pie delantero sobre un step bajo y el empeine trasero en el banco.
 2. Baja con el tronco estable.
 3. Usa el rango extra solo si lo controlas.
-4. Sube empujando con el pie delantero.', 'Perder el equilibrio por un step inestable.', 'Reduce la carga respecto a la búlgara normal.', 1, 3, 'zancada', 1),
-  ('Zancada hacia delante en Smith', 'Smith machine forward lunge', 'zancada hacia delante en smith', 'smith machine forward lunge', 'Zancada alternando el paso hacia adelante con la barra guiada.', '1. Coloca la barra sobre la espalda alta y desbloquéala.
+4. Sube empujando con el pie delantero.', 'Perder el equilibrio por un step inestable.', 'Reduce la carga respecto a la búlgara normal.', 1, 3, 'desplante', 1),
+  ('Desplante hacia delante en Smith', 'Smith machine forward lunge', 'desplante hacia delante en smith', 'smith machine forward lunge', 'Desplante alternando el paso hacia adelante con la barra guiada.', '1. Coloca la barra sobre la espalda alta y desbloquéala.
 2. Da un paso al frente y baja ambas rodillas.
 3. Empuja con la pierna delantera para regresar.
 4. Alterna o completa un lado según la rutina.', 'Pasos muy cortos que cargan la rodilla.
-Perder la alineación de la rodilla.', 'Como la barra va en vertical, ajusta tu posición antes de empezar.', 1, 2, 'zancada', 1),
+Perder la alineación de la rodilla.', 'Como la barra va en vertical, ajusta tu posición antes de empezar.', 1, 2, 'desplante', 1),
   ('Step-up lateral', 'Lateral step-up', 'step-up lateral', 'lateral step-up', 'Subida al cajón de lado.', '1. Párate de lado junto al cajón y apoya el pie cercano encima.
 2. Sube empujando con la pierna de arriba.
 3. Baja controlado.
 4. Completa las repeticiones y cambia de lado.', 'Impulsarse con la pierna de abajo.
-Dejar que la rodilla se vaya hacia adentro.', 'Empieza con un cajón bajo.', 1, 1, 'zancada', 1),
+Dejar que la rodilla se vaya hacia adentro.', 'Empieza con un cajón bajo.', 1, 1, 'desplante', 1),
   ('Step-down de cajón', 'Box step-down', 'step-down de cajon', 'box step-down', 'Bajada controlada desde un cajón con una pierna, tocando el piso con el talón contrario.', '1. Párate sobre el cajón con una pierna y la otra en el aire.
 2. Flexiona la rodilla de apoyo hasta tocar el piso con el talón libre.
 3. Sube extendiendo la pierna de apoyo.
 4. Cambia de lado.', 'Caer de golpe al piso.
-Rodilla hacia adentro.', 'Usa un cajón bajo y aumenta la altura poco a poco.', 1, 2, 'zancada', 1),
+Rodilla hacia adentro.', 'Usa un cajón bajo y aumenta la altura poco a poco.', 1, 2, 'desplante', 1),
   ('Spanish squat con banda', 'Spanish squat', 'spanish squat con banda', 'spanish squat', 'Sentadilla con una banda gruesa detrás de las rodillas que permite mantener las espinillas verticales.', '1. Ancla una banda gruesa a un soporte firme y colócala detrás de las rodillas.
 2. Inclínate hacia atrás hasta tensar la banda.
 3. Baja manteniendo las espinillas verticales.
@@ -266,7 +266,7 @@ FROM (VALUES
 2. Baja hacia un lado flexionando esa rodilla y estirando la otra.
 3. Mantén el talón de la pierna flexionada en el piso.
 4. Sube y cambia de lado.', 'Despegar el talón.
-Redondear la espalda para bajar más.', 'Baja solo hasta donde controles; el rango mejora con práctica.', 1, 2, 'zancada', 1),
+Redondear la espalda para bajar más.', 'Baja solo hasta donde controles; el rango mejora con práctica.', 1, 2, 'desplante', 1),
   ('Elevación de talones en prensa', 'Leg press calf raise', 'elevacion de talones en prensa', 'leg press calf raise', 'Elevación de talones empujando la plataforma de la prensa con las puntas.', '1. Siéntate en la prensa con las puntas de los pies en el borde inferior de la plataforma.
 2. Con rodillas extendidas sin bloquear, empuja con las puntas.
 3. Baja los talones hasta un estiramiento cómodo.
@@ -696,7 +696,7 @@ SELECT e.id, q.id FROM (VALUES
   ('sentadilla bulgara con pie delantero elevado', 'mancuernas'),
   ('sentadilla bulgara con pie delantero elevado', 'banco'),
   ('sentadilla bulgara con pie delantero elevado', 'cajon'),
-  ('zancada hacia delante en smith', 'maquina smith'),
+  ('desplante hacia delante en smith', 'maquina smith'),
   ('step-up lateral', 'cajon'),
   ('step-up lateral', 'mancuernas'),
   ('step-down de cajon', 'cajon'),
@@ -864,13 +864,13 @@ SELECT b.id, e.id, v.column3, strftime('%Y-%m-%dT%H:%M:%fZ', 'now') FROM (VALUES
   ('extension de cuadriceps', 'extension terminal de rodilla con banda', NULL),
   ('sentadilla bulgara', 'sentadilla bulgara en smith', NULL),
   ('sentadilla bulgara', 'sentadilla bulgara con pie delantero elevado', NULL),
-  ('zancada hacia atras', 'zancada hacia delante en smith', NULL),
+  ('desplante hacia atras', 'desplante hacia delante en smith', NULL),
   ('subida al cajon', 'step-up lateral', NULL),
   ('subida al cajon', 'step-down de cajon', NULL),
   ('sentadilla goblet', 'sentadilla ciclista', NULL),
   ('aduccion de cadera en polea', 'aduccion de cadera de pie con banda', NULL),
   ('plancha copenhague', 'plancha copenhague con rodilla apoyada', NULL),
-  ('zancada lateral', 'sentadilla cossack', NULL),
+  ('desplante lateral', 'sentadilla cossack', NULL),
   ('elevacion de talones de pie', 'elevacion de talones en prensa', NULL),
   ('elevacion de talones de pie', 'elevacion de talones en smith', NULL),
   ('elevacion de talones de pie', 'elevacion de talones unilateral de pie', NULL),
@@ -1042,8 +1042,8 @@ SELECT e.id, m.id, v.column3 FROM (VALUES
   ('sentadilla bulgara con pie delantero elevado', 'cuadriceps', 1),
   ('sentadilla bulgara con pie delantero elevado', 'gluteos', 2),
   ('sentadilla bulgara con pie delantero elevado', 'aductores', 2),
-  ('zancada hacia delante en smith', 'cuadriceps', 1),
-  ('zancada hacia delante en smith', 'gluteos', 2),
+  ('desplante hacia delante en smith', 'cuadriceps', 1),
+  ('desplante hacia delante en smith', 'gluteos', 2),
   ('step-up lateral', 'cuadriceps', 1),
   ('step-up lateral', 'gluteos', 2),
   ('step-up lateral', 'abductores', 2),

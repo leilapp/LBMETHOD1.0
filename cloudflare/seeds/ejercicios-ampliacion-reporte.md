@@ -56,17 +56,17 @@ Grupos musculares: Antebrazos (Forearms), Tibial anterior (Tibialis anterior).
 | Sentadilla pendular | Pendulum squat | Cuádriceps | Glúteos | Máquina | Fuerza | Sentadilla | Intermedio | Sentadilla hack |
 | Prensa vertical | Vertical leg press | Cuádriceps | Glúteos | Máquina | Fuerza | Sentadilla | Intermedio | Prensa de piernas |
 | Extensión terminal de rodilla con banda | Banded terminal knee extension | Cuádriceps | — | Banda elástica | Fuerza | Extensión de rodilla | Principiante | Extensión de cuádriceps |
-| Sentadilla búlgara en Smith | Smith machine Bulgarian split squat | Cuádriceps | Glúteos, Aductores | Máquina Smith, Banco | Fuerza | Zancada | Intermedio | Sentadilla búlgara |
-| Sentadilla búlgara con pie delantero elevado | Front-foot-elevated Bulgarian split squat | Cuádriceps | Glúteos, Aductores | Mancuernas, Banco, Cajón | Fuerza | Zancada | Avanzado | Sentadilla búlgara |
-| Zancada hacia delante en Smith | Smith machine forward lunge | Cuádriceps | Glúteos | Máquina Smith | Fuerza | Zancada | Intermedio | Zancada hacia atrás |
-| Step-up lateral | Lateral step-up | Cuádriceps | Glúteos, Abductores | Cajón, Mancuernas | Fuerza | Zancada | Principiante | Subida al cajón |
-| Step-down de cajón | Box step-down | Cuádriceps | Glúteos | Cajón | Fuerza | Zancada | Intermedio | Subida al cajón |
+| Sentadilla búlgara en Smith | Smith machine Bulgarian split squat | Cuádriceps | Glúteos, Aductores | Máquina Smith, Banco | Fuerza | Desplante | Intermedio | Sentadilla búlgara |
+| Sentadilla búlgara con pie delantero elevado | Front-foot-elevated Bulgarian split squat | Cuádriceps | Glúteos, Aductores | Mancuernas, Banco, Cajón | Fuerza | Desplante | Avanzado | Sentadilla búlgara |
+| Desplante hacia delante en Smith | Smith machine forward lunge | Cuádriceps | Glúteos | Máquina Smith | Fuerza | Desplante | Intermedio | Desplante hacia atrás |
+| Step-up lateral | Lateral step-up | Cuádriceps | Glúteos, Abductores | Cajón, Mancuernas | Fuerza | Desplante | Principiante | Subida al cajón |
+| Step-down de cajón | Box step-down | Cuádriceps | Glúteos | Cajón | Fuerza | Desplante | Intermedio | Subida al cajón |
 | Spanish squat con banda | Spanish squat | Cuádriceps | — | Banda elástica | Fuerza | Sentadilla | Intermedio | — |
 | Sentadilla ciclista | Cyclist squat | Cuádriceps | Glúteos | Mancuernas, Kettlebell | Fuerza | Sentadilla | Intermedio | Sentadilla goblet |
 | Aducción de cadera acostada | Side-lying hip adduction | Aductores | — | Peso corporal, Tapete | Fuerza | Aducción de cadera | Principiante | — |
 | Aducción de cadera de pie con banda | Standing banded hip adduction | Aductores | — | Banda elástica | Fuerza | Aducción de cadera | Principiante | Aducción de cadera en polea |
 | Plancha Copenhague con rodilla apoyada | Short-lever Copenhagen plank | Aductores | Abdomen | Banco | Isométrico | Aducción de cadera | Intermedio | Plancha Copenhague |
-| Sentadilla Cossack | Cossack squat | Aductores | Cuádriceps, Glúteos | Peso corporal, Kettlebell | Fuerza | Zancada | Intermedio | Zancada lateral |
+| Sentadilla Cossack | Cossack squat | Aductores | Cuádriceps, Glúteos | Peso corporal, Kettlebell | Fuerza | Desplante | Intermedio | Desplante lateral |
 | Elevación de talones en prensa | Leg press calf raise | Pantorrillas | — | Máquina | Fuerza | Flexión plantar | Principiante | Elevación de talones de pie |
 | Elevación de talones en Smith | Smith machine calf raise | Pantorrillas | — | Máquina Smith, Cajón | Fuerza | Flexión plantar | Principiante | Elevación de talones de pie |
 | Elevación de talones unilateral de pie | Single-leg standing calf raise | Pantorrillas | — | Peso corporal, Mancuernas | Fuerza | Flexión plantar | Principiante | Elevación de talones de pie |
@@ -259,7 +259,7 @@ Grupos musculares: Antebrazos (Forearms), Tibial anterior (Tibialis anterior).
 | Abducción de cadera en polea inclinada | No se agrega: es un ajuste de técnica de Abducción de cadera en polea. |
 | Prensa inclinada con pies bajos | No se agrega: la posición de los pies se anota en la rutina (Prensa de piernas). |
 | Prensa horizontal unilateral | Agregado como «Prensa horizontal» (máquina distinta); hacerla a una pierna se anota en la rutina. |
-| Zancada caminando en Smith | No se agrega: no es posible en la Smith; usar Zancada caminando. |
+| Zancada caminando en Smith | No se agrega: no es posible en la Smith; usar Desplantes caminando. |
 | Aducción de cadera en máquina unilateral | Agregado como «Aducción de cadera en máquina de pie» (multicadera). |
 | Elevación de talones unilateral sentado | No se agrega: igual a Elevación de talones sentado. |
 | Elevación lateral en polea detrás del cuerpo | No se agrega: posición del cable de Elevación lateral en polea. |

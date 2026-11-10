@@ -42,7 +42,7 @@ describe('Biblioteca base de ejercicios', () => {
     const item = found.items[0]
     assert.equal(item.primaryMuscleGroup, 'Cuádriceps')
     assert.deepEqual(item.equipment, ['Banco', 'Mancuernas'])
-    assert.equal(item.movementPattern, 'Zancada')
+    assert.equal(item.movementPattern, 'Desplante')
     assert.equal(item.typeLabel, 'Fuerza')
     const detail = await (await s.get(`${EX}/${item.id}`)).json()
     assert.equal(detail.difficulty, 2)

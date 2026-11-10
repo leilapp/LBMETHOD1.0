@@ -45,7 +45,7 @@ export const EQUIPMENT = {
 export const PATTERNS = {
   bisagra: ['Bisagra de cadera', 'Hip hinge'],
   sentadilla: ['Sentadilla', 'Squat'],
-  zancada: ['Zancada', 'Lunge'],
+  zancada: ['Desplante', 'Lunge'],
   extcadera: ['Extensión de cadera', 'Hip extension'],
   abduccion: ['Abducción de cadera', 'Hip abduction'],
   aduccion: ['Aducción de cadera', 'Hip adduction'],
@@ -119,10 +119,10 @@ export const EXERCISES = [
   ['Prensa de piernas', 'Leg press', 1, 1, 'sentadilla', 'cuadriceps', ['gluteos', 'aductores'], ['maquina']],
   ['Prensa a una pierna', 'Single-leg leg press', 1, 2, 'sentadilla', 'cuadriceps', ['gluteos'], ['maquina']],
   ['Sentadilla búlgara', 'Bulgarian split squat', 1, 2, 'zancada', 'cuadriceps', ['gluteos', 'aductores'], ['mancuernas', 'banco']],
-  ['Zancada hacia atrás', 'Reverse lunge', 1, 1, 'zancada', 'cuadriceps', ['gluteos'], ['mancuernas']],
-  ['Zancada caminando', 'Walking lunge', 1, 2, 'zancada', 'cuadriceps', ['gluteos'], ['mancuernas']],
-  ['Zancada lateral', 'Lateral lunge', 1, 2, 'zancada', 'cuadriceps', ['gluteos', 'aductores'], ['mancuernas']],
-  ['Zancada cruzada', 'Curtsy lunge', 1, 2, 'zancada', 'gluteos', ['cuadriceps', 'abductores'], ['mancuernas']],
+  ['Desplante hacia atrás', 'Reverse lunge', 1, 1, 'zancada', 'cuadriceps', ['gluteos'], ['mancuernas']],
+  ['Desplantes caminando', 'Walking lunge', 1, 2, 'zancada', 'cuadriceps', ['gluteos'], ['mancuernas']],
+  ['Desplante lateral', 'Lateral lunge', 1, 2, 'zancada', 'cuadriceps', ['gluteos', 'aductores'], ['mancuernas']],
+  ['Desplante cruzado', 'Curtsy lunge', 1, 2, 'zancada', 'gluteos', ['cuadriceps', 'abductores'], ['mancuernas']],
   ['Subida al cajón', 'Box step-up', 1, 1, 'zancada', 'cuadriceps', ['gluteos'], ['cajon', 'mancuernas']],
   ['Extensión de cuádriceps', 'Leg extension', 1, 1, 'extrodilla', 'cuadriceps', [], ['maquina']],
   ['Curl femoral acostado', 'Lying leg curl', 1, 1, 'flexrodilla', 'femoral', ['pantorrillas'], ['maquina']],
@@ -205,7 +205,7 @@ export const EXERCISES = [
   ['Burpees', 'Burpee', 3, 2, 'salto', 'cuadriceps', ['pecho', 'hombros', 'abdomen'], ['corporal']],
   ['Sentadilla con salto', 'Jump squat', 4, 2, 'salto', 'cuadriceps', ['gluteos', 'pantorrillas'], ['corporal']],
   ['Salto al cajón', 'Box jump', 4, 2, 'salto', 'cuadriceps', ['gluteos', 'pantorrillas'], ['cajon']],
-  ['Zancadas con salto', 'Jumping lunge', 4, 3, 'salto', 'cuadriceps', ['gluteos'], ['corporal']],
+  ['Desplantes con salto', 'Jumping lunge', 4, 3, 'salto', 'cuadriceps', ['gluteos'], ['corporal']],
   ['Lanzamiento de balón medicinal al piso', 'Medicine ball slam', 4, 2, null, 'abdomen', ['hombros', 'espalda'], ['balon']],
 
   // Movilidad y estiramientos
