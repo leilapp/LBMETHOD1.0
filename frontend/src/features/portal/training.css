@@ -354,3 +354,17 @@
     width: 100%;
   }
 }
+.program-day__title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.program-day__summary > .muted {
+  white-space: nowrap;
+  font-weight: 400;
+}
+.program-day__title .day-muscle {
+  margin: 0;
+  font-weight: 400;
+}

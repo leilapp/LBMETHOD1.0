@@ -1,7 +1,8 @@
 import type { RoutineExercise, RoutineVersion } from '../../api/routines'
 import { summarize } from './routineModel'
 import { WeeklyVolume } from './WeeklyVolume'
-import { volumeFromVersion } from '../../lib/weeklyVolume'
+import { mainMuscleFromVersionDay, volumeFromVersion } from '../../lib/weeklyVolume'
+import { DayMainMuscle } from './DayMainMuscle'
 
 const unitLabel = (u: number | null) => (u === 2 ? 'lb' : 'kg')
 
@@ -26,6 +27,7 @@ export function RoutinePreview({ version }: { version: RoutineVersion }) {
             {d.name}
             {d.dayLabel && <span className="badge badge--muted">{d.dayLabel}</span>}
           </h3>
+          <DayMainMuscle main={mainMuscleFromVersionDay(d)} />
           {d.notes && <p className="muted pre-line">{d.notes}</p>}
           {d.exercises.length === 0 ? (
             <p className="muted">Sin ejercicios.</p>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { WeeklyVolume } from '../routines/WeeklyVolume'
-import { volumeFromVersion } from '../../lib/weeklyVolume'
+import { mainMuscleFromVersionDay, volumeFromVersion } from '../../lib/weeklyVolume'
+import { DayMainMuscle } from '../routines/DayMainMuscle'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '../../api/client'
@@ -251,9 +252,12 @@ function ProgramView({ program, canStart }: { program: PortalProgram; canStart: 
       {program.days.map((d) => (
         <details key={d.id} className="program-day" open={program.days.length <= 2}>
           <summary className="program-day__summary">
-            <span>
-              {d.name}
-              {d.dayLabel && <span className="muted"> · {d.dayLabel}</span>}
+            <span className="program-day__title">
+              <span>
+                {d.name}
+                {d.dayLabel && <span className="muted"> · {d.dayLabel}</span>}
+              </span>
+              <DayMainMuscle main={mainMuscleFromVersionDay(d)} />
             </span>
             <span className="muted">{d.exercises.length} {d.exercises.length === 1 ? 'ejercicio' : 'ejercicios'}</span>
           </summary>

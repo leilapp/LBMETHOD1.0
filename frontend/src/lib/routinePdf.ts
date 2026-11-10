@@ -1,7 +1,7 @@
 import type { PortalProgram } from '../api/portal'
 import type { RoutineVersion } from '../api/routines'
 import { saveBlob } from './saveFile'
-import { volumeFromVersion, type MuscleVolume } from './weeklyVolume'
+import { mainMuscleFromVersionDay, mainMuscleText, volumeFromVersion, type MuscleVolume } from './weeklyVolume'
 
 /**
  * PDF de una rutina generado en el navegador (jsPDF + jspdf-autotable), con el mismo diseño que tenía el PDF del
@@ -46,6 +46,8 @@ export interface PdfDay {
   name: string
   dayLabel: string | null
   notes: string | null
+  /** «Músculo principal: Pecho (9 de 14 series)»; null si no hay series con músculo o la API no lo manda. */
+  mainMuscle?: string | null
   exercises: PdfExercise[]
 }
 
@@ -112,6 +114,11 @@ export function slug(text: string, fallback = 'rutina') {
 // ---------- De la pantalla al documento ----------
 
 /** Versión de rutina o plantilla (pantalla de la entrenadora). Con `assignment`, agrega cliente, fechas e indicaciones. */
+function mainOf(day: Parameters<typeof mainMuscleFromVersionDay>[0]) {
+  const main = mainMuscleFromVersionDay(day)
+  return main ? mainMuscleText(main) : null
+}
+
 export function fromRoutineVersion(
   version: RoutineVersion,
   assignment?: { clientName: string; startDate: string; endDate: string | null; statusLabel: string; notes: string | null },
@@ -134,6 +141,7 @@ export function fromRoutineVersion(
       name: d.name,
       dayLabel: d.dayLabel,
       notes: blank(d.notes),
+      mainMuscle: mainOf(d),
       exercises: d.exercises.map((e) => ({
         position: e.position,
         name: e.exerciseNameEs,
@@ -183,6 +191,7 @@ export function fromPortalProgram(program: PortalProgram, clientName: string | n
       name: d.name,
       dayLabel: d.dayLabel,
       notes: blank(d.notes),
+      mainMuscle: mainOf(d),
       exercises: d.exercises.map((e) => ({
         position: e.position,
         name: e.nameEs,
@@ -392,7 +401,7 @@ export async function buildRoutinePdf(data: RoutinePdfData, now = new Date(), { 
     const notes = day.notes ? (doc.setFont('helvetica', 'normal'), doc.setFontSize(9.5), doc.splitTextToSize(pdfText(day.notes), CONTENT_W) as string[]) : []
     // El título del día no se queda solo al final de una página: va con sus notas y al menos el primer ejercicio.
     y += 3
-    ensure(lineH(13) + notes.length * lineH(9.5) + 18)
+    ensure(lineH(13) + (day.mainMuscle ? lineH(9.5) : 0) + notes.length * lineH(9.5) + 18)
     doc.setFont('times', 'bold')
     doc.setFontSize(13)
     doc.setTextColor(...VIOLET)
@@ -402,6 +411,7 @@ export async function buildRoutinePdf(data: RoutinePdfData, now = new Date(), { 
       doc.text(`   ${pdfText(day.dayLabel)}`, MARGIN.left + doc.getTextWidth(heading), y + 13 * PT)
     }
     y += lineH(13) + 1
+    if (day.mainMuscle) paragraph(pdfText(day.mainMuscle), 9.5, VIOLET, 'helvetica', 'bold')
     if (notes.length) paragraph(notes.join('\n'), 9.5, MUTED)
     if (day.exercises.length === 0) {
       paragraph('Sin ejercicios.', 9.5, MUTED)
