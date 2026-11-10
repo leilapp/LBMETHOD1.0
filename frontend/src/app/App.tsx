@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell, type NavItem } from '../layouts/AppShell'
-import { ChangePasswordPage, LoginPage } from '../features/auth/AuthPages'
+import { ChangePasswordPage, LoginPage, RecoverPasswordPage } from '../features/auth/AuthPages'
 import { ClientsPage, TrainerDashboardPage, TrainerSettingsPage } from '../features/trainer/TrainerPages'
 import { PortalHomePage, PortalProfilePage } from '../features/portal/PortalPages'
 import { PortalRoutinePage, PortalSessionsPage, SessionPage } from '../features/portal/TrainingPages'
@@ -58,6 +58,7 @@ export function AppRoutes() {
       <Route path="/" element={<RedirectHome />} />
       <Route path="/iniciar-sesion" element={<LoginPage />} />
       <Route path="/cambiar-contrasena" element={<ChangePasswordPage />} />
+      <Route path="/recuperar-contrasena" element={<RecoverPasswordPage />} />
 
       <Route element={<RequireRole role="TRAINER" />}>
         <Route path="/entrenadora" element={<AppShell nav={trainerNav} areaLabel="Entrenadora" />}>

@@ -1,5 +1,7 @@
 .auth {
   position: relative;
+  /* Texto claro aunque el teléfono use tema claro (el panel siempre es oscuro). */
+  color: var(--lb-text);
   isolation: isolate;
   min-height: 100%;
   display: grid;
@@ -63,4 +65,30 @@
   gap: var(--lb-space-2);
   padding-top: var(--lb-space-4);
   border-top: 1px solid var(--lb-border);
+}
+
+.auth__link {
+  color: var(--lb-gold-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.recovery-codes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--lb-space-2);
+  margin: var(--lb-space-3) 0;
+  padding: 0;
+  list-style: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--lb-text-md, 1rem);
+  letter-spacing: 0.02em;
+}
+
+.recovery-codes li {
+  padding: var(--lb-space-2) var(--lb-space-3);
+  border: 1px dashed var(--lb-border, currentColor);
+  border-radius: 8px;
+  text-align: center;
+  white-space: nowrap;
 }

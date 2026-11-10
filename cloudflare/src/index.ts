@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { problem, securityHeaders } from './http'
 import { auth } from './routes/auth'
 import { clients } from './routes/clients'
+import { recovery, recoveryCodes } from './routes/recovery'
 import { routines } from './routines/routines'
 import { assignments, routineAssignments } from './clients/assignments'
 import { portalProfile } from './clients/portal'
@@ -29,8 +30,10 @@ app.onError((err, c) => {
 const api = new Hono<AppBindings>()
 api.use('*', loadSession, requireCsrf)
 api.route('/auth', auth)
+api.route('/auth/recovery', recovery)
 api.use('/trainer/*', requireRole('TRAINER'))
 api.use('/portal/*', requireRole('CLIENT'))
+api.route('/trainer/recovery-codes', recoveryCodes)
 api.route('/trainer/clients', clients)
 api.route('/trainer/clients', profiles)
 api.route('/trainer/assignments', assignments)
