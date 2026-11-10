@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { authApi } from '../../api/endpoints'
 import { Alert, Button, LoadingState, Logo, TextField } from '../../components/ui'
 import { homeFor, sessionKey, useSession, useSignOut } from '../../app/session'
@@ -72,7 +72,11 @@ export function LoginPage() {
           <Button type="submit" block loading={submitting}>
             Entrar
           </Button>
-          <p className="auth__help">¿Olvidaste tu contraseña? Pide a tu entrenadora que la restablezca.</p>
+          <p className="auth__help">
+            <Link className="auth__link" to={`/recuperar-contrasena${email.trim() ? `?correo=${encodeURIComponent(email.trim())}` : ''}`}>
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </p>
         </form>
         {(canInstall || offerApk) && (
           <div className="auth__install">
@@ -95,6 +99,139 @@ export function LoginPage() {
             </Button>
             <p className="auth__help">Queda como una app más en tu teléfono o computadora, sin pasar por una tienda.</p>
           </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * «Olvidé mi contraseña» sin correo electrónico. Primero se escribe el correo y la app detecta el tipo de cuenta:
+ * la entrenadora (administradora) crea una contraseña nueva con uno de sus códigos de recuperación; un cliente
+ * ve que debe pedir a su entrenadora una contraseña temporal nueva.
+ */
+export function RecoverPasswordPage() {
+  const [params] = useSearchParams()
+  const [email, setEmail] = useState(params.get('correo') ?? '')
+  const [method, setMethod] = useState<'recovery-code' | 'ask-trainer' | null>(null)
+  const [code, setCode] = useState('')
+  const [next, setNext] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [errors, setErrors] = useState<{ next?: string; confirm?: string; form?: string }>({})
+  const [remaining, setRemaining] = useState<number | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  async function onCheck(e: FormEvent) {
+    e.preventDefault()
+    setErrors({})
+    if (!email.trim()) {
+      setErrors({ form: 'Escribe tu correo electrónico.' })
+      return
+    }
+    setSubmitting(true)
+    try {
+      setMethod((await authApi.recoveryCheck(email.trim())).method)
+    } catch (err) {
+      setErrors({ form: (err as Error).message })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function onReset(e: FormEvent) {
+    e.preventDefault()
+    const found: typeof errors = {}
+    const problem = passwordProblems(next)
+    if (problem) found.next = problem
+    if (next !== confirm) found.confirm = 'Las contraseñas no coinciden.'
+    if (!code.trim()) found.form = 'Escribe uno de tus códigos de recuperación.'
+    setErrors(found)
+    if (Object.keys(found).length) return
+    setSubmitting(true)
+    try {
+      setRemaining((await authApi.recoveryReset(email.trim(), code.trim(), next)).remainingCodes)
+    } catch (err) {
+      setErrors({ form: (err as Error).message })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="auth lb-dark">
+      <div className="lb-sparkles" aria-hidden="true" />
+      <div className="auth__panel">
+        <div className="auth__brand">
+          <Logo size="lg" />
+        </div>
+        <h1 className="auth__title">Recuperar contraseña</h1>
+        {remaining !== null ? (
+          <>
+            <Alert kind="success">Listo, tu contraseña se cambió. Ya puedes entrar con la nueva.</Alert>
+            <p className="auth__help">
+              {remaining === 0
+                ? 'Ya usaste todos tus códigos de recuperación: genera otros en Configuración en cuanto entres.'
+                : `Te quedan ${remaining} códigos de recuperación sin usar. El que usaste ya no sirve.`}
+            </p>
+            <Link className="btn btn--primary btn--block" to="/iniciar-sesion">
+              Ir a iniciar sesión
+            </Link>
+          </>
+        ) : method === 'ask-trainer' ? (
+          <>
+            <Alert kind="info">
+              Pide a tu entrenadora que te dé una contraseña temporal nueva. Ella puede hacerlo desde tu ficha, en «Restablecer contraseña».
+            </Alert>
+            <Link className="btn btn--secondary btn--block" to="/iniciar-sesion">
+              Volver a iniciar sesión
+            </Link>
+          </>
+        ) : method === 'recovery-code' ? (
+          <form className="form" onSubmit={onReset} noValidate>
+            {errors.form && <Alert kind="error">{errors.form}</Alert>}
+            <p className="auth__help">
+              Escribe uno de los códigos de recuperación que guardaste (por ejemplo ABCD-EFGH-JKLM) y crea tu contraseña nueva.
+            </p>
+            <TextField label="Código de recuperación" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} required />
+            <TextField
+              label="Nueva contraseña"
+              type="password"
+              autoComplete="new-password"
+              hint="Mínimo 10 caracteres, con mayúscula, minúscula y número."
+              value={next}
+              onChange={(e) => setNext(e.target.value)}
+              error={errors.next}
+              required
+            />
+            <TextField
+              label="Confirmar nueva contraseña"
+              type="password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              error={errors.confirm}
+              required
+            />
+            <Button type="submit" block loading={submitting}>
+              Guardar contraseña nueva
+            </Button>
+            <Button variant="ghost" block onClick={() => setMethod(null)}>
+              Usar otro correo
+            </Button>
+          </form>
+        ) : (
+          <form className="form" onSubmit={onCheck} noValidate>
+            {errors.form && <Alert kind="error">{errors.form}</Alert>}
+            <TextField label="Correo electrónico" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Button type="submit" block loading={submitting}>
+              Continuar
+            </Button>
+            <p className="auth__help">
+              <Link className="auth__link" to="/iniciar-sesion">
+                Volver a iniciar sesión
+              </Link>
+            </p>
+          </form>
         )}
       </div>
     </div>

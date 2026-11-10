@@ -532,7 +532,105 @@ export function TrainerSettingsPage() {
           <h2 className="card__title">Cambiar contraseña</h2>
           <ChangePasswordForm />
         </section>
+        <RecoveryCodesSection />
       </div>
     </>
+  )
+}
+
+/**
+ * Códigos de recuperación de la entrenadora: con uno de ellos puede crear una contraseña nueva desde
+ * «¿Olvidaste tu contraseña?» en la pantalla de inicio, sin correo. Cada código sirve una sola vez.
+ */
+function RecoveryCodesSection() {
+  const qc = useQueryClient()
+  const status = useQuery({ queryKey: ['trainer', 'recovery-codes'], queryFn: trainerApi.recoveryCodes })
+  const [password, setPassword] = useState('')
+  const [codes, setCodes] = useState<string[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const generate = useMutation({
+    mutationFn: () => trainerApi.generateRecoveryCodes(password),
+    onSuccess: (result) => {
+      setCodes(result.codes)
+      setPassword('')
+      setError(null)
+      void qc.invalidateQueries({ queryKey: ['trainer', 'recovery-codes'] })
+    },
+    onError: (err) => setError((err as Error).message),
+  })
+
+  async function copy() {
+    if (!codes) return
+    try {
+      await navigator.clipboard.writeText(`Códigos de recuperación de LB METHOD (cada uno sirve una vez):\n${codes.join('\n')}`)
+      setCopied(true)
+    } catch {
+      setError('No se pudieron copiar. Anótalos a mano.')
+    }
+  }
+
+  return (
+    <section className="card" aria-labelledby="codigos-recuperacion">
+      <h2 className="card__title" id="codigos-recuperacion">
+        Códigos de recuperación
+      </h2>
+      <p className="muted" style={{ marginBottom: 'var(--lb-space-3)' }}>
+        Si olvidas tu contraseña, en la pantalla de inicio toca «¿Olvidaste tu contraseña?», escribe tu correo y uno de
+        estos códigos. Cada código sirve una sola vez. Guárdalos fuera de la app (en una nota de tu teléfono, una foto o en papel).
+      </p>
+      {status.data && (
+        <p style={{ marginBottom: 'var(--lb-space-3)' }}>
+          {status.data.total === 0
+            ? 'Todavía no tienes códigos. Genera tus códigos ahora para no quedarte sin acceso.'
+            : `Te quedan ${status.data.remaining} de ${status.data.total} códigos sin usar${status.data.generatedAt ? ` (generados el ${formatDateTime(status.data.generatedAt)})` : ''}.`}
+        </p>
+      )}
+      {codes && (
+        <>
+          <Alert kind="warning">Anota o copia estos códigos ahora: no se volverán a mostrar. Los códigos anteriores ya no sirven.</Alert>
+          <ul className="recovery-codes">
+            {codes.map((code) => (
+              <li key={code}>{code}</li>
+            ))}
+          </ul>
+          <div className="form__actions" style={{ marginBottom: 'var(--lb-space-4)' }}>
+            <Button variant="secondary" onClick={() => void copy()}>
+              {copied ? 'Copiados' : 'Copiar códigos'}
+            </Button>
+            <Button variant="ghost" onClick={() => setCodes(null)}>
+              Ya los guardé
+            </Button>
+          </div>
+        </>
+      )}
+      <form
+        className="form"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (!password) {
+            setError('Escribe tu contraseña actual.')
+            return
+          }
+          generate.mutate()
+        }}
+        noValidate
+      >
+        {error && <Alert kind="error">{error}</Alert>}
+        <TextField
+          label="Contraseña actual"
+          type="password"
+          autoComplete="current-password"
+          hint="Se pide para confirmar que eres tú."
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <div className="form__actions">
+          <Button type="submit" loading={generate.isPending}>
+            {status.data?.total ? 'Generar códigos nuevos' : 'Generar mis códigos'}
+          </Button>
+        </div>
+      </form>
+    </section>
   )
 }

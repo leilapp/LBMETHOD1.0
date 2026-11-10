@@ -84,6 +84,19 @@ export function temporaryPassword(length = 14) {
   return chars.join('')
 }
 
+/**
+ * Código de recuperación de un solo uso: 12 caracteres en 3 grupos (ABCD-EFGH-JKLM), sin 0/O ni 1/I/L.
+ * 31 símbolos x 12 ≈ 59 bits al azar: imposible de adivinar con el límite de intentos.
+ */
+export function recoveryCode() {
+  const set = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+  const chars = Array.from({ length: 12 }, () => set[randomInt(set.length)]).join('')
+  return `${chars.slice(0, 4)}-${chars.slice(4, 8)}-${chars.slice(8)}`
+}
+
+/** Forma normalizada de un código escrito por la persona: sin guiones ni espacios, en mayúsculas. */
+export const normalizeRecoveryCode = (code: string) => code.replace(/[\s-]/g, '').toUpperCase()
+
 /** Entero aleatorio uniforme en [0, max), sin sesgo de módulo. */
 function randomInt(max: number) {
   const limit = Math.floor(0x1_0000_0000 / max) * max

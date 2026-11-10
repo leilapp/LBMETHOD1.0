@@ -110,7 +110,7 @@ async function sessionFor(c: Context<AppBindings>, userId: number) {
 }
 
 /** Límite de intentos por dirección IP en ventanas de un minuto (10 por defecto), guardado en D1. */
-async function withinRateLimit(c: Context<AppBindings>) {
+export async function withinRateLimit(c: Context<AppBindings>) {
   const ip = c.req.header('CF-Connecting-IP') ?? 'desconocida'
   const window = new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString()
   const row = await c.env.DB.prepare(

@@ -68,6 +68,19 @@ export const authApi = {
   },
   changePassword: (currentPassword: string, newPassword: string) =>
     api.post<void>('/api/auth/change-password', { currentPassword, newPassword }),
+  /** «Olvidé mi contraseña»: la entrenadora usa un código de recuperación; los clientes, a su entrenadora. */
+  recoveryCheck: (email: string) => api.post<{ method: 'recovery-code' | 'ask-trainer' }>('/api/auth/recovery/check', { email }),
+  async recoveryReset(email: string, code: string, newPassword: string) {
+    const result = await api.post<{ remainingCodes: number }>('/api/auth/recovery/reset', { email, code, newPassword })
+    resetCsrfToken()
+    return result
+  },
+}
+
+export interface RecoveryCodesStatus {
+  total: number
+  remaining: number
+  generatedAt: string | null
 }
 
 export const trainerApi = {
@@ -76,6 +89,9 @@ export const trainerApi = {
     api.post<TemporaryPassword>('/api/trainer/clients', { ...data, phone: data.phone || null }),
   resetPassword: (clientId: number) => api.post<TemporaryPassword>(`/api/trainer/clients/${clientId}/reset-password`),
   setAccess: (clientId: number, enabled: boolean) => api.post<void>(`/api/trainer/clients/${clientId}/access`, { enabled }),
+  recoveryCodes: () => api.get<RecoveryCodesStatus>('/api/trainer/recovery-codes'),
+  generateRecoveryCodes: (currentPassword: string) =>
+    api.post<{ codes: string[]; generatedAt: string }>('/api/trainer/recovery-codes', { currentPassword }),
 }
 
 export interface PortalAssignment {
