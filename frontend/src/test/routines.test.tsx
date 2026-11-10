@@ -140,6 +140,29 @@ describe('rutinas', () => {
     expect(sent.days[0].dayOfWeek).toBe(1)
   })
 
+  it('los ejercicios del día se pliegan y despliegan tocando su encabezado', async () => {
+    mockApi(builderRoutes({}))
+    const user = userEvent.setup()
+    renderApp('/entrenadora/rutinas/3/editar')
+
+    const day = await screen.findByRole('region', { name: 'Día 1: Día 1 - Glúteo' })
+    expect(within(day).queryByRole('group', { name: 'Parámetros de Hip thrust' })).not.toBeInTheDocument()
+
+    const head = within(day).getByRole('button', { name: 'Desplegar Hip thrust' })
+    expect(head).toHaveAttribute('aria-expanded', 'false')
+    await user.click(head)
+    expect(within(day).getByRole('group', { name: 'Parámetros de Hip thrust' })).toBeInTheDocument()
+    expect(within(day).getByRole('button', { name: 'Plegar Hip thrust' })).toHaveAttribute('aria-expanded', 'true')
+
+    await user.click(within(day).getByRole('button', { name: 'Listo' }))
+    expect(within(day).queryByRole('group', { name: 'Parámetros de Hip thrust' })).not.toBeInTheDocument()
+
+    await user.click(within(day).getByRole('button', { name: /^Desplegar todos los ejercicios/ }))
+    expect(within(day).getAllByRole('group', { name: /^Parámetros de / })).toHaveLength(3)
+    await user.click(within(day).getByRole('button', { name: /^Plegar todos los ejercicios/ }))
+    expect(within(day).queryAllByRole('group', { name: /^Parámetros de / })).toHaveLength(0)
+  })
+
   it('un ejercicio recién agregado no trae valores inventados y exige las series', async () => {
     const calls = mockApi(
       builderRoutes({
