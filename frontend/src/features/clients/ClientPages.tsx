@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import { clientsApi, isCurrent, type Assignment, type ClientDetail, type ClientOptions } from '../../api/clients'
 import {
+  BackLink,
   Alert,
   Button,
   ConfirmDialog,
@@ -11,7 +12,9 @@ import {
   ErrorState,
   LoadingState,
   Modal,
+  MoreMenu,
   PageHeader,
+  Tabs,
   SelectField,
   TextAreaField,
   TextField,
@@ -19,7 +22,10 @@ import {
 import { PdfButton } from '../../components/PdfButton'
 import { routinesApi } from '../../api/routines'
 import { fromRoutineVersion } from '../../lib/routinePdf'
-import { formatDate, formatDateTime, todayInMexico } from '../../lib/format'
+import { formatDate, formatDateTime, initials, todayInMexico } from '../../lib/format'
+import { Activity, ClipboardList, ClipboardPlus, KeyRound, Pencil, UserCheck, UserX } from 'lucide-react'
+import { AccessDialogs, type AccessAction } from '../trainer/TrainerPages'
+import { SessionsCard } from '../tracking/TrackingPages'
 import { isEmail } from '../../lib/validation'
 import { AssignModal } from './AssignModal'
 import { CreateRoutineModal } from '../routines/RoutinesPages'
@@ -30,6 +36,14 @@ import './clients.css'
 const useClientOptions = () => useQuery({ queryKey: clientKeys.options, queryFn: clientsApi.options, staleTime: Infinity })
 
 /* ---------- Ficha del cliente ---------- */
+type ClientTab = 'resumen' | 'rutina' | 'progreso' | 'perfil'
+const CLIENT_TABS = [
+  ['resumen', 'Resumen'],
+  ['rutina', 'Rutina'],
+  ['progreso', 'Progreso'],
+  ['perfil', 'Perfil'],
+] as const
+
 export function ClientDetailPage() {
   const id = Number(useParams().id)
   const qc = useQueryClient()
@@ -39,64 +53,188 @@ export function ClientDetailPage() {
   const [params, setParams] = useSearchParams()
   // ?crearRutina=1: viene de «Crear su rutina» justo después de crear el cliente.
   const [creatingRoutine, setCreatingRoutine] = useState(() => params.get('crearRutina') === '1')
+  const [choosing, setChoosing] = useState(false)
+  const [access, setAccess] = useState<AccessAction | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const tabParam = params.get('ver')
+  const tab: ClientTab = CLIENT_TABS.some(([v]) => v === tabParam) ? (tabParam as ClientTab) : 'resumen'
+  const setTab = (v: ClientTab) => setParams(v === 'resumen' ? {} : { ver: v }, { replace: true })
 
   if (profile.isPending) return <LoadingState label="Cargando cliente…" />
   if (profile.error) return <ErrorState message={profile.error.message} onRetry={() => profile.refetch()} />
   const c = profile.data
   const name = `${c.firstName} ${c.lastName}`
   const active = c.status === 'Active'
+  const current = assignments.data?.filter(isCurrent) ?? []
+  const who = { id, firstName: c.firstName, lastName: c.lastName }
 
   return (
     <>
-      <p className="breadcrumb">
-        <Link to="/entrenadora/clientes">← Clientes</Link>
-      </p>
-      <PageHeader
-        title={name}
-        subtitle={c.email}
-        actions={
-          <div className="page-actions">
-            <Link className="btn btn--secondary" to={`/entrenadora/clientes/${id}/seguimiento`}>
-              Seguimiento
-            </Link>
-            <Link className="btn btn--secondary" to={`/entrenadora/clientes/${id}/editar`}>
-              Editar perfil
-            </Link>
-            {active && (
-              <Button variant="secondary" onClick={() => setAssigning({})}>
-                Asignar rutina existente
-              </Button>
-            )}
-            {active && <Button onClick={() => setCreatingRoutine(true)}>Crear rutina para {c.firstName}</Button>}
-          </div>
-        }
-      />
+      <BackLink to="/entrenadora/clientes" label="Clientes" />
+      <header className="client-head">
+        <span className="avatar avatar--gold avatar--lg" aria-hidden="true">
+          {initials(name)}
+        </span>
+        <div className="client-head__text">
+          <h1 className="page-header__title">{name}</h1>
+          <p className="page-header__subtitle">{c.email}</p>
+        </div>
+        <MoreMenu
+          label={`Más acciones para ${c.firstName}`}
+          items={[
+            { label: 'Editar perfil', icon: Pencil, to: `/entrenadora/clientes/${id}/editar` },
+            { label: 'Seguimiento completo', icon: Activity, to: `/entrenadora/clientes/${id}/seguimiento` },
+            c.hasAccount && { label: 'Restablecer contraseña', icon: KeyRound, onSelect: () => setAccess({ kind: 'reset', client: who }) },
+            c.hasAccount && active && { label: 'Desactivar cliente', icon: UserX, danger: true, onSelect: () => setAccess({ kind: 'disable', client: who }) },
+            c.hasAccount && !active && { label: 'Reactivar cliente', icon: UserCheck, onSelect: () => setAccess({ kind: 'enable', client: who }) },
+          ]}
+        />
+      </header>
+      <Tabs fill label="Secciones de la ficha" value={tab} options={CLIENT_TABS} onChange={setTab} />
       <div className="stack">
         {notice && <Alert kind="success">{notice}</Alert>}
         {!active && <Alert kind="warning">Cliente inactivo: no puede entrar ni recibir rutinas nuevas. Su historial se conserva completo.</Alert>}
 
-        <div className="client-layout">
-          <div className="stack">
-            <AssignmentsCard
-              clientActive={active}
-              query={assignments}
-              onChangeVersion={(a) => setAssigning({ routineId: a.routineId, versionId: a.latestVersionId ?? undefined })}
-              onChanged={(message) => {
-                setNotice(message)
-                qc.invalidateQueries({ queryKey: clientKeys.all })
-              }}
-            />
-            <NotesCard clientId={id} />
+        {tab === 'resumen' && (
+          <div className="client-layout">
+            <div className="stack">
+              {assignments.isPending ? (
+                <section className="card">
+                  <LoadingState />
+                </section>
+              ) : assignments.error ? (
+                <section className="card">
+                  <ErrorState message={assignments.error.message} onRetry={() => assignments.refetch()} />
+                </section>
+              ) : current.length === 0 ? (
+                <section className="card card--attention stack" aria-labelledby="sin-rutina">
+                  <span className="badge badge--warning">Sin rutina</span>
+                  <h2 className="card__title" id="sin-rutina">
+                    {c.firstName} todavía no tiene rutina
+                  </h2>
+                  {active ? (
+                    <>
+                      <p className="muted">Ármale una nueva, solo para {c.firstName}, o usa una que ya tengas.</p>
+                      <div>
+                        <Button onClick={() => setChoosing(true)}>Darle una rutina</Button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="muted">Reactívalo desde el menú ⋮ para poder asignarle una.</p>
+                  )}
+                </section>
+              ) : (
+                <section className="card stack" aria-labelledby="rutina-actual">
+                  <div className="section-head">
+                    <h2 className="card__title" id="rutina-actual">
+                      {current.length === 1 ? 'Rutina actual' : 'Rutinas actuales'}
+                    </h2>
+                    <button type="button" className="link-button" onClick={() => setTab('rutina')}>
+                      Ver detalle
+                    </button>
+                  </div>
+                  <ul className="assignments" aria-label="Programa actual">
+                    {current.map((a) => (
+                      <li key={a.id} className="assignment">
+                        <div className="assignment__main">
+                          <span className="assignment__title">
+                            <Link to={`/entrenadora/rutinas/${a.routineId}`}>{a.routineName}</Link>{' '}
+                            <span className={`badge ${statusBadge[a.status]}`}>{a.statusLabel}</span>
+                          </span>
+                          <span className="list-item__meta">{period(a)}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              <NotesCard clientId={id} />
+            </div>
+            <ProfileProgress client={c} onOpen={() => setTab('perfil')} />
           </div>
-          <ProfileCard client={c} />
-        </div>
+        )}
+
+        {tab === 'rutina' && (
+          <AssignmentsCard
+            clientActive={active}
+            clientName={c.firstName}
+            query={assignments}
+            onAdd={() => setChoosing(true)}
+            onChangeVersion={(a) => setAssigning({ routineId: a.routineId, versionId: a.latestVersionId ?? undefined })}
+            onChanged={(message) => {
+              setNotice(message)
+              qc.invalidateQueries({ queryKey: clientKeys.all })
+            }}
+          />
+        )}
+
+        {tab === 'progreso' && (
+          <>
+            <section className="card stack" aria-labelledby="progreso-title">
+              <h2 className="card__title" id="progreso-title">
+                Medidas, fotos y evaluaciones
+              </h2>
+              <p className="muted">Gráficas de progreso, evaluaciones y fotos privadas de {c.firstName}.</p>
+              <div>
+                <Link className="btn btn--primary" to={`/entrenadora/clientes/${id}/seguimiento`}>
+                  Abrir seguimiento
+                </Link>
+              </div>
+            </section>
+            <SessionsCard clientId={id} limit={10} />
+          </>
+        )}
+
+        {tab === 'perfil' && <ProfileCard client={c} />}
       </div>
 
+      {choosing && (
+        <Modal title={`Darle una rutina a ${c.firstName}`} onClose={() => setChoosing(false)}>
+          <div className="choice-list">
+            <button
+              type="button"
+              className="choice"
+              onClick={() => {
+                setChoosing(false)
+                setCreatingRoutine(true)
+              }}
+            >
+              <span className="icon-chip" aria-hidden="true">
+                <ClipboardPlus size={22} />
+              </span>
+              <span className="choice__text">
+                <span className="choice__title">Crear una nueva para {c.firstName}</span>
+                <span className="choice__hint">La armas ejercicio por ejercicio; al publicarla se le asigna.</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              className="choice"
+              onClick={() => {
+                setChoosing(false)
+                setAssigning({})
+              }}
+            >
+              <span className="icon-chip icon-chip--gold" aria-hidden="true">
+                <ClipboardList size={22} />
+              </span>
+              <span className="choice__text">
+                <span className="choice__title">Usar una rutina que ya tengo</span>
+                <span className="choice__hint">Eliges una rutina publicada y desde qué fecha.</span>
+              </span>
+            </button>
+          </div>
+          <div className="form__actions">
+            <Button variant="secondary" onClick={() => setChoosing(false)}>
+              Cancelar
+            </Button>
+          </div>
+        </Modal>
+      )}
       {creatingRoutine && (
         <CreateRoutineModal
           section="rutinas"
-          forClient={{ id, firstName: c.firstName, lastName: c.lastName }}
+          forClient={who}
           onClose={() => {
             setCreatingRoutine(false)
             if (params.has('crearRutina')) setParams({}, { replace: true })
@@ -118,31 +256,101 @@ export function ClientDetailPage() {
           }}
         />
       )}
+      <AccessDialogs
+        action={access}
+        onClose={() => setAccess(null)}
+        onNotice={async (message) => {
+          setNotice(message)
+          await qc.invalidateQueries({ queryKey: clientKeys.profile(id) })
+        }}
+      />
     </>
   )
 }
 
-function ProfileCard({ client: c }: { client: ClientDetail }) {
+/** Datos del perfil que se pueden llenar (sin contar nombre y correo, que son obligatorios). */
+function profileFields(c: ClientDetail) {
   const units = (v: number | null, u: number | null, labels: [string, string]) => (v === null ? null : `${v} ${u === 2 ? labels[1] : labels[0]}`)
+  return [
+    ['Teléfono', c.phone],
+    ['Fecha de nacimiento', c.birthDate && formatDate(c.birthDate)],
+    ['Estatura', units(c.height, c.heightUnit, ['cm', 'in'])],
+    ['Peso', units(c.weight, c.weightUnit, ['kg', 'lb'])],
+    ['Experiencia', c.experienceLabel],
+    ['Objetivo', c.goal],
+    ['Lugar de entrenamiento', c.trainingLocationLabel],
+    ['Días disponibles', c.availableDayNames.join(', ')],
+    ['Duración de sesión', c.sessionDurationMinutes && `${c.sessionDurationMinutes} min`],
+    ['Limitaciones declaradas', c.declaredLimitations],
+  ] as const
+}
+
+/** Resumen del perfil: cuántos datos tiene y lo más útil para entrenar (objetivo, experiencia, limitaciones). */
+function ProfileProgress({ client: c, onOpen }: { client: ClientDetail; onOpen: () => void }) {
+  const fields = profileFields(c)
+  const filled = fields.filter(([, v]) => v).length
+  const key = fields.filter(([label, v]) => v && ['Objetivo', 'Experiencia', 'Limitaciones declaradas'].includes(label))
   return (
-    <section className="card" aria-labelledby="perfil-title">
-      <h2 className="card__title" id="perfil-title">
-        Perfil
-      </h2>
+    <section className="card stack" aria-labelledby="perfil-resumen">
+      <div className="section-head">
+        <h2 className="card__title" id="perfil-resumen">
+          Perfil
+        </h2>
+        <span className="muted">
+          {filled} de {fields.length} datos
+        </span>
+      </div>
+      <div className="meter" role="progressbar" aria-label="Perfil completo" aria-valuemin={0} aria-valuemax={fields.length} aria-valuenow={filled}>
+        <span style={{ width: `${(filled / fields.length) * 100}%` }} />
+      </div>
+      {key.length > 0 && (
+        <dl className="profile-list">
+          {key.map(([label, value]) => (
+            <Row key={label} label={label} value={value} />
+          ))}
+        </dl>
+      )}
+      <div className="head-actions">
+        {filled < fields.length && (
+          <Link className="btn btn--secondary" to={`/entrenadora/clientes/${c.id}/editar`}>
+            Completar perfil
+          </Link>
+        )}
+        <button type="button" className="link-button" onClick={onOpen}>
+          Ver perfil completo
+        </button>
+      </div>
+    </section>
+  )
+}
+
+function ProfileCard({ client: c }: { client: ClientDetail }) {
+  const fields = profileFields(c)
+  const empty = fields.filter(([, v]) => !v)
+  return (
+    <section className="card stack" aria-labelledby="perfil-title">
+      <div className="section-head">
+        <h2 className="card__title" id="perfil-title">
+          Perfil
+        </h2>
+        <Link className="btn btn--secondary" to={`/entrenadora/clientes/${c.id}/editar`}>
+          Editar perfil
+        </Link>
+      </div>
       <dl className="profile-list">
         <Row label="Estado" value={c.status === 'Active' ? 'Activo' : `Inactivo${c.deactivatedAt ? ` desde ${formatDateTime(c.deactivatedAt)}` : ''}`} />
         <Row label="Registro" value={formatDateTime(c.registeredAt)} />
-        <Row label="Teléfono" value={c.phone} />
-        <Row label="Fecha de nacimiento" value={c.birthDate && formatDate(c.birthDate)} />
-        <Row label="Estatura" value={units(c.height, c.heightUnit, ['cm', 'in'])} />
-        <Row label="Peso" value={units(c.weight, c.weightUnit, ['kg', 'lb'])} />
-        <Row label="Experiencia" value={c.experienceLabel} />
-        <Row label="Objetivo" value={c.goal} />
-        <Row label="Lugar de entrenamiento" value={c.trainingLocationLabel} />
-        <Row label="Días disponibles" value={c.availableDayNames.join(', ')} />
-        <Row label="Duración de sesión" value={c.sessionDurationMinutes && `${c.sessionDurationMinutes} min`} />
-        <Row label="Limitaciones declaradas" value={c.declaredLimitations} />
+        {fields
+          .filter(([, v]) => v)
+          .map(([label, value]) => (
+            <Row key={label} label={label} value={value} />
+          ))}
       </dl>
+      {empty.length > 0 && (
+        <p className="muted">
+          Sin registrar: {empty.map(([label]) => label.toLowerCase()).join(', ')}.
+        </p>
+      )}
     </section>
   )
 }
@@ -171,12 +379,16 @@ const statusBadge: Record<Assignment['status'], string> = {
 
 function AssignmentsCard({
   clientActive,
+  clientName,
   query,
+  onAdd,
   onChangeVersion,
   onChanged,
 }: {
   clientActive: boolean
+  clientName: string
   query: ReturnType<typeof useQuery<Assignment[]>>
+  onAdd: () => void
   onChangeVersion: (a: Assignment) => void
   onChanged: (message: string) => void
 }) {
@@ -197,9 +409,16 @@ function AssignmentsCard({
 
   return (
     <section className="card stack" aria-labelledby="programa-title">
-      <h2 className="card__title" id="programa-title">
-        Programa
-      </h2>
+      <div className="section-head">
+        <h2 className="card__title" id="programa-title">
+          Programa
+        </h2>
+        {clientActive && current.length > 0 && (
+          <Button variant="secondary" onClick={onAdd}>
+            Agregar otra rutina
+          </Button>
+        )}
+      </div>
       {query.isPending ? (
         <LoadingState />
       ) : query.error ? (
@@ -207,7 +426,11 @@ function AssignmentsCard({
       ) : (
         <>
           {current.length === 0 ? (
-            <EmptyState title="Sin rutina asignada" description={clientActive ? 'Usa «Crear rutina» para armarle una personalizada, o «Asignar rutina existente».' : undefined} />
+            <EmptyState
+              title="Sin rutina asignada"
+              description={clientActive ? `Ármale una nueva a ${clientName} o usa una que ya tengas.` : undefined}
+              action={clientActive ? <Button onClick={onAdd}>Darle una rutina</Button> : undefined}
+            />
           ) : (
             <ul className="assignments" aria-label="Programa actual">
               {current.map((a) => (
@@ -455,9 +678,7 @@ function ProfileForm({ client, options }: { client: ClientDetail; options: Clien
 
   return (
     <>
-      <p className="breadcrumb">
-        <Link to={`/entrenadora/clientes/${client.id}`}>← Volver a la ficha</Link>
-      </p>
+      <BackLink to={`/entrenadora/clientes/${client.id}`} label={`Ficha de ${client.firstName}`} />
       <PageHeader title={`Editar perfil de ${client.firstName}`} subtitle="Solo nombre, apellidos y correo son obligatorios." />
       <form className="card form" onSubmit={submit} noValidate>
         {problem && <Alert kind="error">{problem}</Alert>}

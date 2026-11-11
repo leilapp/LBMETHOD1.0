@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { libraryApi, MEDIA_LIMITS, type ExerciseDetail, type ExerciseMedia, type ExerciseVariant } from '../../api/library'
 import {
+  BackLink,
   Alert,
   Button,
   ConfirmDialog,
@@ -44,9 +45,7 @@ function Detail({ exercise: e, notice, setNotice }: { exercise: ExerciseDetail; 
 
   return (
     <>
-      <p className="breadcrumb">
-        <Link to="/entrenadora/biblioteca">← Biblioteca</Link>
-      </p>
+      <BackLink to="/entrenadora/biblioteca" label="Ejercicios" />
       <PageHeader
         title={e.nameEs}
         subtitle={e.nameEn ?? undefined}

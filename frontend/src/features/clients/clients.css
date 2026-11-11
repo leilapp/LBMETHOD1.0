@@ -138,3 +138,21 @@
     max-width: none;
   }
 }
+
+/* Encabezado de la ficha: inicial, nombre y menú ⋮ */
+.client-head {
+  display: flex;
+  align-items: center;
+  gap: var(--lb-space-3);
+  margin-bottom: var(--lb-space-4);
+}
+.client-head__text {
+  flex: 1;
+  min-width: 0;
+}
+.client-head__text .page-header__title {
+  overflow-wrap: anywhere;
+}
+.client-head + .tabs {
+  margin-bottom: var(--lb-space-4);
+}

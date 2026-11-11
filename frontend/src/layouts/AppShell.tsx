@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Check, Ellipsis, LogOut, Monitor, Moon, Sun, X, type LucideIcon } from 'lucide-react'
 import { Button, Logo } from '../components/ui'
 import { useSession, useSignOut } from '../app/session'
 import { DARK_PALETTES, setDarkPalette, setThemePreference, useDarkPalette, useThemePreference, type ThemePreference } from '../lib/theme'
 import { initials } from '../lib/format'
+import { FocusModeContext } from './focusMode'
 import './AppShell.css'
 
 export interface NavItem {
@@ -18,6 +19,8 @@ export interface NavItem {
   /** Fase en la que se habilita el módulo; si existe, se muestra como pendiente. */
   pendingPhase?: number
   end?: boolean
+  /** Otras rutas que también cuentan como esta sección (por ejemplo, plantillas dentro de Rutinas). */
+  also?: string[]
 }
 
 const THEMES: { value: ThemePreference; label: string; icon: LucideIcon }[] = [
@@ -75,17 +78,28 @@ export function DarkPaletteSwitch() {
  * - Computadora: menú lateral con íconos.
  * - Teléfono y tablet: barra superior (logo y tu inicial) y barra inferior con los accesos principales y «Más».
  */
-export function AppShell({ nav, areaLabel }: { nav: NavItem[]; areaLabel: string }) {
+export function AppShell({
+  nav,
+  areaLabel,
+  accountLink,
+}: {
+  nav: NavItem[]
+  areaLabel: string
+  /** Enlace en la hoja de tu cuenta (círculo con tu inicial), por ejemplo «Mi perfil». */
+  accountLink?: { to: string; label: string; icon: LucideIcon }
+}) {
   const [moreOpen, setMoreOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [focus, setFocus] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { data: session } = useSession()
   const signOut = useSignOut()
   const primary = nav.filter((i) => i.primary).slice(0, 4)
-  const isActive = (item: NavItem) =>
-    item.end ? location.pathname === item.to : location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)
-  const moreActive = nav.some((i) => !primary.includes(i) && isActive(i))
+  const under = (path: string) => location.pathname === path || location.pathname.startsWith(`${path}/`)
+  const isActive = (item: NavItem) => (item.end ? location.pathname === item.to : under(item.to) || (item.also ?? []).some(under))
+  const extra = nav.filter((i) => !primary.includes(i))
+  const moreActive = extra.some(isActive)
 
   useEffect(() => {
     if (!moreOpen && !accountOpen) return
@@ -111,7 +125,7 @@ export function AppShell({ nav, areaLabel }: { nav: NavItem[]; areaLabel: string
   const name = session?.displayName ?? ''
 
   return (
-    <div className="shell">
+    <div className={`shell${focus ? ' shell--focus' : ''}`}>
       <header className="shell__topbar">
         <Logo />
         <button
@@ -144,9 +158,11 @@ export function AppShell({ nav, areaLabel }: { nav: NavItem[]; areaLabel: string
         </div>
         <nav aria-label="Navegación principal">
           <ul className="shell__nav">
-            {nav.map(({ to, end, label, icon: Icon, pendingPhase }) => (
+            {nav.map((item) => {
+              const { to, end, label, icon: Icon, pendingPhase } = item
+              return (
               <li key={to}>
-                <NavLink to={to} end={end} className="shell__link" onClick={() => setMoreOpen(false)}>
+                <NavLink to={to} end={end} className={() => `shell__link${isActive(item) ? ' active' : ''}`} onClick={() => setMoreOpen(false)}>
                   <span className="shell__link-icon" aria-hidden="true">
                     <Icon size={20} />
                   </span>
@@ -158,7 +174,8 @@ export function AppShell({ nav, areaLabel }: { nav: NavItem[]; areaLabel: string
                   )}
                 </NavLink>
               </li>
-            ))}
+              )
+            })}
           </ul>
         </nav>
         <div className="shell__user">
@@ -171,6 +188,12 @@ export function AppShell({ nav, areaLabel }: { nav: NavItem[]; areaLabel: string
               <div className="shell__user-email">{session?.email}</div>
             </div>
           </div>
+          {accountLink && (
+            <Link className="btn btn--secondary btn--block" to={accountLink.to} onClick={closeSheets}>
+              <accountLink.icon size={16} aria-hidden="true" />
+              {accountLink.label}
+            </Link>
+          )}
           <ThemeSwitch />
           <DarkPaletteSwitch />
           <Button variant="secondary" block onClick={handleSignOut}>
@@ -195,6 +218,12 @@ export function AppShell({ nav, areaLabel }: { nav: NavItem[]; areaLabel: string
                 <div className="shell__area">{areaLabel}</div>
               </div>
             </div>
+            {accountLink && (
+              <Link className="btn btn--secondary btn--block" to={accountLink.to} onClick={closeSheets}>
+                <accountLink.icon size={16} aria-hidden="true" />
+                {accountLink.label}
+              </Link>
+            )}
             <ThemeSwitch />
             <DarkPaletteSwitch />
             <Button variant="secondary" block onClick={handleSignOut}>
@@ -206,18 +235,24 @@ export function AppShell({ nav, areaLabel }: { nav: NavItem[]; areaLabel: string
       )}
 
       <main className="shell__main" id="contenido">
-        <Outlet />
+        <FocusModeContext.Provider value={setFocus}>
+          <Outlet />
+        </FocusModeContext.Provider>
       </main>
 
-      <nav className="bottom-nav" aria-label="Accesos rápidos">
-        {primary.map(({ to, end, label, short, icon: Icon }) => (
-          <NavLink key={to} to={to} end={end} className="bottom-nav__item" onClick={closeSheets}>
+      <nav className="bottom-nav" aria-label="Accesos rápidos" hidden={focus}>
+        {primary.map((item) => {
+          const { to, end, label, short, icon: Icon } = item
+          return (
+          <NavLink key={to} to={to} end={end} className={() => `bottom-nav__item${isActive(item) ? ' active' : ''}`} onClick={closeSheets}>
             <span className="bottom-nav__pill" aria-hidden="true">
               <Icon size={22} />
             </span>
             <span className="bottom-nav__label">{short ?? label}</span>
           </NavLink>
-        ))}
+          )
+        })}
+        {extra.length > 0 && (
         <button
           className={`bottom-nav__item${moreActive || moreOpen ? ' active' : ''}`}
           aria-expanded={moreOpen}
@@ -232,6 +267,7 @@ export function AppShell({ nav, areaLabel }: { nav: NavItem[]; areaLabel: string
           </span>
           <span className="bottom-nav__label">Más</span>
         </button>
+        )}
       </nav>
     </div>
   )

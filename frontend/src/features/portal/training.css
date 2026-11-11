@@ -343,16 +343,29 @@
   .session-bar {
     left: 0;
     gap: var(--lb-space-2);
-    padding: var(--lb-space-2) var(--lb-space-4);
+    padding: var(--lb-space-2) var(--lb-space-4) calc(var(--lb-space-2) + env(safe-area-inset-bottom, 0px));
   }
-  .session-bar__status {
+  .session-bar__progress {
     width: 100%;
   }
   .session-bar__actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     width: 100%;
   }
+}
+.session-bar__progress {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.log-ex__auto {
+  display: block;
+  font-weight: 400;
+  font-size: var(--lb-text-xs);
+  color: var(--lb-text-muted);
 }
 .program-day__title {
   display: flex;
@@ -367,4 +380,146 @@
 .program-day__title .day-muscle {
   margin: 0;
   font-weight: 400;
+}
+
+/* Inicio de la clienta: «Te toca» dentro de la tarjeta principal */
+.today {
+  display: grid;
+  gap: var(--lb-space-2);
+}
+.today__eyebrow {
+  margin: 0;
+  font-size: var(--lb-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lb-gold-light);
+}
+.today__name {
+  margin: 0;
+  font-family: var(--lb-font-display);
+  font-size: var(--lb-text-2xl);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--lb-text);
+}
+.today__meta {
+  margin: 0;
+  color: var(--lb-text-muted);
+  font-size: var(--lb-text-sm);
+}
+.today__item {
+  display: grid;
+  gap: var(--lb-space-1);
+}
+.today__item + .today__item {
+  padding-top: var(--lb-space-3);
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+}
+.today .btn {
+  margin-top: var(--lb-space-2);
+  min-height: 52px;
+  font-size: var(--lb-text-md);
+}
+
+/* Semana: los colores se entienden solos (verde = entrenado, contorno = te toca) */
+.week__day--planned {
+  border: 2px solid var(--lb-chip-violet-fg);
+  background: var(--lb-surface);
+}
+.week__day--planned .week__date {
+  color: var(--lb-chip-violet-fg);
+}
+.week__day--done {
+  border-color: transparent;
+  background: var(--lb-success-bg);
+}
+.week__day--done .week__mark,
+.week__day--done .week__date {
+  color: var(--lb-success);
+  font-weight: 700;
+}
+.week__day--progress .week__mark {
+  color: var(--lb-gold-soft);
+}
+.week__day--today {
+  box-shadow: 0 0 0 2px var(--lb-lilac);
+}
+.week__day--today .week__label {
+  color: var(--lb-text);
+  font-weight: 700;
+}
+.week-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lb-space-4);
+  font-size: var(--lb-text-xs);
+  color: var(--lb-text-muted);
+}
+.week-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.week-legend__dot {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.week-legend__dot--done {
+  background: var(--lb-success-bg);
+  color: var(--lb-success);
+}
+.week-legend__dot--planned {
+  border: 2px solid var(--lb-chip-violet-fg);
+}
+
+/* Mi rutina: días plegados con su botón «Empezar» siempre a la vista */
+.program-day {
+  display: grid;
+  gap: var(--lb-space-2);
+  padding-bottom: var(--lb-space-3);
+}
+button.program-day__summary {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--lb-text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+}
+button.program-day__summary:focus-visible {
+  outline: none;
+  box-shadow: var(--lb-focus);
+  border-radius: var(--lb-radius);
+}
+.program-day__count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lb-space-1);
+  flex: none;
+  font-weight: 400;
+}
+.program-day__chev {
+  color: var(--lb-text-muted);
+  transition: transform 0.15s;
+}
+.program-day--open .program-day__chev {
+  transform: rotate(180deg);
+}
+.volume-toggle > summary {
+  min-height: var(--lb-touch);
+  display: flex;
+  align-items: center;
+  color: var(--lb-lilac);
+  font-weight: 600;
+  cursor: pointer;
+}
+.log-ex__complete {
+  flex-wrap: wrap;
 }

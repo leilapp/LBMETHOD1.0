@@ -5,6 +5,7 @@ import { DayMainMuscle } from '../routines/DayMainMuscle'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '../../api/client'
+import { ChevronDown, ChevronRight, Play } from 'lucide-react'
 import {
   portalTrainingApi,
   type PortalExercise,
@@ -13,7 +14,7 @@ import {
   type SessionDetail,
   type SessionSummary,
 } from '../../api/portal'
-import { Alert, Button, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader } from '../../components/ui'
+import { BackLink, Alert, Button, ConfirmDialog, EmptyState, ErrorState, LoadingState, PageHeader } from '../../components/ui'
 import { PdfButton } from '../../components/PdfButton'
 import { useSession } from '../../app/session'
 import { fromPortalProgram } from '../../lib/routinePdf'
@@ -22,6 +23,8 @@ import { summarize } from '../routines/routineModel'
 import '../library/library.css'
 import '../clients/clients.css'
 import './training.css'
+import { useFocusMode } from '../../layouts/focusMode'
+import { HistoryTabs } from './HistoryTabs'
 import { portalKeys, setTarget, toDraft, toSessionPayload, type SetDraft, type ExerciseDraft } from './portalModel'
 
 /** Inicia (o retoma) un entrenamiento y abre la pantalla de registro. */
@@ -41,89 +44,115 @@ const progress = (s: SessionSummary) => `${s.exercisesCompleted} de ${s.exercise
 
 /* ---------- Inicio ---------- */
 
-/** Entrenamiento en curso, próximo entrenamiento, semana y último entrenamiento (datos reales). */
-export function TrainingHomeCards() {
+/**
+ * Lo primero que ve la clienta: qué entrenamiento le toca y el botón para empezar (o retomar el que dejó a medias).
+ * Va dentro de la tarjeta principal del inicio.
+ */
+export function TodayWorkout() {
   const home = useQuery({ queryKey: portalKeys.home, queryFn: portalTrainingApi.home })
   const start = useStartWorkout()
   if (home.isPending) return <LoadingState />
   if (home.error) return <ErrorState message={home.error.message} onRetry={() => home.refetch()} />
-  const { inProgress, next, week, last } = home.data
+  const { inProgress, next } = home.data
+
+  if (inProgress)
+    return (
+      <div className="today" aria-labelledby="hoy">
+        <p className="today__eyebrow" id="hoy">
+          Entrenamiento en curso
+        </p>
+        <p className="today__name">{inProgress.dayName}</p>
+        <p className="today__meta">
+          {inProgress.routineTitle} · {progress(inProgress)}
+        </p>
+        <Link className="btn btn--primary btn--block today__go" to={`/portal/entrenamiento/${inProgress.id}`}>
+          <Play size={18} aria-hidden="true" />
+          Retomar entrenamiento
+        </Link>
+      </div>
+    )
+
+  if (next.length === 0)
+    return (
+      <div className="today">
+        <p className="today__eyebrow">Tu entrenamiento</p>
+        <p className="today__meta">Cuando tu entrenadora te asigne una rutina, aquí verás qué te toca y podrás empezar.</p>
+      </div>
+    )
+
+  return (
+    <div className="today" aria-labelledby="hoy">
+      <p className="today__eyebrow" id="hoy">
+        {next.length === 1 ? 'Te toca' : 'Te toca (elige uno)'}
+      </p>
+      {start.error && <Alert kind="error">{start.error.message}</Alert>}
+      {next.map((n) => (
+        <div key={n.assignmentId} className="today__item">
+          <p className="today__name">{n.dayName}</p>
+          <p className="today__meta">
+            {n.routineName}
+            {n.dayLabel ? ` · ${n.dayLabel}` : ''}
+          </p>
+          <Button block loading={start.isPending} onClick={() => start.mutate({ assignmentId: n.assignmentId, dayId: n.routineDayId })}>
+            <Play size={18} aria-hidden="true" />
+            Empezar {n.dayName}
+          </Button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** Semana y último entrenamiento (datos reales). */
+export function TrainingHomeCards() {
+  const home = useQuery({ queryKey: portalKeys.home, queryFn: portalTrainingApi.home })
+  if (home.isPending || home.error) return null
+  const { week, last } = home.data
   const today = todayInMexico()
+  const done = week.filter((d) => d.sessions.some((s) => s.status === 'Completed')).length
 
   return (
     <>
-      {inProgress && (
-        <section className="card in-progress" aria-labelledby="en-curso">
-          <h2 className="card__title" id="en-curso">
-            Entrenamiento en curso
-          </h2>
-          <p>
-            <strong>{inProgress.dayName}</strong> · {inProgress.routineTitle}
-          </p>
-          <p className="muted">{progress(inProgress)}</p>
-          <Link className="btn btn--primary btn--block" to={`/portal/entrenamiento/${inProgress.id}`}>
-            Retomar entrenamiento
-          </Link>
-        </section>
-      )}
-
-      <section className="card" aria-labelledby="proximo">
-        <h2 className="card__title" id="proximo">
-          Próximo entrenamiento
-        </h2>
-        {start.error && <Alert kind="error">{start.error.message}</Alert>}
-        {next.length === 0 ? (
-          <p className="muted">Cuando tu entrenadora te asigne una rutina, aquí verás tu siguiente día.</p>
-        ) : (
-          <div className="stack">
-            {next.map((n) => (
-              <div key={n.assignmentId} className="next-workout">
-                <p className="portal-program__name">{n.dayName}</p>
-                <p className="muted">
-                  {n.routineName}
-                  {n.dayLabel ? ` · ${n.dayLabel}` : ''}
-                </p>
-                {!inProgress && (
-                  <Button block loading={start.isPending} onClick={() => start.mutate({ assignmentId: n.assignmentId, dayId: n.routineDayId })}>
-                    Empezar {n.dayName}
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
       <section className="card" aria-labelledby="semana">
-        <h2 className="card__title" id="semana">
-          Esta semana
-        </h2>
+        <div className="section-head">
+          <h2 className="card__title" id="semana">
+            Esta semana
+          </h2>
+          <span className="muted">
+            {done} {done === 1 ? 'día entrenado' : 'días entrenados'}
+          </span>
+        </div>
         <ol className="week" aria-labelledby="semana">
-          {week.map((d) => (
-            <li key={d.date} className={`week__day${d.date === today ? ' week__day--today' : ''}`} aria-current={d.date === today ? 'date' : undefined}>
-              <span className="week__label">{d.label.slice(0, 3)}</span>
-              <span className="week__date">{Number(d.date.slice(8))}</span>
-              {d.sessions.some((s) => s.status === 'Completed') ? (
-                <span className="week__mark week__mark--done" title="Entrenado">
-                  ✓<span className="sr-only"> entrenado</span>
+          {week.map((d) => {
+            const trained = d.sessions.some((s) => s.status === 'Completed')
+            const state = trained ? 'done' : d.sessions.length > 0 ? 'progress' : d.planned.length > 0 ? 'planned' : 'rest'
+            return (
+              <li
+                key={d.date}
+                className={`week__day week__day--${state}${d.date === today ? ' week__day--today' : ''}`}
+                aria-current={d.date === today ? 'date' : undefined}
+                title={d.planned.length ? d.planned.join(', ') : undefined}
+              >
+                <span className="week__label">{d.date === today ? 'Hoy' : d.label.slice(0, 3)}</span>
+                <span className="week__date">{Number(d.date.slice(8))}</span>
+                <span className="week__mark" aria-hidden="true">
+                  {state === 'done' ? '✓' : state === 'progress' ? '•' : ''}
                 </span>
-              ) : d.sessions.length > 0 ? (
-                <span className="week__mark week__mark--progress" title="En curso">
-                  •<span className="sr-only"> en curso</span>
+                <span className="sr-only">
+                  {state === 'done' ? 'entrenado' : state === 'progress' ? 'en curso' : state === 'planned' ? `te toca: ${d.planned.join(', ')}` : 'descanso'}
                 </span>
-              ) : d.planned.length > 0 ? (
-                <span className="week__mark" title={d.planned.join(', ')}>
-                  ○<span className="sr-only"> {d.planned.join(', ')}</span>
-                </span>
-              ) : (
-                <span className="week__mark week__mark--rest" aria-hidden="true">
-                  ·
-                </span>
-              )}
-            </li>
-          ))}
+              </li>
+            )
+          })}
         </ol>
-        <p className="field__hint">○ día de rutina · ✓ entrenado. Los días de tu rutina aparecen si tu entrenadora les asignó día de la semana.</p>
+        <div className="week-legend" aria-hidden="true">
+          <span className="week-legend__item">
+            <span className="week-legend__dot week-legend__dot--done">✓</span> Entrenado
+          </span>
+          <span className="week-legend__item">
+            <span className="week-legend__dot week-legend__dot--planned" /> Te toca
+          </span>
+        </div>
       </section>
 
       <section className="card" aria-labelledby="ultimo">
@@ -131,17 +160,17 @@ export function TrainingHomeCards() {
           Último entrenamiento
         </h2>
         {last ? (
-          <>
-            <p>
-              <strong>{last.dayName}</strong> · {last.routineTitle}
-            </p>
-            <p className="muted">
-              {formatDateTime(last.completedAt ?? last.startedAt)} · {progress(last)}
-            </p>
-            <Link to={`/portal/entrenamiento/${last.id}`}>Ver detalle</Link>
-          </>
+          <Link className="list-item list-item--link list-item--flat" to={`/portal/entrenamiento/${last.id}`}>
+            <span className="list-item__main">
+              <span className="list-item__title">{last.dayName}</span>
+              <span className="list-item__meta">
+                {formatDateTime(last.completedAt ?? last.startedAt)} · {progress(last)}
+              </span>
+            </span>
+            <ChevronRight className="list-item__chev" size={20} aria-hidden="true" />
+          </Link>
         ) : (
-          <p className="muted">Aún no has registrado entrenamientos.</p>
+          <p className="muted">Aún no has registrado entrenamientos. Cuando termines el primero, aparecerá aquí.</p>
         )}
       </section>
     </>
@@ -244,37 +273,59 @@ function ProgramView({ program, canStart }: { program: PortalProgram; canStart: 
         </p>
         {program.notes && <p className="portal-program__notes">{program.notes}</p>}
       </div>
-      <WeeklyVolume rows={volumeFromVersion(program)} compact />
+      {start.error && <Alert kind="error">{start.error.message}</Alert>}
+      {program.days.map((d) => (
+        <ProgramDay key={d.id} day={d} canStart={active && canStart} starting={start.isPending} onStart={() => start.mutate({ assignmentId: program.assignmentId, dayId: d.id })} />
+      ))}
+      <details className="volume-toggle">
+        <summary>Series por músculo a la semana</summary>
+        <WeeklyVolume rows={volumeFromVersion(program)} compact />
+      </details>
       <PdfButton getData={() => fromPortalProgram(program, session?.displayName ?? null)} label={`Descargar en PDF: ${program.routineName}`}>
         Descargar en PDF
       </PdfButton>
-      {start.error && <Alert kind="error">{start.error.message}</Alert>}
-      {program.days.map((d) => (
-        <details key={d.id} className="program-day" open={program.days.length <= 2}>
-          <summary className="program-day__summary">
-            <span className="program-day__title">
-              <span>
-                {d.name}
-                {d.dayLabel && <span className="muted"> · {d.dayLabel}</span>}
-              </span>
-              <DayMainMuscle main={mainMuscleFromVersionDay(d)} />
-            </span>
-            <span className="muted">{d.exercises.length} {d.exercises.length === 1 ? 'ejercicio' : 'ejercicios'}</span>
-          </summary>
+    </section>
+  )
+}
+
+/** Un día de la rutina: plegado muestra el resumen y el botón para empezar; al abrirlo, los ejercicios. */
+function ProgramDay({ day: d, canStart, starting, onStart }: { day: PortalProgram['days'][number]; canStart: boolean; starting: boolean; onStart: () => void }) {
+  const [open, setOpen] = useState(false)
+  const contentId = `dia-${d.id}`
+  return (
+    <div className={`program-day${open ? ' program-day--open' : ''}`}>
+      <button type="button" className="program-day__summary" aria-expanded={open} aria-controls={contentId} onClick={() => setOpen(!open)}>
+        <span className="program-day__title">
+          <span>
+            {d.name}
+            {d.dayLabel && <span className="muted"> · {d.dayLabel}</span>}
+          </span>
+          <DayMainMuscle main={mainMuscleFromVersionDay(d)} />
+        </span>
+        <span className="program-day__count">
+          <span className="muted">
+            {d.exercises.length} {d.exercises.length === 1 ? 'ejercicio' : 'ejercicios'}
+          </span>
+          <ChevronDown className="program-day__chev" size={20} aria-hidden="true" />
+        </span>
+      </button>
+      {open && (
+        <div id={contentId}>
           {d.notes && <p className="muted">{d.notes}</p>}
           <ol className="program-ex-list">
             {d.exercises.map((e) => (
               <ExerciseInfo key={e.id} e={e} />
             ))}
           </ol>
-          {active && canStart && (
-            <Button block loading={start.isPending} onClick={() => start.mutate({ assignmentId: program.assignmentId, dayId: d.id })}>
-              Empezar {d.name}
-            </Button>
-          )}
-        </details>
-      ))}
-    </section>
+        </div>
+      )}
+      {canStart && (
+        <Button block loading={starting} onClick={onStart}>
+          <Play size={18} aria-hidden="true" />
+          Empezar {d.name}
+        </Button>
+      )}
+    </div>
   )
 }
 
@@ -378,7 +429,13 @@ function SessionLogger({ session }: { session: SessionDetail }) {
   }, [persist])
 
   const setEx = (exId: number, fn: (e: ExerciseDraft) => ExerciseDraft) => change((d) => ({ ...d, exercises: d.exercises.map((e) => (e.id === exId ? fn(e) : e)) }))
-  const setSet = (exId: number, n: number, patch: Partial<SetDraft>) => setEx(exId, (e) => ({ ...e, sets: e.sets.map((s) => (s.setNumber === n ? { ...s, ...patch } : s)) }))
+  // Al palomear o despalomear una serie, el ejercicio se marca completo solo cuando todas sus series están hechas.
+  const setSet = (exId: number, n: number, patch: Partial<SetDraft>) =>
+    setEx(exId, (e) => {
+      const sets = e.sets.map((s) => (s.setNumber === n ? { ...s, ...patch } : s))
+      return 'isCompleted' in patch ? { ...e, sets, isCompleted: sets.length > 0 && sets.every((s) => s.isCompleted) } : { ...e, sets }
+    })
+  useFocusMode(!readOnly)
 
   const finish = useMutation({
     mutationFn: async () => {
@@ -394,12 +451,12 @@ function SessionLogger({ session }: { session: SessionDetail }) {
 
   const total = draft.exercises.length
   const done = draft.exercises.filter((e) => e.isCompleted).length
+  const setsTotal = draft.exercises.reduce((n, e) => n + e.sets.length, 0)
+  const setsDone = draft.exercises.reduce((n, e) => n + e.sets.filter((x) => x.isCompleted).length, 0)
 
   return (
     <>
-      <p className="breadcrumb">
-        <Link to={readOnly ? '/portal/entrenamientos' : '/portal'}>← {readOnly ? 'Mis entrenamientos' : 'Inicio'}</Link>
-      </p>
+      <BackLink to={readOnly ? '/portal/entrenamientos' : '/portal'} label={readOnly ? 'Historial' : 'Inicio'} />
       <PageHeader
         title={session.dayName ?? 'Entrenamiento'}
         subtitle={`${session.routineTitle ?? ''}${session.versionNumber ? ` · versión ${session.versionNumber}` : ''} · ${readOnly ? `Finalizado ${formatDateTime(session.completedAt ?? session.startedAt)}` : `Iniciado ${formatDateTime(session.startedAt)}`}`}
@@ -516,6 +573,7 @@ function SessionLogger({ session }: { session: SessionDetail }) {
             <label className="check log-ex__complete">
               <input type="checkbox" checked={e.isCompleted} disabled={readOnly} onChange={(ev) => setEx(e.id, (x) => ({ ...x, isCompleted: ev.target.checked }))} />
               Ejercicio completado
+              {!readOnly && !e.isCompleted && <span className="log-ex__auto">Se marca solo al palomear todas las series.</span>}
             </label>
             {(!readOnly || e.comment) && (
               <label className="log-ex__comment">
@@ -557,32 +615,44 @@ function SessionLogger({ session }: { session: SessionDetail }) {
 
       {!readOnly && (
         <div className="session-bar" role="region" aria-label="Acciones del entrenamiento">
-          <span className="muted session-bar__status" aria-live="polite">
-            {done} de {total} ejercicios ·{' '}
-            {saveState === 'saving' ? 'Guardando…' : saveState === 'pending' ? 'Cambios por guardar' : saveState === 'error' ? 'Sin guardar' : saveState === 'saved' ? 'Guardado' : 'Al día'}
-          </span>
+          <div className="session-bar__progress">
+            <span className="session-bar__status" aria-live="polite">
+              <strong>
+                {setsDone} de {setsTotal} series
+              </strong>{' '}
+              <span className="muted">
+                · {done} de {total} ejercicios ·{' '}
+                {saveState === 'saving' ? 'Guardando…' : saveState === 'pending' ? 'Guardando…' : saveState === 'error' ? 'Sin guardar' : '✓ Guardado'}
+              </span>
+            </span>
+            <span className="meter" role="progressbar" aria-label="Series registradas" aria-valuemin={0} aria-valuemax={setsTotal} aria-valuenow={setsDone}>
+              <span style={{ width: `${setsTotal ? (setsDone / setsTotal) * 100 : 0}%` }} />
+            </span>
+          </div>
           <div className="session-bar__actions">
-            <Button variant="secondary" onClick={() => void persist()} disabled={saveState === 'saving'}>
-              Guardar
-            </Button>
-            <Button onClick={() => setFinishing(true)}>Finalizar</Button>
+            {saveState === 'error' && (
+              <Button variant="secondary" onClick={() => void persist()}>
+                Reintentar guardar
+              </Button>
+            )}
+            <Button onClick={() => setFinishing(true)}>Terminar entrenamiento</Button>
           </div>
         </div>
       )}
 
       {finishing && (
         <ConfirmDialog
-          title="Finalizar entrenamiento"
+          title="Terminar entrenamiento"
           message={
             <>
               {done < total
                 ? `Llevas ${done} de ${total} ejercicios completados. Puedes finalizar así; lo que registraste queda guardado.`
                 : '¡Completaste todos los ejercicios!'}{' '}
-              Después de finalizar ya no se puede editar.
+              Después de terminar ya no se puede editar.
               {finish.error && <Alert kind="error">{finish.error.message}</Alert>}
             </>
           }
-          confirmLabel="Finalizar"
+          confirmLabel="Terminar"
           loading={finish.isPending}
           onConfirm={() => finish.mutate()}
           onCancel={() => {
@@ -600,7 +670,8 @@ export function PortalSessionsPage() {
   const sessions = useQuery({ queryKey: portalKeys.sessions, queryFn: portalTrainingApi.sessions })
   return (
     <>
-      <PageHeader title="Mis entrenamientos" subtitle="Lo que has registrado, del más reciente al más antiguo." />
+      <PageHeader title="Historial" subtitle="Lo que has registrado, del más reciente al más antiguo." />
+      <HistoryTabs />
       <div className="stack portal-narrow">
         {sessions.isPending ? (
           <LoadingState />
@@ -608,22 +679,33 @@ export function PortalSessionsPage() {
           <ErrorState message={sessions.error.message} onRetry={() => sessions.refetch()} />
         ) : sessions.data.length === 0 ? (
           <div className="card">
-            <EmptyState title="Aún no tienes entrenamientos" description="Empieza uno desde el inicio o desde Mi rutina." />
+            <EmptyState
+              title="Aún no tienes entrenamientos"
+              description="Cuando termines tu primer entrenamiento, aparecerá aquí."
+              action={
+                <Link className="btn btn--primary" to="/portal">
+                  Ir a empezar
+                </Link>
+              }
+            />
           </div>
         ) : (
           <ul className="list" aria-label="Entrenamientos">
             {sessions.data.map((s) => (
-              <li key={s.id} className="list-item">
-                <div className="list-item__main">
-                  <span className="list-item__title">
-                    <Link to={`/portal/entrenamiento/${s.id}`}>{s.dayName}</Link>{' '}
-                    <span className={`badge ${s.status === 'Completed' ? 'badge--success' : 'badge--pending'}`}>{s.status === 'Completed' ? 'Finalizado' : 'En curso'}</span>
+              <li key={s.id}>
+                <Link className="list-item list-item--link" to={`/portal/entrenamiento/${s.id}`}>
+                  <span className="list-item__main">
+                    <span className="list-item__title">
+                      {s.dayName}{' '}
+                      <span className={`badge ${s.status === 'Completed' ? 'badge--success' : 'badge--pending'}`}>{s.status === 'Completed' ? 'Finalizado' : 'En curso'}</span>
+                    </span>
+                    <span className="list-item__meta">
+                      {s.routineTitle} · {formatDateTime(s.startedAt)}
+                    </span>
+                    <span className="list-item__meta">{progress(s)}</span>
                   </span>
-                  <span className="list-item__meta">
-                    {s.routineTitle} · {formatDateTime(s.startedAt)}
-                  </span>
-                  <span className="list-item__meta">{progress(s)}</span>
-                </div>
+                  <ChevronRight className="list-item__chev" size={20} aria-hidden="true" />
+                </Link>
               </li>
             ))}
           </ul>

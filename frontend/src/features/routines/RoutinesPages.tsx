@@ -1,9 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ApiError } from '../../api/client'
+import { ApiError, api } from '../../api/client'
+import { Archive, ChevronRight, Copy, FileDown, FileSpreadsheet, LayoutTemplate } from 'lucide-react'
+import { useTask } from '../../components/useTask'
 import { routinesApi, type RoutineDetail } from '../../api/routines'
 import {
+  BackLink,
   Alert,
   Button,
   ConfirmDialog,
@@ -11,13 +14,13 @@ import {
   ErrorState,
   LoadingState,
   Modal,
+  MoreMenu,
   PageHeader,
+  Tabs,
   TextAreaField,
   TextField,
 } from '../../components/ui'
-import { DownloadButton } from '../../components/DownloadButton'
-import { PdfButton } from '../../components/PdfButton'
-import { fromRoutineVersion } from '../../lib/routinePdf'
+import { buildRoutinePdf, fromRoutineVersion, routinePdfName, savePdf } from '../../lib/routinePdf'
 import { formatDate, formatDateTime } from '../../lib/format'
 import { clientsApi, isCurrent } from '../../api/clients'
 import { AssignModal } from '../clients/AssignModal'
@@ -47,7 +50,11 @@ export function RoutineListPage({ section }: { section: Section }) {
   const text = copyText[section]
   const kind = section === 'rutinas' ? 'program' : 'template'
   const [status, setStatus] = useState<'active' | 'archived'>('active')
-  const [creating, setCreating] = useState(false)
+  const [params, setParams] = useSearchParams()
+  // ?nueva=1: viene del botón «Nueva rutina» del inicio.
+  const [creating, setCreating] = useState(() => params.get('nueva') === '1')
+  const navigate = useNavigate()
+  const exporting = useTask('No se pudo descargar el archivo.')
   const { data, isPending, error, refetch } = useQuery({
     queryKey: routineKeys.list(kind, status),
     queryFn: () => routinesApi.list(kind, status),
@@ -56,30 +63,44 @@ export function RoutineListPage({ section }: { section: Section }) {
   return (
     <>
       <PageHeader
-        title={text.title}
+        title="Rutinas"
         subtitle={text.subtitle}
         actions={
-          <div className="page-actions">
-            <DownloadButton path="/api/trainer/exports/routines" fileName="rutinas-lbmethod.xlsx" label="Exportar rutinas y plantillas a Excel">
-              Exportar a Excel
-            </DownloadButton>
+          <div className="head-actions">
             <Button onClick={() => setCreating(true)}>Nueva {text.singular}</Button>
+            <MoreMenu
+              items={[
+                {
+                  label: exporting.pending ? 'Descargando…' : 'Exportar rutinas y plantillas a Excel',
+                  icon: FileSpreadsheet,
+                  disabled: exporting.pending,
+                  onSelect: () => exporting.run(() => api.download('/api/trainer/exports/routines', 'rutinas-lbmethod.xlsx')),
+                },
+              ]}
+            />
           </div>
         }
       />
-      <div className="tabs" role="tablist" aria-label="Estado">
-        {(['active', 'archived'] as const).map((s) => (
-          <button
-            key={s}
-            role="tab"
-            type="button"
-            aria-selected={status === s}
-            className={`tabs__tab${status === s ? ' tabs__tab--active' : ''}`}
-            onClick={() => setStatus(s)}
-          >
-            {s === 'active' ? 'Activas' : 'Archivadas'}
-          </button>
-        ))}
+      {exporting.error && <Alert kind="error">{exporting.error}</Alert>}
+      <div className="routine-tabs">
+        <Tabs
+          label="Tipo"
+          value={section}
+          options={[
+            ['rutinas', 'Rutinas'],
+            ['plantillas', 'Plantillas'],
+          ]}
+          onChange={(v) => navigate(`/entrenadora/${v}`)}
+        />
+        <Tabs
+          label="Estado"
+          value={status}
+          options={[
+            ['active', 'Activas'],
+            ['archived', 'Archivadas'],
+          ]}
+          onChange={setStatus}
+        />
       </div>
       {isPending ? (
         <LoadingState />
@@ -100,31 +121,40 @@ export function RoutineListPage({ section }: { section: Section }) {
       ) : (
         <ul className="list" aria-label={text.title}>
           {data!.map((r) => (
-            <li key={r.id} className="list-item">
-              <div className="list-item__main">
-                <Link className="list-item__title exercise-item__link" to={`/entrenadora/${section}/${r.id}`}>
-                  {r.name}
-                </Link>
-                <span className="list-item__meta">
-                  {[r.goal, `${r.dayCount} ${r.dayCount === 1 ? 'día' : 'días'}`, `${r.exerciseCount} ${r.exerciseCount === 1 ? 'ejercicio' : 'ejercicios'}`]
-                    .filter(Boolean)
-                    .join(' · ')}
+            <li key={r.id}>
+              <Link className="list-item list-item--link" to={`/entrenadora/${section}/${r.id}`}>
+                <span className="list-item__main">
+                  <span className="list-item__title">{r.name}</span>
+                  <span className="list-item__meta">
+                    {[r.goal, `${r.dayCount} ${r.dayCount === 1 ? 'día' : 'días'}`, `${r.exerciseCount} ${r.exerciseCount === 1 ? 'ejercicio' : 'ejercicios'}`]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                  <span className="exercise-item__tags">
+                    {r.publishedVersionNumber ? (
+                      <span className="badge badge--success">Publicada · v{r.publishedVersionNumber}</span>
+                    ) : (
+                      <span className="badge badge--muted">Sin publicar</span>
+                    )}
+                    {r.hasDraft && <span className="badge badge--pending">Borrador en edición</span>}
+                  </span>
+                  <span className="list-item__meta">Actualizada {formatDateTime(r.updatedAt)}</span>
                 </span>
-                <span className="exercise-item__tags">
-                  {r.publishedVersionNumber ? (
-                    <span className="badge badge--success">Publicada · v{r.publishedVersionNumber}</span>
-                  ) : (
-                    <span className="badge badge--muted">Sin publicar</span>
-                  )}
-                  {r.hasDraft && <span className="badge badge--pending">Borrador en edición</span>}
-                </span>
-              </div>
-              <span className="list-item__meta">Actualizada {formatDateTime(r.updatedAt)}</span>
+                <ChevronRight className="list-item__chev" size={20} aria-hidden="true" />
+              </Link>
             </li>
           ))}
         </ul>
       )}
-      {creating && <CreateRoutineModal section={section} onClose={() => setCreating(false)} />}
+      {creating && (
+        <CreateRoutineModal
+          section={section}
+          onClose={() => {
+            setCreating(false)
+            if (params.has('nueva')) setParams({}, { replace: true })
+          }}
+        />
+      )}
     </>
   )
 }
@@ -250,6 +280,7 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
   })
   const archived = routine.status === 'Archived'
   const isTemplate = routine.kind === 'Template'
+  const pdf = useTask('No se pudo generar el PDF. Inténtalo de nuevo.')
 
   const act = useMutation({
     mutationFn: async ({ kind, title }: { kind: Exclude<Pending, null>; title?: string }) => {
@@ -270,14 +301,12 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
 
   return (
     <>
-      <p className="breadcrumb">
-        <Link to={`/entrenadora/${section}`}>← {copyText[section].title}</Link>
-      </p>
+      <BackLink to={`/entrenadora/${section}`} label={copyText[section].title} />
       <PageHeader
         title={routine.name}
         subtitle={isTemplate ? 'Plantilla' : 'Rutina'}
         actions={
-          <div className="page-actions">
+          <div className="head-actions">
             {!archived && (
               <Link className="btn btn--primary" to={`/entrenadora/${section}/${routine.id}/editar`}>
                 {routine.draftVersionId ? 'Seguir editando' : 'Editar'}
@@ -293,17 +322,27 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
                 Usar plantilla
               </Button>
             )}
-            <Button variant="secondary" onClick={() => setPending('duplicate')}>
-              Duplicar
-            </Button>
-            {!isTemplate && (
-              <Button variant="secondary" onClick={() => setPending('template')}>
-                Guardar como plantilla
+            {archived && (
+              <Button variant="secondary" onClick={() => setPending('restore')}>
+                Restaurar
               </Button>
             )}
-            <Button variant={archived ? 'secondary' : 'ghost'} onClick={() => setPending(archived ? 'restore' : 'archive')}>
-              {archived ? 'Restaurar' : 'Archivar'}
-            </Button>
+            <MoreMenu
+              items={[
+                version.data && {
+                  label: pdf.pending ? 'Generando PDF…' : `Descargar versión ${version.data.versionNumber} en PDF`,
+                  icon: FileDown,
+                  disabled: pdf.pending,
+                  onSelect: () => {
+                    const data = fromRoutineVersion(version.data!)
+                    void pdf.run(async () => savePdf(await buildRoutinePdf(data), routinePdfName(data)))
+                  },
+                },
+                { label: 'Duplicar', icon: Copy, onSelect: () => setPending('duplicate') },
+                !isTemplate && { label: 'Guardar como plantilla', icon: LayoutTemplate, onSelect: () => setPending('template') },
+                !archived && { label: 'Archivar', icon: Archive, danger: true, onSelect: () => setPending('archive') },
+              ]}
+            />
           </div>
         }
       />
@@ -311,6 +350,7 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
         {notice && <Alert kind="success">{notice}</Alert>}
         {archived && <Alert kind="warning">Archivada: no aparece en la lista principal ni se puede editar. Sus versiones se conservan.</Alert>}
         {act.error && <Alert kind="error">{act.error.message}</Alert>}
+        {pdf.error && <Alert kind="error">{pdf.error}</Alert>}
 
         <div className="routine-overview">
           <section className="card stack" aria-labelledby="versions-title">
@@ -342,12 +382,7 @@ function RoutineOverview({ routine, section }: { routine: RoutineDetail; section
             ) : version.error ? (
               <ErrorState message={version.error.message} onRetry={() => version.refetch()} />
             ) : (
-              <div className="stack">
-                <PdfButton getData={() => fromRoutineVersion(version.data!)} label={`Descargar la versión ${version.data!.versionNumber} en PDF`}>
-                  Descargar versión {version.data!.versionNumber} en PDF
-                </PdfButton>
-                <RoutinePreview version={version.data!} />
-              </div>
+              <RoutinePreview version={version.data!} />
             )}
           </section>
         </div>

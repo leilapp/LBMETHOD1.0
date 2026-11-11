@@ -11,6 +11,7 @@ import {
   ErrorState,
   LoadingState,
   Modal,
+  MoreMenu,
   PageHeader,
   SelectField,
   TextField,
@@ -35,18 +36,15 @@ export function LibraryPage() {
   return (
     <>
       <PageHeader
-        title="Biblioteca"
-        subtitle="Catálogo central de ejercicios. Cada ejercicio se registra una sola vez y se reutiliza en las rutinas."
+        title="Ejercicios"
+        subtitle="Tu biblioteca: cada ejercicio se registra una sola vez y se reutiliza en las rutinas."
         actions={
-          <div className="page-actions">
-            <Link className="btn btn--secondary" to="/entrenadora/biblioteca/importar">
-              <FileSpreadsheet size={18} aria-hidden="true" />
-              Importar / exportar
-            </Link>
+          <div className="head-actions">
             <Link className="btn btn--primary" to="/entrenadora/biblioteca/nuevo">
               <Plus size={18} aria-hidden="true" />
               Nuevo ejercicio
             </Link>
+            <MoreMenu items={[{ label: 'Importar o exportar con Excel', icon: FileSpreadsheet, to: '/entrenadora/biblioteca/importar' }]} />
           </div>
         }
       />
@@ -108,9 +106,14 @@ function ExerciseList() {
         <div className="filters__search">
           <TextField
             label="Buscar"
+            type="search"
             placeholder="Nombre en español o inglés"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              // Al borrar la búsqueda se vuelve a ver todo, sin tener que tocar «Buscar».
+              if (!e.target.value.trim() && filters.q) update({ q: undefined })
+            }}
             hint="No importan mayúsculas ni acentos."
           />
           <Button type="submit" variant="secondary">
@@ -222,30 +225,22 @@ function ExerciseList() {
           <ul className="list exercise-grid" aria-label="Ejercicios">
             {data!.items.map((e) => (
               <li key={e.id} className="list-item exercise-item">
-                {e.thumbnailMediaId ? (
-                  <img className="exercise-item__thumb" src={libraryApi.mediaUrl(e.thumbnailMediaId)} alt="" loading="lazy" />
-                ) : (
-                  <span className={`exercise-item__thumb icon-chip icon-chip--${muscleColor(e.primaryMuscleGroup)}`} aria-hidden="true">
-                    <Dumbbell size={24} />
+                <Link className="exercise-item__open" to={`/entrenadora/biblioteca/ejercicios/${e.id}`}>
+                  {e.thumbnailMediaId ? (
+                    <img className="exercise-item__thumb" src={libraryApi.mediaUrl(e.thumbnailMediaId)} alt="" loading="lazy" />
+                  ) : (
+                    <span className={`exercise-item__thumb icon-chip icon-chip--${muscleColor(e.primaryMuscleGroup)}`} aria-hidden="true">
+                      <Dumbbell size={20} />
+                    </span>
+                  )}
+                  <span className="list-item__main">
+                    <span className="list-item__title">{e.nameEs}</span>
+                    <span className="list-item__meta exercise-item__meta">
+                      {[e.primaryMuscleGroup, ...e.equipment.slice(0, 2)].filter(Boolean).join(' · ') || e.typeLabel}
+                      {!e.isActive && <span className="badge badge--pending">Desactivado</span>}
+                    </span>
                   </span>
-                )}
-                <div className="list-item__main">
-                  <Link className="list-item__title exercise-item__link" to={`/entrenadora/biblioteca/ejercicios/${e.id}`}>
-                    {e.nameEs}
-                  </Link>
-                  {e.nameEn && <span className="list-item__meta">{e.nameEn}</span>}
-                  <span className="exercise-item__tags">
-                    {e.primaryMuscleGroup && <span className="badge badge--lilac">{e.primaryMuscleGroup}</span>}
-                    <span className="badge badge--muted">{e.typeLabel}</span>
-                    {e.movementPattern && <span className="badge badge--muted">{e.movementPattern}</span>}
-                    {e.equipment.map((eq) => (
-                      <span key={eq} className="badge badge--muted">
-                        {eq}
-                      </span>
-                    ))}
-                    {!e.isActive && <span className="badge badge--pending">Desactivado</span>}
-                  </span>
-                </div>
+                </Link>
                 <button
                   type="button"
                   className={`fav${e.isFavorite ? ' fav--on' : ''}`}

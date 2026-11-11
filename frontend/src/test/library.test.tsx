@@ -76,8 +76,9 @@ describe('biblioteca de ejercicios', () => {
     renderApp('/entrenadora/biblioteca')
 
     const list = await screen.findByRole('list', { name: 'Ejercicios' })
-    expect(within(list).getByRole('link', { name: 'Hip thrust con barra' })).toHaveAttribute('href', '/entrenadora/biblioteca/ejercicios/42')
-    expect(within(list).getByText('Barbell hip thrust')).toBeInTheDocument()
+    expect(within(list).getByRole('link', { name: /Hip thrust con barra/ })).toHaveAttribute('href', '/entrenadora/biblioteca/ejercicios/42')
+    // Fila compacta: nombre y, debajo, músculo principal y equipo.
+    expect(within(list).getByText('Glúteos · Barra')).toBeInTheDocument()
 
     // Los grupos desactivados no se ofrecen como filtro.
     const muscle = screen.getByLabelText('Grupo muscular')

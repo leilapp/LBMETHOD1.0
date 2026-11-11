@@ -2,10 +2,13 @@ import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../../api/client'
+import { ArrowDown, ArrowUp, Copy, Eye, Save, Trash2 } from 'lucide-react'
+import { useFocusMode } from '../../layouts/focusMode'
 import { routinesApi, type RoutineOptions } from '../../api/routines'
 import { clientsApi } from '../../api/clients'
 import { clientKeys } from '../clients/clientModel'
 import {
+  BackLink,
   Alert,
   Button,
   ConfirmDialog,
@@ -13,6 +16,7 @@ import {
   LoadingState,
   Modal,
   PageHeader,
+  MoreMenu,
   SelectField,
   TextAreaField,
   TextField,
@@ -67,9 +71,7 @@ export function RoutineBuilderPage({ section }: { section: Section }) {
   if (draft.error || options.error)
     return (
       <>
-        <p className="breadcrumb">
-          <Link to={`/entrenadora/${section}/${id}`}>← Volver</Link>
-        </p>
+        <BackLink to={`/entrenadora/${section}/${id}`} label="Volver" />
         <ErrorState message={(draft.error ?? options.error)!.message} onRetry={() => draft.refetch()} />
       </>
     )
@@ -146,9 +148,17 @@ function Builder({
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [dirty])
 
+  useFocusMode()
+  // Guardado automático del borrador: unos segundos después del último cambio, si no hay campos por corregir.
+  const edits = useRef(0)
+  const saving = useRef(false)
+  const [autoState, setAutoState] = useState<'idle' | 'saving' | 'error' | 'invalid'>('idle')
+  const [retryTick, setRetryTick] = useState(0)
+
   /** Cambio de contenido. Los cambios de estructura (orden, altas, bajas) limpian los avisos por posición. */
   const update = (fn: (s: BuilderState) => BuilderState, structural = false) => {
     setState(fn)
+    edits.current += 1
     setDirty(true)
     setNotice(null)
     if (structural) setErrors({})
@@ -187,10 +197,38 @@ function Builder({
     setExpanded(keys)
   }
 
+  useEffect(() => {
+    if (!dirty) return
+    const timer = window.setTimeout(async () => {
+      if (saving.current) return
+      if (Object.keys(validate(state)).length > 0) {
+        setAutoState('invalid')
+        return
+      }
+      const at = edits.current
+      saving.current = true
+      setAutoState('saving')
+      try {
+        await routinesApi.saveDraft(routineId, toPayload(state))
+        if (edits.current === at) setDirty(false)
+        setAutoState('idle')
+        void qc.invalidateQueries({ queryKey: routineKeys.all })
+      } catch {
+        setAutoState('error')
+      } finally {
+        saving.current = false
+        // Si hubo cambios mientras se guardaba, se vuelve a intentar con lo más nuevo.
+        if (edits.current !== at) setRetryTick((n) => n + 1)
+      }
+    }, 2500)
+    return () => window.clearTimeout(timer)
+  }, [state, dirty, retryTick, routineId, qc])
+
   const save = useMutation({
     mutationFn: () => routinesApi.saveDraft(routineId, toPayload(state)),
     onSuccess: async () => {
       setDirty(false)
+      setAutoState('idle')
       setProblem(null)
       setNotice('Borrador guardado.')
       await qc.invalidateQueries({ queryKey: routineKeys.all })
@@ -335,9 +373,7 @@ function Builder({
 
   return (
     <>
-      <p className="breadcrumb">
-        <Link to={`/entrenadora/${section}/${routineId}`}>← Volver a la ficha</Link>
-      </p>
+      <BackLink to={`/entrenadora/${section}/${routineId}`} label="Ficha de la rutina" />
       <PageHeader
         title={state.title || 'Sin nombre'}
         subtitle={`Borrador · versión ${versionNumber}. Tú eliges cada ejercicio, el orden y todos los parámetros.`}
@@ -409,7 +445,19 @@ function Builder({
             onDragOver={allowDrop(`day:${day.key}`, 'day')}
             onDrop={dropDay(day.key)}
           >
-            <DayMainMuscle main={mainMuscleFromBuilderDay(day)} />
+            <div className="day__top">
+              <DayMainMuscle main={mainMuscleFromBuilderDay(day)} />
+              <MoreMenu
+                className="day__menu"
+                label={`Acciones de ${day.name || `día ${di + 1}`}`}
+                items={[
+                  di > 0 && { label: 'Subir día', icon: ArrowUp, onSelect: () => shiftDay(day.key, -1) },
+                  di < state.days.length - 1 && { label: 'Bajar día', icon: ArrowDown, onSelect: () => shiftDay(day.key, 1) },
+                  { label: 'Duplicar día', icon: Copy, onSelect: () => duplicateDay(day) },
+                  { label: 'Quitar día', icon: Trash2, danger: true, onSelect: () => (day.exercises.length ? setRemoving(day) : removeDay(day.key)) },
+                ]}
+              />
+            </div>
             <div className="day__head">
               <span
                 className="handle"
@@ -442,20 +490,6 @@ function Builder({
                     </option>
                   ))}
                 </SelectField>
-              </div>
-              <div className="day__actions">
-                <Button variant="ghost" aria-label={`Subir ${day.name}`} disabled={di === 0} onClick={() => shiftDay(day.key, -1)}>
-                  ↑
-                </Button>
-                <Button variant="ghost" aria-label={`Bajar ${day.name}`} disabled={di === state.days.length - 1} onClick={() => shiftDay(day.key, 1)}>
-                  ↓
-                </Button>
-                <Button variant="ghost" onClick={() => duplicateDay(day)}>
-                  Duplicar día
-                </Button>
-                <Button variant="ghost" onClick={() => (day.exercises.length ? setRemoving(day) : removeDay(day.key))}>
-                  Quitar día
-                </Button>
               </div>
             </div>
             <TextField label="Notas del día" maxLength={1000} value={day.notes} onChange={(e) => { const v = e.target.value; setDay(day.key, (d) => ({ ...d, notes: v })) }} />
@@ -522,21 +556,29 @@ function Builder({
 
       <div className="builder-bar" role="region" aria-label="Acciones del borrador">
         <span className="muted builder-bar__status" aria-live="polite">
-          {dirty ? 'Cambios sin guardar' : 'Todo guardado'} · {state.days.length} {state.days.length === 1 ? 'día' : 'días'} · {totalExercises}{' '}
-          {totalExercises === 1 ? 'ejercicio' : 'ejercicios'}
+          <strong className={`builder-bar__save${autoState === 'invalid' || autoState === 'error' ? ' builder-bar__save--warn' : ''}`}>
+            {save.isPending || autoState === 'saving'
+              ? 'Guardando…'
+              : !dirty
+                ? '✓ Borrador guardado'
+                : autoState === 'invalid'
+                  ? 'Hay campos por revisar'
+                  : autoState === 'error'
+                    ? 'No se pudo guardar'
+                    : 'Guardando en un momento…'}
+          </strong>{' '}
+          · {state.days.length} {state.days.length === 1 ? 'día' : 'días'} · {totalExercises} {totalExercises === 1 ? 'ejercicio' : 'ejercicios'}
         </span>
-        <div className="page-actions">
-          {hasPublished && (
-            <Button variant="ghost" onClick={() => setDiscarding(true)}>
-              Descartar borrador
-            </Button>
-          )}
-          <Button variant="secondary" onClick={() => setPreview(true)}>
-            Vista previa
-          </Button>
-          <Button variant="secondary" loading={save.isPending} onClick={() => trySave() && save.mutate()}>
-            Guardar borrador
-          </Button>
+        <div className="head-actions builder-bar__actions">
+          <MoreMenu
+            className="more-menu--up"
+            label="Más acciones del borrador"
+            items={[
+              { label: 'Vista previa', icon: Eye, onSelect: () => setPreview(true) },
+              dirty && { label: 'Guardar ahora', icon: Save, onSelect: () => trySave() && save.mutate() },
+              hasPublished && { label: 'Descartar borrador', icon: Trash2, danger: true, onSelect: () => setDiscarding(true) },
+            ]}
+          />
           <Button onClick={() => trySave() && setPublishing(true)}>Publicar</Button>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { HistoryTabs } from '../portal/HistoryTabs'
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -421,7 +422,8 @@ export function PortalCalendarPage() {
   const items = useQuery({ queryKey: [...trackingKeys.portal, 'calendar', from, to], queryFn: () => portalTrackingApi.calendar(from, to) })
   return (
     <>
-      <PageHeader title="Mi calendario" subtitle="Tus días de rutina, entrenamientos, descansos y evaluaciones." />
+      <PageHeader title="Historial" subtitle="Tus días de rutina, entrenamientos, descansos y evaluaciones." />
+      <HistoryTabs />
       <CalendarView
         items={items.data}
         isPending={items.isPending}

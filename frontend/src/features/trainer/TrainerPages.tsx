@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
-import { Activity, CalendarCheck, CalendarDays, ClipboardPlus, Dumbbell, Ruler, UserPlus, Users, type LucideIcon } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
-import { ApiError } from '../../api/client'
-import { trainerApi, type ClientSummary, type TemporaryPassword } from '../../api/endpoints'
+import { Activity, CalendarCheck, ChevronRight, ClipboardPlus, Dumbbell, FileSpreadsheet, Ruler, TriangleAlert, UserPlus, Users, type LucideIcon } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { ApiError, api } from '../../api/client'
+import { useTask } from '../../components/useTask'
+import { trainerApi, type TemporaryPassword } from '../../api/endpoints'
 import {
   Alert,
   Button,
@@ -12,10 +13,11 @@ import {
   ErrorState,
   LoadingState,
   Modal,
+  MoreMenu,
   PageHeader,
+  Tabs,
   TextField,
 } from '../../components/ui'
-import { DownloadButton } from '../../components/DownloadButton'
 import { useSession } from '../../app/session'
 import { ThemeSwitch } from '../../layouts/AppShell'
 import { ChangePasswordForm } from '../auth/AuthPages'
@@ -23,7 +25,6 @@ import { isEmail } from '../../lib/validation'
 import { formatDate, formatDateTime, initials, todayLong } from '../../lib/format'
 import '../clients/clients.css'
 import { trackingApi, type TrainerDashboard } from '../../api/tracking'
-import { useExercises } from '../library/libraryQueries'
 import { MeasurementTypesSection } from '../tracking/TrackingPages'
 import { trackingKeys } from '../tracking/trackingModel'
 
@@ -38,7 +39,6 @@ export function TrainerDashboardPage() {
   const { data: session } = useSession()
   const { data: clients, isPending, error, refetch } = useClients()
   const tracking = useQuery({ queryKey: trackingKeys.dashboard, queryFn: trackingApi.dashboard })
-  const library = useExercises({})
   const active = clients?.filter((c) => c.status === 'Active') ?? []
   const withProgram = active.filter((c) => c.currentProgram).length
 
@@ -76,29 +76,28 @@ export function TrainerDashboardPage() {
             </div>
           </div>
         )}
-        <div className="quick-actions" role="group" aria-label="Accesos rápidos de inicio">
-          <QuickAction to="/entrenadora/clientes" icon={UserPlus} label="Clientes" />
-          <QuickAction to="/entrenadora/rutinas" icon={ClipboardPlus} label="Rutinas" />
-          <QuickAction to="/entrenadora/biblioteca" icon={Dumbbell} label="Ejercicios" />
-          <QuickAction to="/entrenadora/calendario" icon={CalendarDays} label="Calendario" />
+        <div className="quick-actions quick-actions--two" role="group" aria-label="Acciones rápidas">
+          <QuickAction to="/entrenadora/clientes?nuevo=1" icon={UserPlus} label="Nuevo cliente" />
+          <QuickAction to="/entrenadora/rutinas?nueva=1" icon={ClipboardPlus} label="Nueva rutina" />
         </div>
       </section>
 
       <div className="tiles">
+        <Link className={`tile${clients && active.length - withProgram > 0 ? ' tile--attention' : ''}`} to="/entrenadora/clientes?filtro=sin-rutina">
+          <span className="icon-chip icon-chip--gold">
+            <TriangleAlert size={22} aria-hidden="true" />
+          </span>
+          <p className="tile__value">{clients ? active.length - withProgram : '—'}</p>
+          <p className="tile__label">Clientes activos sin rutina</p>
+          <span className="tile__go">Ver quiénes <ChevronRight size={16} aria-hidden="true" /></span>
+        </Link>
         <Link className="tile" to="/entrenadora/clientes">
           <span className="icon-chip">
             <Users size={22} aria-hidden="true" />
           </span>
           <p className="tile__value">{clients ? withProgram : '—'}</p>
           <p className="tile__label">Clientes con programa vigente</p>
-          {clients && <p className="tile__label">{active.length - withProgram} activos sin rutina asignada</p>}
-        </Link>
-        <Link className="tile" to="/entrenadora/biblioteca">
-          <span className="icon-chip icon-chip--gold">
-            <Dumbbell size={22} aria-hidden="true" />
-          </span>
-          <p className="tile__value">{library.data ? library.data.total : '—'}</p>
-          <p className="tile__label">Ejercicios en tu biblioteca</p>
+          <span className="tile__go">Ver clientes <ChevronRight size={16} aria-hidden="true" /></span>
         </Link>
         <Link className="tile" to="/entrenadora/calendario">
           <span className="icon-chip icon-chip--rose">
@@ -106,6 +105,7 @@ export function TrainerDashboardPage() {
           </span>
           <p className="tile__value">{tracking.data ? tracking.data.upcomingEvaluations.length : '—'}</p>
           <p className="tile__label">Evaluaciones en los próximos 14 días</p>
+          <span className="tile__go">Abrir calendario <ChevronRight size={16} aria-hidden="true" /></span>
         </Link>
         <Link className="tile" to="/entrenadora/seguimiento">
           <span className="icon-chip icon-chip--mint">
@@ -113,6 +113,7 @@ export function TrainerDashboardPage() {
           </span>
           <p className="tile__value">{tracking.data ? tracking.data.recentActivity.length : '—'}</p>
           <p className="tile__label">Registros recientes</p>
+          <span className="tile__go">Ver seguimiento <ChevronRight size={16} aria-hidden="true" /></span>
         </Link>
       </div>
 
@@ -214,156 +215,38 @@ function DashboardTracking({ query }: { query: UseQueryResult<TrainerDashboard> 
 }
 
 /* ---------- Clientes ---------- */
-type PendingAction = { kind: 'reset' | 'disable' | 'enable'; client: ClientSummary }
+export type AccessAction = { kind: 'reset' | 'disable' | 'enable'; client: { id: number; firstName: string; lastName: string } }
 
-export function ClientsPage() {
+/**
+ * Confirmación y resultado de restablecer contraseña, desactivar o reactivar un cliente.
+ * Viven en el menú ⋮ de la ficha del cliente (no en la lista), para que no se toquen por error.
+ */
+export function AccessDialogs({ action, onClose, onNotice }: { action: AccessAction | null; onClose: () => void; onNotice: (message: string) => void }) {
   const qc = useQueryClient()
-  const { data: clients, isPending, error, refetch } = useClients()
-  const [creating, setCreating] = useState(false)
-  const [action, setAction] = useState<PendingAction | null>(null)
-  const [secret, setSecret] = useState<{ name: string; password: TemporaryPassword; isNew?: boolean } | null>(null)
-  const navigate = useNavigate()
-  const [notice, setNotice] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'Active' | 'Inactive' | 'all'>('Active')
-  const [search, setSearch] = useState('')
-  const term = search.trim().toLocaleLowerCase('es-MX')
-  const shown = (clients ?? []).filter(
-    (c) =>
-      (filter === 'all' || c.status === filter) &&
-      (!term || `${c.firstName} ${c.lastName} ${c.email}`.toLocaleLowerCase('es-MX').includes(term)),
-  )
-
+  const [secret, setSecret] = useState<{ name: string; password: TemporaryPassword } | null>(null)
   const run = useMutation({
-    mutationFn: async ({ kind, client }: PendingAction) => {
+    mutationFn: async ({ kind, client }: AccessAction) => {
       if (kind === 'reset') return trainerApi.resetPassword(client.id)
       await trainerApi.setAccess(client.id, kind === 'enable')
       return null
     },
     onSuccess: async (result, { kind, client }) => {
-      setAction(null)
+      onClose()
       const name = `${client.firstName} ${client.lastName}`
       if (result) setSecret({ name, password: result })
-      else setNotice(kind === 'enable' ? `Se reactivó el acceso de ${name}.` : `Se desactivó el acceso de ${name}. Sus datos se conservan.`)
+      else onNotice(kind === 'enable' ? `Se reactivó el acceso de ${name}.` : `Se desactivó el acceso de ${name}. Sus datos se conservan.`)
       await qc.invalidateQueries({ queryKey: clientsKey })
+      await qc.invalidateQueries({ queryKey: ['clients'] })
     },
   })
-
   return (
     <>
-      <PageHeader
-        title="Clientes"
-        subtitle="Perfiles, cuentas de acceso y programas de tus clientes"
-        actions={
-          <div className="page-actions">
-            <DownloadButton path="/api/trainer/exports/clients" fileName="clientes-lbmethod.xlsx" label="Exportar clientes a Excel">
-              Exportar a Excel
-            </DownloadButton>
-            <Button onClick={() => setCreating(true)}>Nuevo cliente</Button>
-          </div>
-        }
-      />
-      <div className="stack">
-        {notice && <Alert kind="success">{notice}</Alert>}
-
-        {isPending ? (
-          <LoadingState label="Cargando clientes…" />
-        ) : error ? (
-          <ErrorState message={error.message} onRetry={() => refetch()} />
-        ) : clients!.length === 0 ? (
-          <div className="card">
-            <EmptyState
-              title="Aún no tienes clientes"
-              description="Crea la cuenta de tu primer cliente para que pueda entrar a su portal."
-              action={<Button onClick={() => setCreating(true)}>Crear primer cliente</Button>}
-            />
-          </div>
-        ) : (
-          <>
-          <div className="client-filters">
-            <div className="tabs" role="tablist" aria-label="Estado">
-              {([
-                ['Active', 'Activos'],
-                ['Inactive', 'Inactivos'],
-                ['all', 'Todos'],
-              ] as const).map(([value, label]) => (
-                <button key={value} type="button" role="tab" aria-selected={filter === value} className={`tabs__tab${filter === value ? ' tabs__tab--active' : ''}`} onClick={() => setFilter(value)}>
-                  {label}
-                </button>
-              ))}
-            </div>
-            <input className="input client-filters__search" type="search" aria-label="Buscar cliente" placeholder="Buscar por nombre o correo" value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-          {shown.length === 0 && <p className="muted">No hay clientes con ese filtro.</p>}
-          <ul className="list" aria-label="Lista de clientes">
-            {shown.map((c) => (
-              <li key={c.id} className="list-item">
-                <div className="list-item__main">
-                  <span className="list-item__title">
-                    <Link to={`/entrenadora/clientes/${c.id}`}>
-                      {c.firstName} {c.lastName}
-                    </Link>{' '}
-                    <span className={`badge ${c.status === 'Active' ? 'badge--success' : 'badge--muted'}`}>
-                      {c.status === 'Active' ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </span>
-                  <span className="list-item__meta">{c.email}</span>
-                  <span className="list-item__meta">
-                    {c.currentProgram ? (
-                      <>
-                        Programa: <span className="client-list__program">{c.currentProgram}</span>
-                      </>
-                    ) : (
-                      'Sin rutina vigente'
-                    )}
-                  </span>
-                </div>
-                {c.hasAccount && (
-                  <div className="list-item__actions">
-                    <Button variant="secondary" onClick={() => setAction({ kind: 'reset', client: c })}>
-                      Restablecer contraseña
-                    </Button>
-                    {c.status === 'Active' ? (
-                      <Button variant="danger" onClick={() => setAction({ kind: 'disable', client: c })}>
-                        Desactivar
-                      </Button>
-                    ) : (
-                      <Button variant="secondary" onClick={() => setAction({ kind: 'enable', client: c })}>
-                        Reactivar
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-          </>
-        )}
-      </div>
-
-      {creating && (
-        <CreateClientModal
-          onClose={() => setCreating(false)}
-          onCreated={async (name, password) => {
-            setCreating(false)
-            setSecret({ name, password, isNew: true })
-            await qc.invalidateQueries({ queryKey: clientsKey })
-          }}
-        />
-      )}
-
       {action && (
         <ConfirmDialog
-          title={
-            action.kind === 'reset'
-              ? 'Restablecer contraseña'
-              : action.kind === 'disable'
-                ? 'Desactivar cliente'
-                : 'Reactivar cliente'
-          }
+          title={action.kind === 'reset' ? 'Restablecer contraseña' : action.kind === 'disable' ? 'Desactivar cliente' : 'Reactivar cliente'}
           message={
             <>
-              {action.kind === 'reset' &&
-                `Se generará una nueva contraseña temporal para ${action.client.firstName} y se cerrarán sus sesiones abiertas.`}
+              {action.kind === 'reset' && `Se generará una nueva contraseña temporal para ${action.client.firstName} y se cerrarán sus sesiones abiertas.`}
               {action.kind === 'disable' &&
                 `${action.client.firstName} ya no podrá entrar y se cerrarán sus sesiones. No se borra ningún dato: entrenamientos, medidas y asignaciones se conservan.`}
               {action.kind === 'enable' && `${action.client.firstName} podrá volver a entrar con su contraseña actual.`}
@@ -380,7 +263,145 @@ export function ClientsPage() {
           onConfirm={() => run.mutate(action)}
           onCancel={() => {
             run.reset()
-            setAction(null)
+            onClose()
+          }}
+        />
+      )}
+      {secret && <TemporaryPasswordModal name={secret.name} password={secret.password.temporaryPassword} onClose={() => setSecret(null)} />}
+    </>
+  )
+}
+
+export function ClientsPage() {
+  const qc = useQueryClient()
+  const { data: clients, isPending, error, refetch } = useClients()
+  const [secret, setSecret] = useState<{ name: string; password: TemporaryPassword } | null>(null)
+  const navigate = useNavigate()
+  const exporting = useTask('No se pudo descargar el archivo.')
+  const [filter, setFilter] = useState<'Active' | 'Inactive' | 'all'>('Active')
+  const [params, setParams] = useSearchParams()
+  const [creating, setCreating] = useState(() => params.get('nuevo') === '1')
+  // ?filtro=sin-rutina viene del inicio («Sin rutina asignada»); ?nuevo=1, del botón «Nuevo cliente» del inicio.
+  const [onlyWithout, setOnlyWithout] = useState(() => params.get('filtro') === 'sin-rutina')
+  const [search, setSearch] = useState('')
+  const term = search.trim().toLocaleLowerCase('es-MX')
+  const shown = (clients ?? []).filter(
+    (c) =>
+      (filter === 'all' || c.status === filter) &&
+      (!onlyWithout || (c.status === 'Active' && !c.currentProgram)) &&
+      (!term || `${c.firstName} ${c.lastName} ${c.email}`.toLocaleLowerCase('es-MX').includes(term)),
+  )
+  const count = (f: typeof filter) => (clients ?? []).filter((c) => f === 'all' || c.status === f).length
+
+  return (
+    <>
+      <PageHeader
+        title="Clientes"
+        subtitle="Toca un cliente para ver su ficha, su rutina y su progreso."
+        actions={
+          <div className="head-actions">
+            <Button onClick={() => setCreating(true)}>
+              <UserPlus size={18} aria-hidden="true" />
+              Nuevo cliente
+            </Button>
+            <MoreMenu
+              items={[
+                {
+                  label: exporting.pending ? 'Descargando…' : 'Exportar clientes a Excel',
+                  icon: FileSpreadsheet,
+                  disabled: exporting.pending,
+                  onSelect: () => exporting.run(() => api.download('/api/trainer/exports/clients', 'clientes-lbmethod.xlsx')),
+                },
+              ]}
+            />
+          </div>
+        }
+      />
+      <div className="stack">
+        {exporting.error && <Alert kind="error">{exporting.error}</Alert>}
+
+        {isPending ? (
+          <LoadingState label="Cargando clientes…" />
+        ) : error ? (
+          <ErrorState message={error.message} onRetry={() => refetch()} />
+        ) : clients!.length === 0 ? (
+          <div className="card">
+            <EmptyState
+              title="Aún no tienes clientes"
+              description="Crea la cuenta de tu primer cliente para que pueda entrar a su portal."
+              action={<Button onClick={() => setCreating(true)}>Crear primer cliente</Button>}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="client-filters">
+              <input className="input client-filters__search" type="search" aria-label="Buscar cliente" placeholder="Buscar por nombre o correo" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Tabs
+                label="Estado"
+                value={filter}
+                options={[
+                  ['Active', `Activos · ${count('Active')}`],
+                  ['Inactive', `Inactivos · ${count('Inactive')}`],
+                  ['all', 'Todos'],
+                ]}
+                onChange={(v) => {
+                  setFilter(v)
+                  setOnlyWithout(false)
+                }}
+              />
+            </div>
+            {onlyWithout && (
+              <div className="filter-note">
+                <span>Mostrando solo clientes activos sin rutina.</span>
+                <button type="button" className="link-button" onClick={() => setOnlyWithout(false)}>
+                  Ver todos
+                </button>
+              </div>
+            )}
+            {shown.length === 0 && <p className="muted">No hay clientes con ese filtro.</p>}
+            <ul className="list list-tight" aria-label="Lista de clientes">
+              {shown.map((c) => (
+                <li key={c.id}>
+                  <Link className="list-item list-item--link" to={`/entrenadora/clientes/${c.id}`}>
+                    <span className="list-item__lead">
+                      <span className="avatar" aria-hidden="true">
+                        {initials(`${c.firstName} ${c.lastName}`)}
+                      </span>
+                      <span className="list-item__main">
+                        <span className="list-item__title">
+                          {c.firstName} {c.lastName}
+                        </span>
+                        <span className="client-row__status">
+                          {c.status !== 'Active' ? (
+                            <span className="badge badge--muted">Inactivo</span>
+                          ) : c.currentProgram ? (
+                            <span className="list-item__meta">{c.currentProgram}</span>
+                          ) : (
+                            <span className="badge badge--warning">Sin rutina</span>
+                          )}
+                        </span>
+                      </span>
+                    </span>
+                    <ChevronRight className="list-item__chev" size={20} aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+
+      {creating && (
+        <CreateClientModal
+          onClose={() => {
+            setCreating(false)
+            if (params.has('nuevo')) setParams({}, { replace: true })
+          }}
+          onCreated={async (name, password) => {
+            setCreating(false)
+            if (params.has('nuevo')) setParams({}, { replace: true })
+            setSecret({ name, password })
+            await qc.invalidateQueries({ queryKey: clientsKey })
           }}
         />
       )}
@@ -391,7 +412,7 @@ export function ClientsPage() {
           password={secret.password.temporaryPassword}
           onClose={() => setSecret(null)}
           // Cliente recién creado: puede pasar directo a armarle su rutina personalizada.
-          onCreateRoutine={secret.isNew ? () => navigate(`/entrenadora/clientes/${secret.password.clientId}?crearRutina=1`) : undefined}
+          onCreateRoutine={() => navigate(`/entrenadora/clientes/${secret.password.clientId}?crearRutina=1`)}
         />
       )}
     </>

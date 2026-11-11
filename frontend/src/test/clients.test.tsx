@@ -90,12 +90,14 @@ describe('clientes', () => {
     renderApp('/entrenadora/clientes')
 
     const list = await screen.findByRole('list', { name: 'Lista de clientes' })
-    expect(within(list).getByRole('link', { name: 'Mariana López' })).toHaveAttribute('href', '/entrenadora/clientes/10')
+    // Toda la fila abre la ficha; las acciones delicadas (desactivar, restablecer) ya no están en la lista.
+    expect(within(list).getByRole('link', { name: /Mariana López/ })).toHaveAttribute('href', '/entrenadora/clientes/10')
     expect(within(list).getByText('Glúteo 6 semanas')).toBeInTheDocument()
-    expect(within(list).getByText('Sin rutina vigente')).toBeInTheDocument()
+    expect(within(list).getByText('Sin rutina')).toBeInTheDocument()
+    expect(within(list).queryByRole('button')).not.toBeInTheDocument()
     expect(within(list).queryByText(/Bea/)).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('tab', { name: 'Inactivos' }))
+    await user.click(screen.getByRole('tab', { name: /^Inactivos/ }))
     expect(within(screen.getByRole('list', { name: 'Lista de clientes' })).getAllByRole('listitem')).toHaveLength(1)
     await user.click(screen.getByRole('tab', { name: 'Todos' }))
     await user.type(screen.getByLabelText('Buscar cliente'), 'sofía')
@@ -106,7 +108,17 @@ describe('clientes', () => {
     mockApi(detailRoutes())
     renderApp('/entrenadora/clientes/10')
 
+    const user = userEvent.setup()
     expect(await screen.findByRole('heading', { name: 'Mariana López' })).toBeInTheDocument()
+    // Resumen: rutina actual, perfil completo y observaciones.
+    const summary = await screen.findByRole('list', { name: 'Programa actual' })
+    expect(within(summary).getByText('Glúteo 6 semanas')).toBeInTheDocument()
+    expect(screen.getByText('10 de 10 datos')).toBeInTheDocument()
+    expect(screen.getByText('Rodilla izquierda')).toBeInTheDocument()
+    expect(await screen.findByText('Revisar técnica de bisagra')).toBeInTheDocument()
+    expect(screen.getByText('Solo tú las ves. El cliente nunca tiene acceso a ellas.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: 'Rutina' }))
     const current = await screen.findByRole('list', { name: 'Programa actual' })
     expect(within(current).getByText('Vigente')).toBeInTheDocument()
     expect(within(current).getByText(/Hay una versión más nueva \(versión 2\)/)).toBeInTheDocument()
@@ -115,10 +127,27 @@ describe('clientes', () => {
     const past = screen.getByRole('list', { name: 'Programas anteriores' })
     expect(within(past).getByText('Base 4 semanas')).toBeInTheDocument()
     expect(within(past).getByText('Terminada')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: 'Perfil' }))
     expect(screen.getByText('165.5 cm')).toBeInTheDocument()
     expect(screen.getByText('Lunes, Miércoles, Viernes')).toBeInTheDocument()
-    expect(await screen.findByText('Revisar técnica de bisagra')).toBeInTheDocument()
-    expect(screen.getByText('Solo tú las ves. El cliente nunca tiene acceso a ellas.')).toBeInTheDocument()
+  })
+
+  it('sin rutina, la ficha lo dice con un solo botón; desactivar está en el menú ⋮ y pide confirmación', async () => {
+    const calls = mockApi(detailRoutes({ [`GET ${base}/10/assignments`]: () => ({ status: 200, body: [] }) }))
+    const user = userEvent.setup()
+    renderApp('/entrenadora/clientes/10')
+
+    expect(await screen.findByRole('heading', { name: 'Mariana todavía no tiene rutina' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Darle una rutina' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Más acciones para Mariana' }))
+    const menu = screen.getByRole('menu')
+    expect(within(menu).getByRole('menuitem', { name: 'Editar perfil' })).toHaveAttribute('href', '/entrenadora/clientes/10/editar')
+    await user.click(within(menu).getByRole('menuitem', { name: 'Desactivar cliente' }))
+    const dialog = screen.getByRole('dialog', { name: 'Desactivar cliente' })
+    expect(dialog).toHaveTextContent('No se borra ningún dato')
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
+    expect(calls.some((c) => c.key.includes('/access'))).toBe(false)
   })
 
   it('asignar envía la versión elegida, las fechas y solo aplica la fecha de fin sugerida si se pide', async () => {
@@ -150,7 +179,8 @@ describe('clientes', () => {
     const user = userEvent.setup()
     renderApp('/entrenadora/clientes/10')
 
-    await user.click(await screen.findByRole('button', { name: 'Asignar rutina existente' }))
+    await user.click(await screen.findByRole('button', { name: 'Darle una rutina' }))
+    await user.click(screen.getByRole('button', { name: /Usar una rutina que ya tengo/ }))
     const dialog = await screen.findByRole('dialog', { name: 'Asignar rutina a Mariana' })
     const routineSelect = within(dialog).getByLabelText(/^Rutina/)
     await waitFor(() => expect(within(routineSelect).getAllByRole('option')).toHaveLength(2))
@@ -180,7 +210,8 @@ describe('clientes', () => {
     const user = userEvent.setup()
     renderApp('/entrenadora/clientes/10')
 
-    await user.click(await screen.findByRole('button', { name: 'Crear rutina para Mariana' }))
+    await user.click(await screen.findByRole('button', { name: 'Darle una rutina' }))
+    await user.click(screen.getByRole('button', { name: /Crear una nueva para Mariana/ }))
     const dialog = await screen.findByRole('dialog', { name: 'Nueva rutina para Mariana' })
     expect(within(dialog).getByLabelText(/^Nombre/)).toHaveValue('Rutina de Mariana López')
     await user.type(within(dialog).getByLabelText('Objetivo'), 'Glúteo y postura')
@@ -195,7 +226,7 @@ describe('clientes', () => {
   it('terminar pide el último día y lo envía', async () => {
     const calls = mockApi(detailRoutes({ 'POST /api/trainer/assignments/2/end-date': () => ({ status: 204 }) }))
     const user = userEvent.setup()
-    renderApp('/entrenadora/clientes/10')
+    renderApp('/entrenadora/clientes/10?ver=rutina')
 
     const current = await screen.findByRole('list', { name: 'Programa actual' })
     await user.click(within(current).getByRole('button', { name: 'Terminar' }))
@@ -241,7 +272,7 @@ describe('portal del cliente', () => {
       }),
     })
     renderApp('/portal')
-    const card = (await screen.findByRole('heading', { name: 'Rutina vigente' })).closest('section')!
+    const card = (await screen.findByRole('heading', { name: 'Mi rutina' })).closest('section')!
     expect(await within(card).findByText('Glúteo 6 semanas')).toBeInTheDocument()
     expect(within(card).getByText('Calienta antes')).toBeInTheDocument()
     expect(within(card).queryByText('Base 4 semanas')).not.toBeInTheDocument()

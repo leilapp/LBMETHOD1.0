@@ -1135,3 +1135,290 @@ a.tile:hover {
   font-weight: 400;
   color: var(--lb-text-muted);
 }
+
+/* ---------- Regreso: flecha redonda y nombre de la pantalla anterior, siempre arriba a la izquierda ---------- */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lb-space-2);
+  min-height: var(--lb-touch);
+  margin: calc(var(--lb-space-2) * -1) 0 var(--lb-space-2);
+  padding-right: var(--lb-space-3);
+  color: var(--lb-text-muted);
+  font-size: var(--lb-text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--lb-radius-pill);
+}
+.back-link__icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--lb-surface);
+  border: 1px solid var(--lb-border);
+  color: var(--lb-text);
+}
+.back-link:hover,
+.back-link:hover .back-link__icon {
+  color: var(--lb-text);
+  background: var(--lb-active-bg);
+}
+.back-link:focus-visible {
+  outline: none;
+  box-shadow: var(--lb-focus);
+}
+
+/* ---------- Menú ⋮ ---------- */
+.more-menu {
+  position: relative;
+  display: inline-flex;
+}
+.more-menu__toggle {
+  border: 1px solid var(--lb-border);
+  background: var(--lb-surface);
+}
+.more-menu__toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--lb-focus);
+}
+.more-menu__list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 35;
+  display: grid;
+  min-width: 230px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 6px;
+  border-radius: var(--lb-radius-lg);
+  background: var(--lb-surface);
+  border: 1px solid var(--lb-border);
+  box-shadow: var(--lb-shadow);
+}
+.more-menu--up .more-menu__list {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+.more-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--lb-space-3);
+  min-height: 44px;
+  padding: 0 var(--lb-space-3);
+  border: 0;
+  border-radius: var(--lb-radius);
+  background: none;
+  color: var(--lb-text);
+  font: inherit;
+  font-size: var(--lb-text-sm);
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.more-menu__item svg {
+  flex: none;
+  color: var(--lb-text-muted);
+}
+.more-menu__item:hover,
+.more-menu__item:focus-visible {
+  outline: none;
+  background: var(--lb-active-bg);
+}
+.more-menu__item--danger,
+.more-menu__item--danger svg {
+  color: var(--lb-danger);
+}
+.more-menu__item:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Encabezado con acción principal + ⋮ en una sola fila */
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--lb-space-2);
+  flex-wrap: wrap;
+}
+
+/* Modo enfoque: sin barra inferior (constructor de rutinas y registro de entrenamiento) */
+.shell--focus {
+  --lb-bottom-nav: env(safe-area-inset-bottom, 0px);
+}
+.shell--focus .bottom-nav {
+  display: none;
+}
+@media (max-width: 900px) {
+  .shell--focus .shell__main {
+    padding-bottom: var(--lb-space-5);
+  }
+}
+
+/* Fila completa tocable (listas de clientes, rutinas…): toda la tarjeta abre el detalle */
+a.list-item--link {
+  flex-wrap: nowrap;
+  color: var(--lb-text);
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+a.list-item--link:hover {
+  border-color: var(--lb-border-strong);
+  background: var(--lb-surface-2);
+}
+a.list-item--link:focus-visible {
+  outline: none;
+  box-shadow: var(--lb-focus);
+}
+.list-item__chev {
+  flex: none;
+  color: var(--lb-text-muted);
+}
+.list-item__lead {
+  display: flex;
+  align-items: center;
+  gap: var(--lb-space-3);
+  min-width: 0;
+  flex: 1;
+}
+.list-tight .list-item {
+  padding: var(--lb-space-3) var(--lb-space-4);
+}
+.badge--warning {
+  border-color: transparent;
+  background: var(--lb-warning-bg);
+  color: var(--lb-warning);
+}
+
+/* Inicio: dos acciones rápidas (Nuevo cliente, Nueva rutina) como botones anchos */
+.quick-actions--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 420px;
+}
+.quick-actions--two .quick-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--lb-space-2);
+  padding: var(--lb-space-2);
+  font-size: var(--lb-text-sm);
+  text-align: left;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.08);
+  border: 1px solid rgb(255 255 255 / 0.12);
+}
+.quick-actions--two .quick-action__icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+.tile__go {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: auto;
+  color: var(--lb-gold-soft);
+  font-size: var(--lb-text-sm);
+  font-weight: 600;
+}
+.tile--attention {
+  border-color: var(--lb-warning);
+  background: var(--lb-warning-bg);
+}
+.filter-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lb-space-2);
+  align-items: center;
+  font-size: var(--lb-text-sm);
+  color: var(--lb-text-muted);
+}
+.client-row__status {
+  display: flex;
+  min-width: 0;
+}
+
+/* Tarjeta que pide atención (por ejemplo, cliente sin rutina) */
+.card--attention {
+  border-color: var(--lb-warning);
+}
+.card--attention > .badge {
+  justify-self: start;
+}
+
+/* Barra de avance (perfil completo, series registradas) */
+.meter {
+  display: block;
+  height: 8px;
+  border-radius: var(--lb-radius-pill);
+  background: var(--lb-surface-3);
+  overflow: hidden;
+}
+.meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--lb-chip-violet-fg);
+  transition: width 0.2s;
+}
+
+/* Elegir entre dos caminos (crear nueva / usar existente) */
+.choice-list {
+  display: grid;
+  gap: var(--lb-space-3);
+  margin-bottom: var(--lb-space-4);
+}
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--lb-space-3);
+  width: 100%;
+  padding: var(--lb-space-4);
+  border: 1px solid var(--lb-border);
+  border-radius: var(--lb-radius-lg);
+  background: var(--lb-surface);
+  color: var(--lb-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.choice:hover {
+  border-color: var(--lb-border-strong);
+  background: var(--lb-surface-2);
+}
+.choice:focus-visible {
+  outline: none;
+  box-shadow: var(--lb-focus);
+}
+.choice__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.choice__title {
+  font-weight: 700;
+}
+.choice__hint {
+  color: var(--lb-text-muted);
+  font-size: var(--lb-text-sm);
+}
+/* Fila tocable dentro de una tarjeta (sin sombra propia) */
+.list-item--flat {
+  box-shadow: none;
+  background: var(--lb-surface-2);
+}
+/* Pestañas que ocupan todo el ancho (ficha del cliente) */
+.tabs--fill {
+  width: 100%;
+}
+.tabs--fill .tabs__tab {
+  flex: 1;
+  padding: 0 var(--lb-space-2);
+}
+.more-menu__list--left {
+  right: auto;
+  left: 0;
+}
