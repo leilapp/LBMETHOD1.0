@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Ellipsis, LogOut, Monitor, Moon, Sun, X, type LucideIcon } from 'lucide-react'
+import { Check, Ellipsis, LogOut, Monitor, Moon, Sun, X, type LucideIcon } from 'lucide-react'
 import { Button, Logo } from '../components/ui'
 import { useSession, useSignOut } from '../app/session'
-import { setThemePreference, useThemePreference, type ThemePreference } from '../lib/theme'
+import { DARK_PALETTES, setDarkPalette, setThemePreference, useDarkPalette, useThemePreference, type ThemePreference } from '../lib/theme'
 import { initials } from '../lib/format'
 import './AppShell.css'
 
@@ -37,6 +37,35 @@ export function ThemeSwitch() {
           <span className="segmented__label">{label}</span>
         </button>
       ))}
+    </div>
+  )
+}
+
+/** Elegir el estilo del modo oscuro (también cambia la tarjeta principal y el inicio de sesión). */
+export function DarkPaletteSwitch() {
+  const palette = useDarkPalette()
+  const current = DARK_PALETTES.find((p) => p.value === palette)
+  return (
+    <div className="palette-picker">
+      <div className="palette-picker__head">
+        <span className="palette-picker__title">Estilo oscuro</span>
+        <span className="palette-picker__name">{current?.label}</span>
+      </div>
+      <div className="palette-picker__options" role="group" aria-label="Estilo oscuro">
+        {DARK_PALETTES.map(({ value, label }) => (
+          <button
+            key={value}
+            type="button"
+            className={`palette-swatch palette-swatch--${value}`}
+            title={label}
+            aria-label={label}
+            aria-pressed={palette === value}
+            onClick={() => setDarkPalette(value)}
+          >
+            {palette === value && <Check size={16} aria-hidden="true" />}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
@@ -143,6 +172,7 @@ export function AppShell({ nav, areaLabel }: { nav: NavItem[]; areaLabel: string
             </div>
           </div>
           <ThemeSwitch />
+          <DarkPaletteSwitch />
           <Button variant="secondary" block onClick={handleSignOut}>
             <LogOut size={16} aria-hidden="true" />
             Cerrar sesión
@@ -166,6 +196,7 @@ export function AppShell({ nav, areaLabel }: { nav: NavItem[]; areaLabel: string
               </div>
             </div>
             <ThemeSwitch />
+            <DarkPaletteSwitch />
             <Button variant="secondary" block onClick={handleSignOut}>
               <LogOut size={16} aria-hidden="true" />
               Cerrar sesión

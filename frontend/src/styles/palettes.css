@@ -1,0 +1,285 @@
+/*
+ * LB METHOD · estilos del modo oscuro (la persona elige uno en «Tu cuenta»; src/lib/theme.ts pone data-palette en <html>).
+ * Sin data-palette se ve el original, «Noche y amatista» (tokens.css).
+ * Cada estilo se escribe dos veces: una para el oscuro que sigue al teléfono y otra para el oscuro elegido a mano
+ * y las piezas que siempre son oscuras (.lb-dark: inicio de sesión y tarjeta principal). El tema claro no cambia.
+ */
+
+/* ---------- Grafito y oro: negro carbón neutro, sin morado; el oro es el único acento. ---------- */
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='grafito']:not([data-theme='light']) {
+    --lb-black: #0b0b0c;
+    --lb-surface: #161617;
+    --lb-surface-2: #1e1e20;
+    --lb-surface-3: #28282b;
+    --lb-border: #2c2c30;
+    --lb-border-strong: #45454b;
+    --lb-bar-bg: rgb(18 18 19 / 0.97);
+    --lb-body-glow: radial-gradient(ellipse 70% 45% at 85% -5%, rgb(212 176 106 / 0.07), transparent 70%);
+    --lb-card-border: linear-gradient(145deg, rgb(212 176 106 / 0.35), #2c2c30 35%, #2c2c30 100%);
+    --lb-violet-900: #1a1917;
+    --lb-violet-700: #2e2b26;
+    --lb-violet-500: #4a443a;
+    --lb-lilac: #e6cf9b;
+    --lb-lilac-soft: #f6e8c3;
+    --lb-amethyst: #b8a27a;
+    --lb-glow-violet: none;
+    --lb-chip-violet-bg: rgb(212 176 106 / 0.14);
+    --lb-chip-violet-fg: #e6cf9b;
+    --lb-chip-gold-bg: rgb(212 176 106 / 0.14);
+    --lb-chip-gold-fg: #ecd6a4;
+    --lb-chip-rose-bg: rgb(255 255 255 / 0.07);
+    --lb-chip-rose-fg: #d8d4cc;
+    --lb-chip-mint-bg: rgb(255 255 255 / 0.07);
+    --lb-chip-mint-fg: #d8d4cc;
+    --lb-chip-sky-bg: rgb(255 255 255 / 0.07);
+    --lb-chip-sky-fg: #d8d4cc;
+    --lb-text: #f3f1ec;
+    --lb-text-muted: #a8a49c;
+    --lb-text-subtle: #7a776f;
+    --lb-info-bg: #1e1d1a;
+    --lb-hero-bg:
+      radial-gradient(ellipse 60% 70% at 100% 0%, rgb(212 176 106 / 0.22), transparent 65%),
+      linear-gradient(135deg, #121212 0%, #1d1c1a 55%, #2a2620 100%);
+    --lb-hero-shadow: 0 18px 40px rgb(0 0 0 / 0.45);
+    --lb-auth-glow: rgb(212 176 106 / 0.14);
+    --lb-auth-panel-top: rgb(26 26 27 / 0.9);
+    --lb-auth-panel-bottom: rgb(14 14 15 / 0.94);
+    --lb-auth-edge-mid: rgb(70 70 75 / 0.5);
+    --lb-auth-edge-end: rgb(212 176 106 / 0.3);
+    --lb-auth-halo: transparent;
+  }
+}
+:root[data-palette='grafito'][data-theme='dark'],
+:root[data-palette='grafito'] .lb-dark {
+  --lb-black: #0b0b0c;
+  --lb-surface: #161617;
+  --lb-surface-2: #1e1e20;
+  --lb-surface-3: #28282b;
+  --lb-border: #2c2c30;
+  --lb-border-strong: #45454b;
+  --lb-bar-bg: rgb(18 18 19 / 0.97);
+  --lb-body-glow: radial-gradient(ellipse 70% 45% at 85% -5%, rgb(212 176 106 / 0.07), transparent 70%);
+  --lb-card-border: linear-gradient(145deg, rgb(212 176 106 / 0.35), #2c2c30 35%, #2c2c30 100%);
+  --lb-violet-900: #1a1917;
+  --lb-violet-700: #2e2b26;
+  --lb-violet-500: #4a443a;
+  --lb-lilac: #e6cf9b;
+  --lb-lilac-soft: #f6e8c3;
+  --lb-amethyst: #b8a27a;
+  --lb-glow-violet: none;
+  --lb-chip-violet-bg: rgb(212 176 106 / 0.14);
+  --lb-chip-violet-fg: #e6cf9b;
+  --lb-chip-gold-bg: rgb(212 176 106 / 0.14);
+  --lb-chip-gold-fg: #ecd6a4;
+  --lb-chip-rose-bg: rgb(255 255 255 / 0.07);
+  --lb-chip-rose-fg: #d8d4cc;
+  --lb-chip-mint-bg: rgb(255 255 255 / 0.07);
+  --lb-chip-mint-fg: #d8d4cc;
+  --lb-chip-sky-bg: rgb(255 255 255 / 0.07);
+  --lb-chip-sky-fg: #d8d4cc;
+  --lb-text: #f3f1ec;
+  --lb-text-muted: #a8a49c;
+  --lb-text-subtle: #7a776f;
+  --lb-info-bg: #1e1d1a;
+  --lb-hero-bg:
+    radial-gradient(ellipse 60% 70% at 100% 0%, rgb(212 176 106 / 0.22), transparent 65%),
+    linear-gradient(135deg, #121212 0%, #1d1c1a 55%, #2a2620 100%);
+  --lb-hero-shadow: 0 18px 40px rgb(0 0 0 / 0.45);
+  --lb-auth-glow: rgb(212 176 106 / 0.14);
+  --lb-auth-panel-top: rgb(26 26 27 / 0.9);
+  --lb-auth-panel-bottom: rgb(14 14 15 / 0.94);
+  --lb-auth-edge-mid: rgb(70 70 75 / 0.5);
+  --lb-auth-edge-end: rgb(212 176 106 / 0.3);
+  --lb-auth-halo: transparent;
+}
+
+/* ---------- Azul medianoche: azul marino profundo con el mismo oro. ---------- */
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='medianoche']:not([data-theme='light']) {
+    --lb-black: #060a14;
+    --lb-surface: #0f1626;
+    --lb-surface-2: #151e32;
+    --lb-surface-3: #1d2840;
+    --lb-border: #24304a;
+    --lb-border-strong: #3a4a6b;
+    --lb-bar-bg: rgb(12 18 32 / 0.97);
+    --lb-body-glow:
+      radial-gradient(ellipse 70% 45% at 85% -5%, rgb(90 130 210 / 0.16), transparent 70%),
+      radial-gradient(ellipse 60% 40% at -10% 105%, rgb(212 176 106 / 0.07), transparent 70%);
+    --lb-card-border: linear-gradient(145deg, rgb(212 176 106 / 0.35), #24304a 35%, #24304a 70%, rgb(90 130 210 / 0.35));
+    --lb-violet-900: #0e1a33;
+    --lb-violet-700: #1c3060;
+    --lb-violet-500: #2f4c8c;
+    --lb-lilac: #a9c1f0;
+    --lb-lilac-soft: #d2e0fa;
+    --lb-amethyst: #5a82d2;
+    --lb-glow-violet: 0 0 40px rgb(90 130 210 / 0.25);
+    --lb-chip-violet-bg: rgb(90 130 210 / 0.2);
+    --lb-chip-violet-fg: #b7cdf5;
+    --lb-text: #eef2fa;
+    --lb-text-muted: #9ba8c2;
+    --lb-text-subtle: #6f7c97;
+    --lb-info-bg: #141d31;
+    --lb-hero-bg:
+      radial-gradient(ellipse 60% 70% at 100% 0%, rgb(212 176 106 / 0.25), transparent 65%),
+      radial-gradient(ellipse 50% 60% at 0% 100%, rgb(90 130 210 / 0.35), transparent 70%),
+      linear-gradient(135deg, #0a1122 0%, #13203d 50%, #1e3260 100%);
+    --lb-hero-shadow: 0 18px 40px rgb(10 20 50 / 0.45);
+    --lb-auth-glow: rgb(90 130 210 / 0.3);
+    --lb-auth-panel-top: rgb(18 26 44 / 0.9);
+    --lb-auth-panel-bottom: rgb(9 14 26 / 0.94);
+    --lb-auth-edge-mid: rgb(58 74 107 / 0.5);
+    --lb-auth-edge-end: rgb(90 130 210 / 0.55);
+    --lb-auth-halo: rgb(90 130 210 / 0.12);
+  }
+}
+:root[data-palette='medianoche'][data-theme='dark'],
+:root[data-palette='medianoche'] .lb-dark {
+  --lb-black: #060a14;
+  --lb-surface: #0f1626;
+  --lb-surface-2: #151e32;
+  --lb-surface-3: #1d2840;
+  --lb-border: #24304a;
+  --lb-border-strong: #3a4a6b;
+  --lb-bar-bg: rgb(12 18 32 / 0.97);
+  --lb-body-glow:
+    radial-gradient(ellipse 70% 45% at 85% -5%, rgb(90 130 210 / 0.16), transparent 70%),
+    radial-gradient(ellipse 60% 40% at -10% 105%, rgb(212 176 106 / 0.07), transparent 70%);
+  --lb-card-border: linear-gradient(145deg, rgb(212 176 106 / 0.35), #24304a 35%, #24304a 70%, rgb(90 130 210 / 0.35));
+  --lb-violet-900: #0e1a33;
+  --lb-violet-700: #1c3060;
+  --lb-violet-500: #2f4c8c;
+  --lb-lilac: #a9c1f0;
+  --lb-lilac-soft: #d2e0fa;
+  --lb-amethyst: #5a82d2;
+  --lb-glow-violet: 0 0 40px rgb(90 130 210 / 0.25);
+  --lb-chip-violet-bg: rgb(90 130 210 / 0.2);
+  --lb-chip-violet-fg: #b7cdf5;
+  --lb-text: #eef2fa;
+  --lb-text-muted: #9ba8c2;
+  --lb-text-subtle: #6f7c97;
+  --lb-info-bg: #141d31;
+  --lb-hero-bg:
+    radial-gradient(ellipse 60% 70% at 100% 0%, rgb(212 176 106 / 0.25), transparent 65%),
+    radial-gradient(ellipse 50% 60% at 0% 100%, rgb(90 130 210 / 0.35), transparent 70%),
+    linear-gradient(135deg, #0a1122 0%, #13203d 50%, #1e3260 100%);
+  --lb-hero-shadow: 0 18px 40px rgb(10 20 50 / 0.45);
+  --lb-auth-glow: rgb(90 130 210 / 0.3);
+  --lb-auth-panel-top: rgb(18 26 44 / 0.9);
+  --lb-auth-panel-bottom: rgb(9 14 26 / 0.94);
+  --lb-auth-edge-mid: rgb(58 74 107 / 0.5);
+  --lb-auth-edge-end: rgb(90 130 210 / 0.55);
+  --lb-auth-halo: rgb(90 130 210 / 0.12);
+}
+
+/* ---------- Ciruela y oro rosa: fondo vino; el oro pasa a oro rosa (logo, botones y detalles). ---------- */
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='ciruela']:not([data-theme='light']) {
+    --lb-black: #0e080b;
+    --lb-surface: #1a1014;
+    --lb-surface-2: #22151b;
+    --lb-surface-3: #2d1c24;
+    --lb-border: #3a2430;
+    --lb-border-strong: #573645;
+    --lb-bar-bg: rgb(24 14 19 / 0.97);
+    --lb-body-glow:
+      radial-gradient(ellipse 70% 45% at 85% -5%, rgb(196 110 140 / 0.15), transparent 70%),
+      radial-gradient(ellipse 60% 40% at -10% 105%, rgb(222 168 140 / 0.08), transparent 70%);
+    --lb-card-border: linear-gradient(145deg, rgb(222 168 140 / 0.4), #3a2430 35%, #3a2430 70%, rgb(196 110 140 / 0.35));
+    --lb-violet-900: #2a0f1e;
+    --lb-violet-700: #4e1d38;
+    --lb-violet-500: #7a3158;
+    --lb-lilac: #e9a9c0;
+    --lb-lilac-soft: #f5d3df;
+    --lb-amethyst: #c46e8c;
+    --lb-gold: #dea88c;
+    --lb-gold-soft: #ecc4ad;
+    --lb-gold-light: #f8e0d2;
+    --lb-gold-deep: #a86a52;
+    --lb-gold-gradient: linear-gradient(115deg, #a86a52 0%, #dea88c 22%, #f8e0d2 38%, #fff6f0 45%, #ecc4ad 55%, #c98a70 75%, #a86a52 100%);
+    --lb-logo-glow: drop-shadow(0 0 6px rgb(222 168 140 / 0.35));
+    --lb-glow-gold: 0 0 18px rgb(222 168 140 / 0.35);
+    --lb-glow-violet: 0 0 40px rgb(196 110 140 / 0.25);
+    --lb-active-bg: rgb(222 168 140 / 0.16);
+    --lb-active-fg: #f8e0d2;
+    --lb-chip-violet-bg: rgb(196 110 140 / 0.2);
+    --lb-chip-violet-fg: #f0bccd;
+    --lb-chip-gold-bg: rgb(222 168 140 / 0.18);
+    --lb-chip-gold-fg: #f0c9b4;
+    --lb-text: #faf1f4;
+    --lb-text-muted: #bfa3ad;
+    --lb-text-subtle: #8e7280;
+    --lb-warning: #dea88c;
+    --lb-info-bg: #26161d;
+    --lb-focus: 0 0 0 3px rgb(222 168 140 / 0.45);
+    --lb-hero-bg:
+      radial-gradient(ellipse 60% 70% at 100% 0%, rgb(222 168 140 / 0.28), transparent 65%),
+      radial-gradient(ellipse 50% 60% at 0% 100%, rgb(196 110 140 / 0.4), transparent 70%),
+      linear-gradient(135deg, #1a0c13 0%, #33162a 50%, #561f3f 100%);
+    --lb-hero-shadow: 0 18px 40px rgb(40 10 25 / 0.45);
+    --lb-auth-glow: rgb(196 110 140 / 0.3);
+    --lb-auth-panel-top: rgb(36 20 28 / 0.9);
+    --lb-auth-panel-bottom: rgb(20 11 16 / 0.94);
+    --lb-auth-edge-mid: rgb(87 54 69 / 0.5);
+    --lb-auth-edge-end: rgb(196 110 140 / 0.55);
+    --lb-auth-halo: rgb(196 110 140 / 0.12);
+    --lb-primary-bg: linear-gradient(135deg, #f3d3c2 0%, #dea88c 45%, #b97a60 100%);
+    --lb-primary-bg-hover: linear-gradient(135deg, #f8e0d2 0%, #e6b59b 45%, #c98a70 100%);
+    --lb-primary-glow: rgb(222 168 140 / 0.25);
+  }
+}
+:root[data-palette='ciruela'][data-theme='dark'],
+:root[data-palette='ciruela'] .lb-dark {
+  --lb-black: #0e080b;
+  --lb-surface: #1a1014;
+  --lb-surface-2: #22151b;
+  --lb-surface-3: #2d1c24;
+  --lb-border: #3a2430;
+  --lb-border-strong: #573645;
+  --lb-bar-bg: rgb(24 14 19 / 0.97);
+  --lb-body-glow:
+    radial-gradient(ellipse 70% 45% at 85% -5%, rgb(196 110 140 / 0.15), transparent 70%),
+    radial-gradient(ellipse 60% 40% at -10% 105%, rgb(222 168 140 / 0.08), transparent 70%);
+  --lb-card-border: linear-gradient(145deg, rgb(222 168 140 / 0.4), #3a2430 35%, #3a2430 70%, rgb(196 110 140 / 0.35));
+  --lb-violet-900: #2a0f1e;
+  --lb-violet-700: #4e1d38;
+  --lb-violet-500: #7a3158;
+  --lb-lilac: #e9a9c0;
+  --lb-lilac-soft: #f5d3df;
+  --lb-amethyst: #c46e8c;
+  --lb-gold: #dea88c;
+  --lb-gold-soft: #ecc4ad;
+  --lb-gold-light: #f8e0d2;
+  --lb-gold-deep: #a86a52;
+  --lb-gold-gradient: linear-gradient(115deg, #a86a52 0%, #dea88c 22%, #f8e0d2 38%, #fff6f0 45%, #ecc4ad 55%, #c98a70 75%, #a86a52 100%);
+  --lb-logo-glow: drop-shadow(0 0 6px rgb(222 168 140 / 0.35));
+  --lb-glow-gold: 0 0 18px rgb(222 168 140 / 0.35);
+  --lb-glow-violet: 0 0 40px rgb(196 110 140 / 0.25);
+  --lb-active-bg: rgb(222 168 140 / 0.16);
+  --lb-active-fg: #f8e0d2;
+  --lb-chip-violet-bg: rgb(196 110 140 / 0.2);
+  --lb-chip-violet-fg: #f0bccd;
+  --lb-chip-gold-bg: rgb(222 168 140 / 0.18);
+  --lb-chip-gold-fg: #f0c9b4;
+  --lb-text: #faf1f4;
+  --lb-text-muted: #bfa3ad;
+  --lb-text-subtle: #8e7280;
+  --lb-warning: #dea88c;
+  --lb-info-bg: #26161d;
+  --lb-focus: 0 0 0 3px rgb(222 168 140 / 0.45);
+  --lb-hero-bg:
+    radial-gradient(ellipse 60% 70% at 100% 0%, rgb(222 168 140 / 0.28), transparent 65%),
+    radial-gradient(ellipse 50% 60% at 0% 100%, rgb(196 110 140 / 0.4), transparent 70%),
+    linear-gradient(135deg, #1a0c13 0%, #33162a 50%, #561f3f 100%);
+  --lb-hero-shadow: 0 18px 40px rgb(40 10 25 / 0.45);
+  --lb-auth-glow: rgb(196 110 140 / 0.3);
+  --lb-auth-panel-top: rgb(36 20 28 / 0.9);
+  --lb-auth-panel-bottom: rgb(20 11 16 / 0.94);
+  --lb-auth-edge-mid: rgb(87 54 69 / 0.5);
+  --lb-auth-edge-end: rgb(196 110 140 / 0.55);
+  --lb-auth-halo: rgb(196 110 140 / 0.12);
+  --lb-primary-bg: linear-gradient(135deg, #f3d3c2 0%, #dea88c 45%, #b97a60 100%);
+  --lb-primary-bg-hover: linear-gradient(135deg, #f8e0d2 0%, #e6b59b 45%, #c98a70 100%);
+  --lb-primary-glow: rgb(222 168 140 / 0.25);
+}
