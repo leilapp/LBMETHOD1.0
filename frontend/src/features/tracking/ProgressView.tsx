@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Evaluation, MeasurementSeries, Photo, Progress } from '../../api/tracking'
 import { EmptyState, SelectField } from '../../components/ui'
-import { formatDate } from '../../lib/format'
+import { addDays, formatDate, todayInMexico } from '../../lib/format'
 import { ChartCard, LineChart, WeeklyBars } from './charts'
 import { fmt, shortDate } from './trackingModel'
 
@@ -120,6 +120,53 @@ function CompareEvaluations({ evaluations }: { evaluations: Evaluation[] }) {
       </div>
       <p className="field__hint">Si una medida no se tomó en alguna de las dos fechas aparece «Sin dato»; no se estima.</p>
     </section>
+  )
+}
+
+/**
+ * Récords: el mejor peso de cada ejercicio (con sus repeticiones) y cuándo se logró. «Nuevo» marca los récords de los
+ * últimos 14 días que superaron una marca anterior. Solo con entrenamientos finalizados; no se estima nada.
+ */
+function Records({ progress }: { progress: Progress }) {
+  const [all, setAll] = useState(false)
+  const [today] = useState(() => todayInMexico())
+  const twoWeeksAgo = addDays(today, -14)
+  const rows = progress.exercises
+    .map((e) => {
+      const best = e.points.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps) ? b : a))
+      const beforeBest = e.points.filter((p) => p.date < best.date)
+      const isNew = best.date >= twoWeeksAgo && best.date <= today && beforeBest.length > 0 && beforeBest.every((p) => p.weight < best.weight)
+      return { e, best, isNew }
+    })
+    .sort((a, b) => Number(b.isNew) - Number(a.isNew) || b.best.date.localeCompare(a.best.date))
+  if (rows.length === 0) return null
+  const shown = all ? rows : rows.slice(0, 8)
+  const fresh = rows.filter((r) => r.isNew).length
+  return (
+    <div className="stack">
+      <p className="records__intro">
+        {fresh > 0 ? `¡${fresh} ${fresh === 1 ? 'récord nuevo' : 'récords nuevos'} en las últimas dos semanas!` : 'Tu mejor marca en cada ejercicio.'}
+      </p>
+      <ul className="records" aria-label="Récords por ejercicio">
+        {shown.map(({ e, best, isNew }) => (
+          <li key={e.exerciseId} className={`records__item${isNew ? ' records__item--new' : ''}`}>
+            <span className="records__name">{e.name}</span>
+            <span className="records__value">
+              {fmt(best.weight)} {e.unit} × {best.reps}
+            </span>
+            <span className="records__date">
+              {formatDate(best.date)}
+              {isNew && <span className="badge badge--record">Nuevo</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {rows.length > 8 && (
+        <button type="button" className="link-button" onClick={() => setAll(!all)}>
+          {all ? 'Ver menos' : `Ver los ${rows.length} ejercicios`}
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -248,6 +295,15 @@ export function ProgressView({ progress, evaluations, photos }: { progress: Prog
           <span className="stat-tile__value stat-tile__value--sm">{lastEval ? formatDate(lastEval.evaluatedOn) : 'Sin registros'}</span>
         </div>
       </div>
+
+      {progress.exercises.length > 0 && (
+        <section className="card stack" aria-labelledby="records">
+          <h2 className="card__title" id="records">
+            Récords
+          </h2>
+          <Records progress={progress} />
+        </section>
+      )}
 
       <section className="card stack" aria-labelledby="peso-corporal">
         <h2 className="card__title" id="peso-corporal">

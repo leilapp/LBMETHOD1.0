@@ -1,3 +1,4 @@
+import { SessionReply } from '../notices/Notices'
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
@@ -546,6 +547,7 @@ export function TrainerSessionPage() {
             {e.comment && <p className="muted">Comentario: {e.comment}</p>}
           </section>
         ))}
+        <SessionReply clientId={clientId} sessionId={s.id} completed={s.status === 'Completed'} />
       </div>
     </>
   )

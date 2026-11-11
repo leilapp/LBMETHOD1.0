@@ -32,7 +32,12 @@ export function resetCsrfToken() {
 
 async function getCsrfToken(): Promise<string> {
   if (!csrfToken) {
-    const res = await fetch('/api/auth/csrf', { credentials: 'same-origin' })
+    let res: Response
+    try {
+      res = await fetch('/api/auth/csrf', { credentials: 'same-origin' })
+    } catch {
+      throw new ApiError(0, 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.')
+    }
     if (!res.ok) throw new ApiError(res.status, 'No se pudo preparar la conexión segura. Recarga la página.')
     csrfToken = ((await res.json()) as { token: string }).token
   }

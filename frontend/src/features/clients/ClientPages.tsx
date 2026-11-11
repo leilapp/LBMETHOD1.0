@@ -1,3 +1,4 @@
+import { ClientMessagesCard } from '../notices/Notices'
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -87,6 +88,7 @@ export function ClientDetailPage() {
                 qc.invalidateQueries({ queryKey: clientKeys.all })
               }}
             />
+            <ClientMessagesCard clientId={id} firstName={c.firstName} canWrite={active} />
             <NotesCard clientId={id} />
           </div>
           <ProfileCard client={c} />

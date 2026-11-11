@@ -5,7 +5,11 @@ import { sessionKey } from './session'
 export function createQueryClient() {
   const qc = new QueryClient({
     defaultOptions: {
+      // «always»: sin señal, las consultas fallan de inmediato (en vez de quedarse en espera) para que las pantallas
+      // puedan usar lo guardado en el teléfono, como el entrenamiento en curso.
+      mutations: { networkMode: 'always' },
       queries: {
+        networkMode: 'always',
         refetchOnWindowFocus: false,
         retry: (count, err) => !(err instanceof ApiError && err.status < 500 && err.status !== 0) && count < 2,
       },

@@ -652,3 +652,56 @@
     flex-basis: 100%;
   }
 }
+
+/* Récords por ejercicio (11/11/2026). */
+.records__intro {
+  margin: 0;
+  font-weight: 600;
+}
+.records {
+  display: grid;
+  gap: var(--lb-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.records__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px var(--lb-space-3);
+  padding: var(--lb-space-2) var(--lb-space-3);
+  border: 1px solid var(--lb-border);
+  border-radius: var(--lb-radius);
+  background: var(--lb-surface-2);
+}
+.records__item--new {
+  border-color: var(--lb-gold);
+}
+.records__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.records__value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.records__date {
+  grid-column: 1 / -1;
+  font-size: var(--lb-text-sm);
+  color: var(--lb-text-muted);
+}
+.badge--record {
+  margin-left: var(--lb-space-2);
+  border: 1px solid var(--lb-gold);
+  background: color-mix(in srgb, var(--lb-gold) 18%, transparent);
+  color: var(--lb-gold-deep);
+}
+:root[data-theme='dark'] .badge--record {
+  color: var(--lb-gold-soft);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .badge--record {
+    color: var(--lb-gold-soft);
+  }
+}
