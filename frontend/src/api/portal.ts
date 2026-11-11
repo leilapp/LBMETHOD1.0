@@ -153,6 +153,23 @@ export interface LoggedExercise {
   comment: string | null
   sets: LoggedSet[]
   media: PortalMedia[]
+  /** La vez pasada que hizo este ejercicio (solo referencia). La versión .NET no lo manda. */
+  previous?: PreviousExercise | null
+  /** Su mejor peso antes de este entrenamiento. La versión .NET no lo manda. */
+  best?: BestLift | null
+}
+
+export interface PreviousExercise {
+  date: string
+  sets: { setNumber: number; reps: number | null; weight: number | null; weightUnit: string | null }[]
+}
+
+export interface BestLift {
+  weight: number
+  weightUnit: string
+  weightKg: number
+  reps: number | null
+  date: string
 }
 
 export interface SessionDetail {

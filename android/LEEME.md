@@ -12,7 +12,8 @@ Se descarga desde el inicio de sesión de la app, en un teléfono Android: botó
 - Pone los videos a pantalla completa, y el botón «atrás» regresa a la pantalla anterior.
 - Usa la misma sesión segura que el navegador (cookie HttpOnly). No guarda contraseñas ni datos propios.
 - Sigue el tema del teléfono (claro u oscuro). Si eliges un tema dentro de la app, las barras del sistema cambian con él.
-- Requiere Android 10 o más nuevo. Versión actual: 1.2 (versionCode 3).
+- Vibra al terminar el descanso entre series (permiso de vibración, desde la versión 1.3).
+- Requiere Android 10 o más nuevo. Versión actual: 1.3 (versionCode 4).
 
 ## Instalarla en el teléfono
 

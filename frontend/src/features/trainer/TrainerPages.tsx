@@ -26,6 +26,7 @@ import { trackingApi, type TrainerDashboard } from '../../api/tracking'
 import { useExercises } from '../library/libraryQueries'
 import { MeasurementTypesSection } from '../tracking/TrackingPages'
 import { trackingKeys } from '../tracking/trackingModel'
+import { TrainerPendingCard } from '../notices/Notices'
 
 const clientsKey = ['trainer', 'clients'] as const
 
@@ -83,6 +84,8 @@ export function TrainerDashboardPage() {
           <QuickAction to="/entrenadora/calendario" icon={CalendarDays} label="Calendario" />
         </div>
       </section>
+
+      <TrainerPendingCard />
 
       <div className="tiles">
         <Link className="tile" to="/entrenadora/clientes">

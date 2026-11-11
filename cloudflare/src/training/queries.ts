@@ -94,6 +94,7 @@ export async function mediaFor(db: D1Database, exerciseIds: number[], mediaUrl: 
 
 interface DetailLogRow {
   id: number
+  client_id: number
   routine_assignment_id: number | null
   routine_title: string | null
   routine_version_number: number | null
@@ -151,7 +152,7 @@ interface DetailSetRow {
 export async function sessionDetail(db: D1Database, visible: Visible, id: number, mediaUrl: (id: number) => string) {
   const log = await db
     .prepare(
-      `SELECT l.id, l.routine_assignment_id, l.routine_title, l.routine_version_number, l.day_name, l.status, l.started_at, l.completed_at, l.comment
+      `SELECT l.id, l.client_id, l.routine_assignment_id, l.routine_title, l.routine_version_number, l.day_name, l.status, l.started_at, l.completed_at, l.comment
          FROM training_logs l WHERE l.id = ? AND (${visible.where})`,
     )
     .bind(id, ...visible.params)
@@ -170,6 +171,7 @@ export async function sessionDetail(db: D1Database, visible: Visible, id: number
   const setsOf = new Map<number, DetailSetRow[]>()
   for (const s of sets.results as DetailSetRow[]) setsOf.set(s.training_log_exercise_id, [...(setsOf.get(s.training_log_exercise_id) ?? []), s])
   const media = await mediaFor(db, [...new Set(exerciseRows.map((e) => e.exercise_id))], mediaUrl)
+  const history = await exerciseHistory(db, log.client_id, log.id, log.started_at)
   return {
     id: log.id,
     assignmentId: log.routine_assignment_id,
@@ -220,6 +222,79 @@ export async function sessionDetail(db: D1Database, visible: Visible, id: number
         notes: s.notes,
       })),
       media: media.get(e.exercise_id) ?? [],
+      previous: history.previous.get(e.exercise_id) ?? null,
+      best: history.best.get(e.exercise_id) ?? null,
     })),
   }
+}
+
+/** Kilos de un peso guardado en centésimas (1 lb = 0.45359237 kg), para comparar pesos registrados en distintas unidades. */
+export const kgOf = (centiValue: number, unitValue: number | null) => (unitValue === 2 ? (centiValue / 100) * 0.45359237 : centiValue / 100)
+
+export interface PreviousExercise {
+  date: string
+  sets: { setNumber: number; reps: number | null; weight: number | null; weightUnit: string | null }[]
+}
+export interface BestLift {
+  weight: number
+  weightUnit: string
+  weightKg: number
+  reps: number | null
+  date: string
+}
+
+/**
+ * Lo que el cliente hizo antes de este entrenamiento, por ejercicio: la última vez (series con algún valor) y su mejor
+ * peso. Solo cuenta entrenamientos finalizados y anteriores; es una referencia, nunca llena nada por el cliente.
+ */
+export async function exerciseHistory(db: D1Database, client: number, logId: number, startedAt: string) {
+  const [prev, best] = await db.batch([
+    db
+      .prepare(
+        `WITH candidates AS (
+           SELECT e.id AS lex_id, e.exercise_id, l.started_at,
+                  ROW_NUMBER() OVER (PARTITION BY e.exercise_id ORDER BY l.started_at DESC, l.id DESC, e.position) AS rn
+             FROM training_log_exercises e JOIN training_logs l ON l.id = e.training_log_id
+            WHERE l.client_id = ?1 AND l.status = 2 AND l.id <> ?2 AND l.started_at < ?3
+              AND e.exercise_id IN (SELECT exercise_id FROM training_log_exercises WHERE training_log_id = ?2)
+              AND EXISTS (SELECT 1 FROM training_log_sets s WHERE s.training_log_exercise_id = e.id AND (s.reps IS NOT NULL OR s.weight_centi IS NOT NULL)))
+         SELECT c.exercise_id, c.started_at, s.set_number, s.reps, s.weight_centi, s.weight_unit
+           FROM candidates c JOIN training_log_sets s ON s.training_log_exercise_id = c.lex_id
+          WHERE c.rn = 1 AND (s.reps IS NOT NULL OR s.weight_centi IS NOT NULL)
+          ORDER BY c.exercise_id, s.set_number`,
+      )
+      .bind(client, logId, startedAt),
+    db
+      .prepare(
+        `SELECT exercise_id, started_at, reps, weight_centi, weight_unit FROM (
+           SELECT e.exercise_id, l.started_at, s.reps, s.weight_centi, s.weight_unit,
+                  ROW_NUMBER() OVER (PARTITION BY e.exercise_id
+                    ORDER BY CASE WHEN s.weight_unit = 2 THEN s.weight_centi * 0.45359237 ELSE s.weight_centi END DESC, s.reps DESC, l.started_at) AS rn
+             FROM training_log_sets s JOIN training_log_exercises e ON e.id = s.training_log_exercise_id JOIN training_logs l ON l.id = e.training_log_id
+            WHERE l.client_id = ?1 AND l.status = 2 AND l.id <> ?2 AND l.started_at < ?3
+              AND e.exercise_id IN (SELECT exercise_id FROM training_log_exercises WHERE training_log_id = ?2)
+              AND s.weight_centi > 0 AND (s.reps IS NULL OR s.reps > 0))
+          WHERE rn = 1`,
+      )
+      .bind(client, logId, startedAt),
+  ])
+  type PrevRow = { exercise_id: number; started_at: string; set_number: number; reps: number | null; weight_centi: number | null; weight_unit: number | null }
+  type BestRow = { exercise_id: number; started_at: string; reps: number | null; weight_centi: number; weight_unit: number | null }
+  const previous = new Map<number, PreviousExercise>()
+  for (const r of prev.results as PrevRow[]) {
+    const item = previous.get(r.exercise_id) ?? { date: r.started_at, sets: [] }
+    item.sets.push({ setNumber: r.set_number, reps: r.reps, weight: weight(r.weight_centi), weightUnit: unit(r.weight_unit) })
+    previous.set(r.exercise_id, item)
+  }
+  const bestMap = new Map<number, BestLift>()
+  for (const r of best.results as BestRow[]) {
+    bestMap.set(r.exercise_id, {
+      weight: r.weight_centi / 100,
+      weightUnit: unit(r.weight_unit) ?? 'kg',
+      weightKg: Math.round(kgOf(r.weight_centi, r.weight_unit) * 100) / 100,
+      reps: r.reps,
+      date: r.started_at,
+    })
+  }
+  return { previous, best: bestMap }
 }

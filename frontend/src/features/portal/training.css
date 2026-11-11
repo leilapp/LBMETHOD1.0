@@ -368,3 +368,189 @@
   margin: 0;
   font-weight: 400;
 }
+
+/* ---------- Mejoras del 11/11/2026 ---------- */
+
+/* La vez pasada y mejor marca (solo referencia: nada se llena solo). */
+.log-ex__history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lb-space-1) var(--lb-space-3);
+  margin: var(--lb-space-1) 0 0;
+  font-size: var(--lb-text-sm);
+  color: var(--lb-lilac);
+}
+.log-set__before {
+  flex-basis: 100%;
+  font-size: var(--lb-text-sm);
+  color: var(--lb-lilac);
+}
+.badge--record {
+  margin-left: var(--lb-space-2);
+  border: 1px solid var(--lb-gold);
+  background: color-mix(in srgb, var(--lb-gold) 18%, transparent);
+  color: var(--lb-gold-deep);
+}
+:root[data-theme='dark'] .badge--record {
+  color: var(--lb-gold-soft);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .badge--record {
+    color: var(--lb-gold-soft);
+  }
+}
+.finish-records {
+  display: block;
+  margin-top: var(--lb-space-2);
+  font-weight: 600;
+}
+
+/* Cronómetro de descanso, dentro de la barra inferior del registro. */
+.session--resting {
+  padding-bottom: 240px;
+}
+.rest-timer {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--lb-space-2) var(--lb-space-3);
+  width: 100%;
+  padding: var(--lb-space-2) var(--lb-space-3);
+  border: 1px solid var(--lb-border-strong);
+  border-radius: var(--lb-radius);
+  background: var(--lb-surface-2);
+}
+.rest-timer__bar {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 4px;
+  background: var(--lb-gold);
+  transition: width 0.25s linear;
+}
+.rest-timer--done {
+  border-color: var(--lb-success);
+  background: var(--lb-success-bg);
+}
+.rest-timer--done .rest-timer__bar {
+  background: var(--lb-success);
+}
+.rest-timer__main {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 0 var(--lb-space-3);
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.rest-timer__label {
+  font-weight: 600;
+}
+.rest-timer__time {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.rest-timer__what {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--lb-text-xs);
+  color: var(--lb-text-muted);
+}
+.rest-timer__actions {
+  display: flex;
+  gap: var(--lb-space-1);
+}
+.rest-timer__btn {
+  min-height: 44px;
+  min-width: 56px;
+  padding: 0 var(--lb-space-2);
+  border: 1px solid var(--lb-border-strong);
+  border-radius: var(--lb-radius);
+  background: var(--lb-surface);
+  color: var(--lb-text);
+  font: inherit;
+  font-size: var(--lb-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.rest-timer__btn:focus-visible {
+  outline: none;
+  box-shadow: var(--lb-focus);
+}
+
+/* Modo gimnasio: un ejercicio a la vez y todo más grande. */
+.gym-toggle .segmented {
+  max-width: 420px;
+}
+.gym-toggle .segmented button {
+  min-height: 40px;
+  font-size: var(--lb-text-sm);
+}
+.gym-steps {
+  display: grid;
+  gap: var(--lb-space-2);
+}
+.gym-steps__count {
+  margin: 0;
+  font-weight: 600;
+}
+.gym-steps__dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lb-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gym-dot {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--lb-border-strong);
+  border-radius: 50%;
+  background: var(--lb-surface-2);
+  color: var(--lb-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gym-dot--done {
+  border-color: var(--lb-success);
+  background: var(--lb-success-bg);
+  color: var(--lb-success);
+}
+.gym-dot--current {
+  border-width: 2px;
+  border-color: var(--lb-gold);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--lb-gold) 35%, transparent);
+}
+.gym-dot:focus-visible {
+  outline: none;
+  box-shadow: var(--lb-focus);
+}
+.session--gym .log-ex__name {
+  font-size: 1.35rem;
+}
+.session--gym .log-input,
+.session--gym .unit-toggle {
+  min-height: 60px;
+  font-size: 1.4rem;
+}
+.session--gym .set-check {
+  width: 64px;
+  height: 60px;
+  font-size: 1.6rem;
+}
+.gym-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--lb-space-2);
+}
+.gym-nav .btn {
+  min-height: 56px;
+  font-size: 1.05rem;
+}

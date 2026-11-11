@@ -13,7 +13,7 @@
     "backup": "node scripts/backup.mjs",
     "restore": "node scripts/restore.mjs",
     "create-trainer": "node scripts/create-trainer.mjs",
-    "test": "node --test --test-concurrency=1 --test-reporter=spec test/api.test.mjs test/biblioteca.test.mjs test/rutinas.test.mjs test/clientes.test.mjs test/portal.test.mjs test/seguimiento.test.mjs test/exportaciones.test.mjs test/auditoria.test.mjs test/ejercicios-base.test.mjs test/configuraciones.test.mjs",
+    "test": "node --test --test-concurrency=1 --test-reporter=spec test/api.test.mjs test/biblioteca.test.mjs test/rutinas.test.mjs test/clientes.test.mjs test/portal.test.mjs test/seguimiento.test.mjs test/exportaciones.test.mjs test/auditoria.test.mjs test/ejercicios-base.test.mjs test/configuraciones.test.mjs test/mejoras.test.mjs",
     "typecheck": "tsc --noEmit",
     "db:seed:ejercicios:local": "node scripts/ejercicios-base.mjs && wrangler d1 execute lbmethod --local --file seeds/ejercicios-base.sql",
     "db:seed:ejercicios:remote": "node scripts/ejercicios-base.mjs && node scripts/backup.mjs && wrangler d1 execute lbmethod --remote --file seeds/ejercicios-base.sql"

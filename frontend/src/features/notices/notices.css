@@ -1,0 +1,67 @@
+/* Pendientes de la entrenadora y avisos al cliente (11/11/2026). */
+.pending {
+  grid-column: 1 / -1;
+}
+.pending__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  margin-left: var(--lb-space-2);
+  padding: 0 var(--lb-space-2);
+  border-radius: 999px;
+  background: var(--lb-gold);
+  color: #1d1630;
+  font-size: var(--lb-text-sm);
+  font-weight: 700;
+  vertical-align: middle;
+}
+.pending__groups {
+  display: grid;
+  gap: var(--lb-space-4);
+}
+@media (min-width: 900px) {
+  .pending__groups {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+.pending__title {
+  display: flex;
+  align-items: center;
+  gap: var(--lb-space-2);
+  margin: 0 0 var(--lb-space-2);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--lb-text-muted);
+}
+.pending__row {
+  align-items: flex-start;
+}
+.pending__quote {
+  display: block;
+  margin-top: 2px;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+.pending__seen {
+  flex: none;
+  min-height: 36px;
+}
+.portal-notices .card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--lb-space-2);
+}
+.portal-notices--new {
+  border-color: var(--lb-gold);
+  box-shadow: 0 0 0 1px var(--lb-gold);
+}
+.note--new .note__text {
+  font-weight: 600;
+}
+.portal-notices__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--lb-space-3);
+}

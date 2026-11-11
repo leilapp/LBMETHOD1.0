@@ -1,3 +1,4 @@
+import { PortalMessagesCard } from '../notices/Notices'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { portalApi, type PortalAssignment } from '../../api/endpoints'
@@ -47,6 +48,7 @@ export function PortalHomePage() {
         </div>
       </section>
       <div className="grid-cards portal-home__cards">
+        <PortalMessagesCard />
         <TrainingHomeCards />
         <CurrentProgramCard />
       </div>

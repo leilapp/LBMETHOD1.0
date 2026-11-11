@@ -60,3 +60,20 @@ export function setTarget(s: { repsMin: number | null; repsMax: number | null; w
   if (s.rpe !== null) parts.push(`RPE ${s.rpe}`)
   return parts.join(' · ')
 }
+
+/** «10 × 60 kg», «10 reps» o «60 kg». */
+export const lift = (reps: number | null, w: number | null, u: string | null) =>
+  [reps !== null ? `${reps}${w !== null ? ' ×' : ' reps'}` : null, w !== null ? `${w} ${u ?? 'kg'}` : null].filter(Boolean).join(' ')
+
+const toKg = (w: number, unit: number) => (unit === 2 ? w * 0.45359237 : w)
+const parseNum = (v: string) => (v.trim() === '' ? null : Number(v.replace(',', '.')))
+
+/** ¿Esta serie supera el mejor peso que el cliente tenía en este ejercicio? (solo si ya tenía uno). */
+export function isNewRecord(e: Pick<ExerciseDraft, 'best'>, s: Pick<SetDraft, 'weight' | 'reps' | 'unit'>) {
+  if (!e.best) return false
+  const w = parseNum(s.weight)
+  const reps = parseNum(s.reps)
+  if (w === null || !Number.isFinite(w) || w <= 0 || reps === 0) return false
+  return toKg(w, s.unit) > e.best.weightKg + 0.001
+}
+

@@ -15,6 +15,7 @@ import { catalogs } from './library/catalogs'
 import { exercises } from './library/exercises'
 import { importExport } from './library/import-export'
 import { exerciseMedia, mediaContent } from './library/media'
+import { portalNotices, trainerNotices } from './notices/notices'
 import { loadSession, requireCsrf, requireRole } from './session'
 import type { AppBindings } from './types'
 
@@ -44,10 +45,12 @@ api.route('/trainer/routines', routines)
 api.route('/trainer/routines', routineAssignments)
 api.route('/trainer/calendar', calendarEvents)
 api.route('/trainer', trackingTrainer)
+api.route('/trainer', trainerNotices)
 api.route('/trainer/exports', excelExports)
 api.route('/portal', portalProfile)
 api.route('/portal', portalTraining)
 api.route('/portal', trackingPortal)
+api.route('/portal', portalNotices)
 
 // Lo que aún no se migra responde 501 con un mensaje claro (con la misma regla de sesión y rol que tendrá).
 api.all('*', requireRole(), (c) =>

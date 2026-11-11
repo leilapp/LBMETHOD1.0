@@ -39,3 +39,8 @@ export function initials(name: string | null | undefined) {
 export function todayLong(now = new Date()) {
   return now.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', weekday: 'long', day: 'numeric', month: 'long' })
 }
+
+/** Día corto («3 nov») de una fecha y hora guardada en UTC, en la hora del centro de México. */
+export function shortDay(isoUtc: string) {
+  return new Date(isoUtc).toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', day: 'numeric', month: 'short' })
+}
