@@ -79,6 +79,22 @@
 
   --lb-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
   --lb-focus: 0 0 0 3px rgb(212 176 106 / 0.45);
+
+  /* Piezas siempre oscuras: tarjeta principal, inicio de sesión y botón principal (cambian con el estilo oscuro, palettes.css) */
+  --lb-hero-bg:
+    radial-gradient(ellipse 60% 70% at 100% 0%, rgb(212 176 106 / 0.28), transparent 65%),
+    radial-gradient(ellipse 50% 60% at 0% 100%, rgb(141 106 208 / 0.4), transparent 70%),
+    linear-gradient(135deg, #150e24 0%, #261842 50%, #3d2770 100%);
+  --lb-hero-shadow: 0 18px 40px rgb(38 24 66 / 0.35);
+  --lb-auth-glow: rgb(141 106 208 / 0.32);
+  --lb-auth-panel-top: rgb(26 21 36 / 0.88);
+  --lb-auth-panel-bottom: rgb(14 11 20 / 0.92);
+  --lb-auth-edge-mid: rgb(70 58 95 / 0.5);
+  --lb-auth-edge-end: rgb(141 106 208 / 0.55);
+  --lb-auth-halo: rgb(141 106 208 / 0.12);
+  --lb-primary-bg: linear-gradient(135deg, #e9d29c 0%, #d4b06a 45%, #b78f4c 100%);
+  --lb-primary-bg-hover: linear-gradient(135deg, #f3e3b8 0%, #ddbb76 45%, #c49a52 100%);
+  --lb-primary-glow: rgb(212 176 106 / 0.25);
 }
 
 /* ---------- Tema claro (se repite: una vez para «sigue al sistema» y otra para «claro» elegido a mano) ---------- */

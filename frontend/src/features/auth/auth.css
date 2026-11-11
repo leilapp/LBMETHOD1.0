@@ -6,7 +6,7 @@
   place-items: center;
   padding: var(--lb-space-5) var(--lb-space-4);
   background:
-    radial-gradient(ellipse 70% 45% at 50% -5%, rgb(141 106 208 / 0.32), transparent 70%),
+    radial-gradient(ellipse 70% 45% at 50% -5%, var(--lb-auth-glow), transparent 70%),
     radial-gradient(ellipse 50% 35% at 15% 100%, rgb(227 183 192 / 0.1), transparent 70%),
     radial-gradient(ellipse 55% 40% at 95% 85%, rgb(212 176 106 / 0.12), transparent 70%),
     var(--lb-black);
@@ -22,11 +22,11 @@
   gap: var(--lb-space-5);
   padding: var(--lb-space-6) var(--lb-space-5);
   background:
-    linear-gradient(180deg, rgb(26 21 36 / 0.88), rgb(14 11 20 / 0.92)) padding-box,
-    linear-gradient(160deg, rgb(246 232 195 / 0.75), rgb(212 176 106 / 0.35) 25%, rgb(70 58 95 / 0.5) 60%, rgb(141 106 208 / 0.55)) border-box;
+    linear-gradient(180deg, var(--lb-auth-panel-top), var(--lb-auth-panel-bottom)) padding-box,
+    linear-gradient(160deg, rgb(246 232 195 / 0.75), rgb(212 176 106 / 0.35) 25%, var(--lb-auth-edge-mid) 60%, var(--lb-auth-edge-end)) border-box;
   border: 1px solid transparent;
   border-radius: 20px;
-  box-shadow: 0 20px 60px rgb(0 0 0 / 0.55), 0 0 80px rgb(141 106 208 / 0.12);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.55), 0 0 80px var(--lb-auth-halo);
   backdrop-filter: blur(10px);
 }
 

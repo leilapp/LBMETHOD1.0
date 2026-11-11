@@ -280,4 +280,23 @@ describe('estilo app de Android', () => {
     expect(document.documentElement).not.toHaveAttribute('data-theme')
     expect(localStorage.getItem('lb-theme')).toBeNull()
   })
+
+  it('se puede elegir el estilo del modo oscuro', async () => {
+    const user = userEvent.setup()
+    mockApi({
+      'GET /api/auth/me': () => ({ status: 200, body: trainerSession }),
+      'GET /api/trainer/clients': () => ({ status: 200, body: [] }),
+    })
+    renderApp('/entrenadora/calendario')
+    await screen.findByRole('navigation', { name: 'Navegación principal' })
+    expect(document.documentElement).not.toHaveAttribute('data-palette')
+    await user.click(screen.getAllByRole('button', { name: 'Grafito y oro' })[0])
+    expect(document.documentElement).toHaveAttribute('data-palette', 'grafito')
+    expect(localStorage.getItem('lb-dark-palette')).toBe('grafito')
+    await user.click(screen.getAllByRole('button', { name: 'Ciruela y oro rosa' })[0])
+    expect(document.documentElement).toHaveAttribute('data-palette', 'ciruela')
+    await user.click(screen.getAllByRole('button', { name: 'Noche y amatista' })[0])
+    expect(document.documentElement).not.toHaveAttribute('data-palette')
+    expect(localStorage.getItem('lb-dark-palette')).toBeNull()
+  })
 })

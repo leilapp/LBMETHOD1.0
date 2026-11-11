@@ -1,4 +1,5 @@
 @import './tokens.css';
+@import './palettes.css';
 
 *,
 *::before,
@@ -181,9 +182,9 @@ a:hover {
 .btn--primary {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #e9d29c 0%, #d4b06a 45%, #b78f4c 100%);
+  background: var(--lb-primary-bg);
   color: #1d1505;
-  box-shadow: 0 4px 18px rgb(212 176 106 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.45);
+  box-shadow: 0 4px 18px var(--lb-primary-glow), inset 0 1px 0 rgb(255 255 255 / 0.45);
 }
 /* Destello que cruza el botón de vez en cuando */
 .btn--primary::after {
@@ -195,7 +196,7 @@ a:hover {
   animation: lb-sweep 5.5s ease-in-out infinite;
 }
 .btn--primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #f3e3b8 0%, #ddbb76 45%, #c49a52 100%);
+  background: var(--lb-primary-bg-hover);
   box-shadow: 0 6px 24px rgb(212 176 106 / 0.4), inset 0 1px 0 rgb(255 255 255 / 0.5);
 }
 @keyframes lb-sweep {
@@ -688,11 +689,8 @@ textarea.input {
   padding: var(--lb-space-5);
   border-radius: var(--lb-radius-xl);
   color: var(--lb-text);
-  background:
-    radial-gradient(ellipse 60% 70% at 100% 0%, rgb(212 176 106 / 0.28), transparent 65%),
-    radial-gradient(ellipse 50% 60% at 0% 100%, rgb(141 106 208 / 0.4), transparent 70%),
-    linear-gradient(135deg, #150e24 0%, #261842 50%, #3d2770 100%);
-  box-shadow: 0 18px 40px rgb(38 24 66 / 0.35);
+  background: var(--lb-hero-bg);
+  box-shadow: var(--lb-hero-shadow);
 }
 .hero::after {
   /* Monograma del logo de fondo, muy sutil */
@@ -941,6 +939,58 @@ a.tile:hover {
   background: var(--lb-surface);
   color: var(--lb-text);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+}
+
+/* Selector del estilo oscuro (muestras redondas con los colores de cada estilo) */
+.palette-picker {
+  display: grid;
+  gap: var(--lb-space-2);
+}
+.palette-picker__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--lb-space-2);
+  font-size: var(--lb-text-xs);
+}
+.palette-picker__title {
+  font-weight: 600;
+  color: var(--lb-text);
+}
+.palette-picker__name {
+  color: var(--lb-text-muted);
+}
+.palette-picker__options {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--lb-space-2);
+}
+.palette-swatch {
+  display: grid;
+  place-items: center;
+  width: var(--lb-touch);
+  height: var(--lb-touch);
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--lb-border-strong);
+  color: #fff;
+  cursor: pointer;
+}
+.palette-swatch[aria-pressed='true'] {
+  border-color: var(--lb-gold);
+  box-shadow: var(--lb-focus);
+}
+.palette-swatch--amatista {
+  background: radial-gradient(circle at 70% 30%, #d4b06a 0 18%, transparent 19%), linear-gradient(135deg, #07060b 0%, #261842 55%, #5b3c94 100%);
+}
+.palette-swatch--grafito {
+  background: radial-gradient(circle at 70% 30%, #d4b06a 0 18%, transparent 19%), linear-gradient(135deg, #0b0b0c 0%, #1e1e20 55%, #3a352c 100%);
+}
+.palette-swatch--medianoche {
+  background: radial-gradient(circle at 70% 30%, #d4b06a 0 18%, transparent 19%), linear-gradient(135deg, #060a14 0%, #13203d 55%, #2f4c8c 100%);
+}
+.palette-swatch--ciruela {
+  background: radial-gradient(circle at 70% 30%, #dea88c 0 18%, transparent 19%), linear-gradient(135deg, #0e080b 0%, #33162a 55%, #7a3158 100%);
 }
 
 /* Chips de filtro (píldoras seleccionables) */
