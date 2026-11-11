@@ -6,16 +6,10 @@ import { useSession } from '../../app/session'
 import { ThemeSwitch } from '../../layouts/AppShell'
 import { ChangePasswordForm } from '../auth/AuthPages'
 import { formatDate, initials, todayLong } from '../../lib/format'
-import { CalendarDays, Dumbbell, History, TrendingUp } from 'lucide-react'
-import { TrainingHomeCards } from './TrainingPages'
+import { ChevronRight } from 'lucide-react'
+import { TodayWorkout, TrainingHomeCards } from './TrainingPages'
 
 const profileKey = ['portal', 'profile'] as const
-const QUICK = [
-  { to: '/portal/rutina', label: 'Mi rutina', icon: Dumbbell },
-  { to: '/portal/entrenamientos', label: 'Historial', icon: History },
-  { to: '/portal/progreso', label: 'Progreso', icon: TrendingUp },
-  { to: '/portal/calendario', label: 'Calendario', icon: CalendarDays },
-]
 const assignmentsKey = ['portal', 'assignments'] as const
 
 export function PortalHomePage() {
@@ -34,17 +28,7 @@ export function PortalHomePage() {
             <p className="hero__date">{todayLong()}</p>
           </div>
         </div>
-        <p className="hero__label">Te damos la bienvenida a tu espacio de entrenamiento</p>
-        <div className="quick-actions" role="group" aria-label="Accesos rápidos de inicio">
-          {QUICK.map(({ to, label, icon: Icon }) => (
-            <Link key={to} className="quick-action" to={to}>
-              <span className="quick-action__icon" aria-hidden="true">
-                <Icon size={22} />
-              </span>
-              {label}
-            </Link>
-          ))}
-        </div>
+        <TodayWorkout />
       </section>
       <div className="grid-cards portal-home__cards">
         <TrainingHomeCards />
@@ -65,7 +49,7 @@ function CurrentProgramCard() {
   return (
     <section className="card" aria-labelledby="programa-actual">
       <h2 className="card__title" id="programa-actual">
-        Rutina vigente
+        Mi rutina
       </h2>
       {isPending ? (
         <LoadingState />
@@ -76,15 +60,17 @@ function CurrentProgramCard() {
       ) : (
         <div className="stack">
           {current.map((a) => (
-            <div key={a.id}>
-              <p className="portal-program__name">
-                {a.routineName} <span className={`badge ${a.status === 'Active' ? 'badge--success' : 'badge--pending'}`}>{a.statusLabel}</span>
-              </p>
-              <p className="muted">{period(a)}</p>
-              {a.notes && <p className="portal-program__notes">{a.notes}</p>}
-            </div>
+            <Link key={a.id} className="list-item list-item--link list-item--flat" to="/portal/rutina">
+              <span className="list-item__main">
+                <span className="list-item__title">
+                  {a.routineName} <span className={`badge ${a.status === 'Active' ? 'badge--success' : 'badge--pending'}`}>{a.statusLabel}</span>
+                </span>
+                <span className="list-item__meta">{period(a)} · ver días y ejercicios</span>
+                {a.notes && <span className="portal-program__notes">{a.notes}</span>}
+              </span>
+              <ChevronRight className="list-item__chev" size={20} aria-hidden="true" />
+            </Link>
           ))}
-          <Link to="/portal/rutina">Ver días y ejercicios</Link>
         </div>
       )}
     </section>

@@ -111,8 +111,9 @@ describe('inicio del portal', () => {
     })
     const user = userEvent.setup()
     renderApp('/portal')
-    const next = (await screen.findByRole('heading', { name: 'Próximo entrenamiento' })).closest('section')!
-    expect(await within(next).findByText('Día B · Pierna')).toBeInTheDocument()
+    // Lo primero en el inicio: qué le toca y el botón para empezar, dentro de la tarjeta principal.
+    const next = (await screen.findByText('Te toca', { selector: '.today__eyebrow' })).closest('.today') as HTMLElement
+    expect(within(next).getByText('Día B · Pierna')).toBeInTheDocument()
     const last = screen.getByRole('heading', { name: 'Último entrenamiento' }).closest('section')!
     expect(within(last).getByText('Día A · Glúteo')).toBeInTheDocument()
     expect(within(last).getByText(/2 de 2 ejercicios · 7 series/)).toBeInTheDocument()
@@ -145,6 +146,10 @@ describe('mi rutina', () => {
     })
     const user = userEvent.setup()
     renderApp('/portal/rutina')
+    // Los días están plegados: se ve el botón para empezar y, al tocar el día, sus ejercicios.
+    expect(await screen.findByRole('button', { name: 'Empezar Día A · Glúteo' })).toBeInTheDocument()
+    expect(screen.queryByText('Hip thrust')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /^Día A · Glúteo/ }))
     await screen.findByText('Hip thrust')
     const items = screen.getAllByRole('listitem')
     const exercises = items.filter((li) => li.classList.contains('program-ex'))
@@ -212,11 +217,12 @@ describe('registro del entrenamiento', () => {
     await user.click(screen.getByRole('button', { name: 'Serie 1 de Hip thrust hecha' }))
     await user.click(screen.getByRole('button', { name: '+ Serie extra' }))
     await user.type(screen.getByLabelText('Repeticiones de la serie 3 de Hip thrust'), '6')
-    await user.click(screen.getByRole('checkbox', { name: 'Ejercicio completado' }))
+    await user.click(screen.getByRole('checkbox', { name: /^Ejercicio completado/ }))
     await user.type(screen.getByLabelText('Comentario del entrenamiento'), 'Bien')
 
-    await user.click(screen.getByRole('button', { name: 'Guardar' }))
-    await waitFor(() => expect(saves.length).toBeGreaterThan(0))
+    // Ya no hay botón «Guardar»: todo se guarda solo.
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument()
+    await waitFor(() => expect((saves.at(-1) as { comment?: string } | undefined)?.comment).toBe('Bien'), { timeout: 4000 })
     expect(saves.at(-1)).toEqual({
       comment: 'Bien',
       exercises: [
@@ -234,10 +240,10 @@ describe('registro del entrenamiento', () => {
     })
     expect(await screen.findByText(/Guardado/)).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Finalizar' }))
+    await user.click(screen.getByRole('button', { name: 'Terminar entrenamiento' }))
     const dialog = await screen.findByRole('dialog')
     expect(dialog).toHaveTextContent('¡Completaste todos los ejercicios!')
-    await user.click(within(dialog).getByRole('button', { name: 'Finalizar' }))
+    await user.click(within(dialog).getByRole('button', { name: 'Terminar' }))
     expect(await screen.findByRole('heading', { name: /Hola, Ana Cliente/ })).toBeInTheDocument()
     expect(calls.some((c) => c.key === 'POST /api/portal/sessions/40/finish')).toBe(true)
   })
@@ -254,7 +260,7 @@ describe('registro del entrenamiento', () => {
     expect(await screen.findByLabelText('Repeticiones de la serie 1 de Hip thrust')).toHaveValue('9')
     expect(screen.getByLabelText('Peso de la serie 1 de Hip thrust')).toBeDisabled()
     expect(screen.getByText(/Entrenamiento finalizado/)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Finalizar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Terminar entrenamiento' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '+ Serie extra' })).not.toBeInTheDocument()
   })
 

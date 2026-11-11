@@ -119,7 +119,7 @@ describe('rutinas', () => {
     })
     renderApp('/entrenadora/rutinas')
     const list = await screen.findByRole('list', { name: 'Rutinas' })
-    expect(within(list).getByRole('link', { name: 'Glúteo 6 semanas' })).toHaveAttribute('href', '/entrenadora/rutinas/3')
+    expect(within(list).getByRole('link', { name: /Glúteo 6 semanas/ })).toHaveAttribute('href', '/entrenadora/rutinas/3')
     expect(screen.queryByText(/Pendiente · Fase/)).not.toBeInTheDocument()
   })
 
@@ -130,7 +130,8 @@ describe('rutinas', () => {
 
     const day = await screen.findByRole('region', { name: 'Día 1: Día 1 - Glúteo' })
     await user.click(within(day).getByRole('button', { name: 'Bajar Hip thrust' }))
-    await user.click(screen.getByRole('button', { name: 'Guardar borrador' }))
+    await user.click(screen.getByRole('button', { name: 'Más acciones del borrador' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Guardar ahora' }))
     await screen.findByText('Borrador guardado.')
 
     const sent = bodyOf(calls, `PUT ${base}/3/draft`)!
@@ -138,6 +139,33 @@ describe('rutinas', () => {
     expect(sent.days[0].exercises.map((e) => e.exerciseId)).toEqual([2, 1, 3])
     expect(sent.days[0].exercises[0].supersetGroup).toBe('A')
     expect(sent.days[0].dayOfWeek).toBe(1)
+  })
+
+  it('el borrador se guarda solo unos segundos después de cada cambio', async () => {
+    const calls = mockApi(builderRoutes({ [`PUT ${base}/3/draft`]: () => ({ status: 204 }) }))
+    const user = userEvent.setup()
+    renderApp('/entrenadora/rutinas/3/editar')
+
+    const day = await screen.findByRole('region', { name: 'Día 1: Día 1 - Glúteo' })
+    expect(screen.getByText('✓ Borrador guardado')).toBeInTheDocument()
+    await user.click(within(day).getByRole('button', { name: 'Bajar Hip thrust' }))
+    expect(screen.getByText('Guardando en un momento…')).toBeInTheDocument()
+    await waitFor(() => expect(calls.some((c) => c.key === `PUT ${base}/3/draft`)).toBe(true), { timeout: 5000 })
+    expect(await screen.findByText('✓ Borrador guardado')).toBeInTheDocument()
+    expect(bodyOf(calls, `PUT ${base}/3/draft`)!.days[0].exercises.map((e) => e.exerciseId)).toEqual([2, 1, 3])
+  })
+
+  it('las acciones del día (subir, bajar, duplicar, quitar) están en su menú ⋮', async () => {
+    mockApi(builderRoutes())
+    const user = userEvent.setup()
+    renderApp('/entrenadora/rutinas/3/editar')
+
+    const day = await screen.findByRole('region', { name: 'Día 1: Día 1 - Glúteo' })
+    await user.click(within(day).getByRole('button', { name: 'Acciones de Día 1 - Glúteo' }))
+    const menu = within(day).getByRole('menu')
+    expect(within(menu).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(expect.arrayContaining(['Duplicar día', 'Quitar día']))
+    await user.click(within(menu).getByRole('menuitem', { name: 'Duplicar día' }))
+    expect(await screen.findByRole('region', { name: /Día 2: Día 1 - Glúteo \(copia\)/ })).toBeInTheDocument()
   })
 
   it('un ejercicio recién agregado no trae valores inventados y exige las series', async () => {
@@ -164,7 +192,8 @@ describe('rutinas', () => {
     expect(within(params).getByLabelText('Reps mín.')).toHaveValue('')
     expect(within(params).getByLabelText('Descanso (s)')).toHaveValue('')
 
-    await user.click(screen.getByRole('button', { name: 'Guardar borrador' }))
+    await user.click(screen.getByRole('button', { name: 'Más acciones del borrador' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Guardar ahora' }))
     expect(await within(params).findByText('Indica las series.')).toBeInTheDocument()
     expect(calls.some((c) => c.key === `PUT ${base}/3/draft`)).toBe(false)
   })
@@ -198,7 +227,8 @@ describe('rutinas', () => {
     renderApp('/entrenadora/rutinas/3/editar')
 
     await screen.findByRole('region', { name: 'Día 1: Día 1 - Glúteo' })
-    await user.click(screen.getByRole('button', { name: 'Vista previa' }))
+    await user.click(screen.getByRole('button', { name: 'Más acciones del borrador' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Vista previa' }))
     const preview = await screen.findByRole('dialog', { name: 'Vista previa' })
     expect(within(preview).getByText('Día 1 - Glúteo')).toBeInTheDocument()
     expect(within(preview).getByText('Lunes')).toBeInTheDocument()

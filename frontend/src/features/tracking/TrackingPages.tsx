@@ -3,7 +3,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { clientsApi } from '../../api/clients'
 import { portalTrackingApi, trackingApi, type Evaluation, type Measurement, type MeasurementType } from '../../api/tracking'
-import { Alert, Button, EmptyState, ErrorState, LoadingState, Modal, PageHeader, SelectField, TextAreaField, TextField } from '../../components/ui'
+import { BackLink, Alert, Button, EmptyState, ErrorState, LoadingState, Modal, MoreMenu, PageHeader, SelectField, TextAreaField, TextField } from '../../components/ui'
+import { ChevronRight, FileSpreadsheet } from 'lucide-react'
+import { api } from '../../api/client'
+import { useTask } from '../../components/useTask'
 import { DownloadButton } from '../../components/DownloadButton'
 import { formatDate, formatDateTime, todayInMexico } from '../../lib/format'
 import { clientKeys } from '../clients/clientModel'
@@ -80,6 +83,7 @@ export function ClientTrackingPage() {
   const photos = useQuery({ queryKey: trackingKeys.photos(id), queryFn: () => trackingApi.photos(id) })
   const [modal, setModal] = useState<'evaluation' | 'photo' | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const exporting = useTask('No se pudo descargar el archivo.')
 
   if (profile.isPending) return <LoadingState label="Cargando seguimiento…" />
   if (profile.error) return <ErrorState message={profile.error.message} onRetry={() => profile.refetch()} />
@@ -90,25 +94,31 @@ export function ClientTrackingPage() {
 
   return (
     <>
-      <p className="breadcrumb">
-        <Link to="/entrenadora/seguimiento">← Seguimiento</Link> · <Link to={`/entrenadora/clientes/${id}`}>Ficha de {c.firstName}</Link>
-      </p>
+      <BackLink to={`/entrenadora/clientes/${id}`} label={`Ficha de ${c.firstName}`} />
       <PageHeader
         title={`Seguimiento de ${name}`}
         actions={
-          <div className="page-actions">
-            <DownloadButton path={`/api/trainer/exports/evaluations?clientId=${id}`} fileName="evaluaciones-lbmethod.xlsx" label={`Exportar evaluaciones de ${name} a Excel`}>
-              Exportar a Excel
-            </DownloadButton>
+          <div className="head-actions">
+            <Button onClick={() => setModal('evaluation')}>Nueva evaluación</Button>
             <Button variant="secondary" onClick={() => setModal('photo')}>
               Subir foto
             </Button>
-            <Button onClick={() => setModal('evaluation')}>Nueva evaluación</Button>
+            <MoreMenu
+              items={[
+                {
+                  label: exporting.pending ? 'Descargando…' : 'Exportar evaluaciones a Excel',
+                  icon: FileSpreadsheet,
+                  disabled: exporting.pending,
+                  onSelect: () => exporting.run(() => api.download(`/api/trainer/exports/evaluations?clientId=${id}`, 'evaluaciones-lbmethod.xlsx')),
+                },
+              ]}
+            />
           </div>
         }
       />
       <div className="stack">
         {notice && <Alert kind="success">{notice}</Alert>}
+        {exporting.error && <Alert kind="error">{exporting.error}</Alert>}
         {loading ? (
           <LoadingState />
         ) : error ? (
@@ -449,7 +459,7 @@ function PhotoModal({ clientId, evaluations, onClose, onSaved }: { clientId: num
   )
 }
 
-function SessionsCard({ clientId }: { clientId: number }) {
+export function SessionsCard({ clientId, limit = 30 }: { clientId: number; limit?: number }) {
   const sessions = useQuery({ queryKey: trackingKeys.sessions(clientId), queryFn: () => trackingApi.sessions(clientId) })
   return (
     <section className="card" aria-labelledby="entrenamientos">
@@ -464,17 +474,20 @@ function SessionsCard({ clientId }: { clientId: number }) {
         <p className="muted">Aún no registra entrenamientos.</p>
       ) : (
         <ul className="list" aria-label="Entrenamientos registrados">
-          {sessions.data.slice(0, 30).map((s) => (
-            <li key={s.id} className="list-item">
-              <div className="list-item__main">
-                <span className="list-item__title">
-                  <Link to={`/entrenadora/clientes/${clientId}/entrenamientos/${s.id}`}>{s.dayName}</Link>{' '}
-                  <span className={`badge ${s.status === 'Completed' ? 'badge--success' : 'badge--pending'}`}>{s.status === 'Completed' ? 'Finalizado' : 'En curso'}</span>
+          {sessions.data.slice(0, limit).map((s) => (
+            <li key={s.id}>
+              <Link className="list-item list-item--link" to={`/entrenadora/clientes/${clientId}/entrenamientos/${s.id}`}>
+                <span className="list-item__main">
+                  <span className="list-item__title">
+                    {s.dayName}{' '}
+                    <span className={`badge ${s.status === 'Completed' ? 'badge--success' : 'badge--pending'}`}>{s.status === 'Completed' ? 'Finalizado' : 'En curso'}</span>
+                  </span>
+                  <span className="list-item__meta">
+                    {formatDateTime(s.startedAt)} · {s.exercisesCompleted} de {s.exercisesTotal} ejercicios · {s.setsCompleted} series
+                  </span>
                 </span>
-                <span className="list-item__meta">
-                  {formatDateTime(s.startedAt)} · {s.exercisesCompleted} de {s.exercisesTotal} ejercicios · {s.setsCompleted} series
-                </span>
-              </div>
+                <ChevronRight className="list-item__chev" size={20} aria-hidden="true" />
+              </Link>
             </li>
           ))}
         </ul>
@@ -496,9 +509,7 @@ export function TrainerSessionPage() {
   const s = session.data
   return (
     <>
-      <p className="breadcrumb">
-        <Link to={`/entrenadora/clientes/${clientId}/seguimiento`}>← Seguimiento</Link>
-      </p>
+      <BackLink to={`/entrenadora/clientes/${clientId}/seguimiento`} label="Seguimiento" />
       <PageHeader
         title={s.dayName ?? 'Entrenamiento'}
         subtitle={`${s.routineTitle ?? ''}${s.versionNumber ? ` · versión ${s.versionNumber}` : ''} · ${s.status === 'Completed' ? `Finalizado ${formatDateTime(s.completedAt ?? s.startedAt)}` : `En curso desde ${formatDateTime(s.startedAt)}`}`}

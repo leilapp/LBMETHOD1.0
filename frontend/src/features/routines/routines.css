@@ -370,3 +370,43 @@
   display: grid;
   gap: 2px;
 }
+.routine-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--lb-space-3);
+}
+
+/* Encabezado del día: músculo principal a la izquierda, menú ⋮ (subir, bajar, duplicar, quitar) a la derecha */
+.day__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--lb-space-2);
+}
+.day__top .day-muscle {
+  margin: 0;
+}
+.day__menu {
+  margin-left: auto;
+}
+.builder-bar__save--warn {
+  color: var(--lb-warning);
+}
+.builder-bar__actions {
+  flex-wrap: nowrap;
+}
+@media (max-width: 900px) {
+  .builder-bar__status {
+    flex: 1 1 100%;
+  }
+  .builder-bar__actions {
+    width: 100%;
+  }
+  .builder-bar__actions .btn {
+    flex: 1;
+    min-height: 44px;
+  }
+  .builder {
+    padding-bottom: 110px;
+  }
+}

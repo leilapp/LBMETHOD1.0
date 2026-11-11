@@ -24,7 +24,6 @@ import {
   Dumbbell,
   History,
   House,
-  LayoutTemplate,
   Settings,
   TrendingUp,
   UserRound,
@@ -35,9 +34,9 @@ import {
 const trainerNav: NavItem[] = [
   { to: '/entrenadora', label: 'Inicio', icon: House, primary: true, end: true },
   { to: '/entrenadora/clientes', label: 'Clientes', icon: Users, primary: true },
-  { to: '/entrenadora/biblioteca', label: 'Biblioteca', icon: Dumbbell, primary: true },
-  { to: '/entrenadora/rutinas', label: 'Rutinas', icon: ClipboardList, primary: true },
-  { to: '/entrenadora/plantillas', label: 'Plantillas', icon: LayoutTemplate },
+  { to: '/entrenadora/biblioteca', label: 'Ejercicios', icon: Dumbbell, primary: true },
+  // Rutinas y plantillas son una sola sección con pestañas.
+  { to: '/entrenadora/rutinas', label: 'Rutinas', icon: ClipboardList, primary: true, also: ['/entrenadora/plantillas'] },
   { to: '/entrenadora/calendario', label: 'Calendario', icon: CalendarDays },
   { to: '/entrenadora/seguimiento', label: 'Seguimiento', icon: Activity },
   { to: '/entrenadora/configuracion', label: 'Configuración', icon: Settings },
@@ -46,10 +45,9 @@ const trainerNav: NavItem[] = [
 const clientNav: NavItem[] = [
   { to: '/portal', label: 'Inicio', icon: House, primary: true, end: true },
   { to: '/portal/rutina', label: 'Mi rutina', short: 'Rutina', icon: Dumbbell, primary: true },
-  { to: '/portal/entrenamientos', label: 'Mis entrenamientos', short: 'Historial', icon: History, primary: true },
+  // Historial = lista de entrenamientos + calendario (dos pestañas de la misma sección).
+  { to: '/portal/entrenamientos', label: 'Historial', icon: History, primary: true, also: ['/portal/calendario', '/portal/entrenamiento'] },
   { to: '/portal/progreso', label: 'Mi progreso', short: 'Progreso', icon: TrendingUp, primary: true },
-  { to: '/portal/calendario', label: 'Mi calendario', icon: CalendarDays },
-  { to: '/portal/perfil', label: 'Mi perfil', icon: UserRound },
 ]
 
 export function AppRoutes() {
@@ -85,7 +83,7 @@ export function AppRoutes() {
       </Route>
 
       <Route element={<RequireRole role="CLIENT" />}>
-        <Route path="/portal" element={<AppShell nav={clientNav} areaLabel="Mi espacio" />}>
+        <Route path="/portal" element={<AppShell nav={clientNav} areaLabel="Mi espacio" accountLink={{ to: '/portal/perfil', label: 'Mi perfil', icon: UserRound }} />}>
           <Route index element={<PortalHomePage />} />
           <Route path="rutina" element={<PortalRoutinePage />} />
           <Route path="entrenamientos" element={<PortalSessionsPage />} />

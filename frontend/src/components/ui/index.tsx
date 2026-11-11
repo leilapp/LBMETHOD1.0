@@ -1,5 +1,8 @@
+import { Link } from 'react-router-dom'
+import { ArrowLeft, EllipsisVertical, type LucideIcon } from 'lucide-react'
 import {
   useEffect,
+  useState,
   useId,
   useRef,
   type ButtonHTMLAttributes,
@@ -307,5 +310,142 @@ export function ConfirmDialog({
         </div>
       </div>
     </Modal>
+  )
+}
+
+/* ---------- Regreso: siempre la misma flecha, en el mismo lugar ---------- */
+/** Flecha para volver a la pantalla anterior, con el nombre de esa pantalla. */
+export function BackLink({ to, label }: { to: string; label: string }) {
+  return (
+    <Link className="back-link" to={to}>
+      <span className="back-link__icon" aria-hidden="true">
+        <ArrowLeft size={18} />
+      </span>
+      <span className="back-link__label">{label}</span>
+    </Link>
+  )
+}
+
+/* ---------- Menú ⋮ con las acciones que se usan poco ---------- */
+export interface MenuAction {
+  label: string
+  icon?: LucideIcon
+  /** Lleva a otra pantalla. */
+  to?: string
+  onSelect?: () => void
+  /** Acción delicada (desactivar, quitar…): se pinta en rojo. */
+  danger?: boolean
+  disabled?: boolean
+}
+
+/**
+ * Botón ⋮ que abre una lista corta de acciones. Así cada pantalla deja a la vista solo su botón principal.
+ * Se cierra al elegir, al tocar fuera o con Escape.
+ */
+export function MoreMenu({ items, label = 'Más acciones', className }: { items: (MenuAction | false | null | undefined)[]; label?: string; className?: string }) {
+  const [open, setOpen] = useState(false)
+  // Si el botón queda del lado izquierdo de la pantalla, el menú se abre hacia la derecha para no salirse.
+  const [alignLeft, setAlignLeft] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const menuId = useId()
+  const list = items.filter(Boolean) as MenuAction[]
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setOpen(false)
+      ref.current?.querySelector<HTMLElement>('.more-menu__toggle')?.focus()
+    }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    ref.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus()
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  if (list.length === 0) return null
+  return (
+    <div className={`more-menu${className ? ` ${className}` : ''}`} ref={ref}>
+      <button
+        type="button"
+        className="icon-button more-menu__toggle"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
+        aria-label={label}
+        title={label}
+        onClick={() => {
+          const box = ref.current?.getBoundingClientRect()
+          if (box) setAlignLeft(box.right < 260)
+          setOpen((v) => !v)
+        }}
+      >
+        <EllipsisVertical size={20} aria-hidden="true" />
+      </button>
+      {open && (
+        <div className={`more-menu__list${alignLeft ? ' more-menu__list--left' : ''}`} role="menu" id={menuId} aria-label={label}>
+          {list.map(({ label: text, icon: Icon, to, onSelect, danger, disabled }) => {
+            const content = (
+              <>
+                {Icon && <Icon size={18} aria-hidden="true" />}
+                <span>{text}</span>
+              </>
+            )
+            const cls = `more-menu__item${danger ? ' more-menu__item--danger' : ''}`
+            return to ? (
+              <Link key={text} role="menuitem" className={cls} to={to} onClick={() => setOpen(false)}>
+                {content}
+              </Link>
+            ) : (
+              <button
+                key={text}
+                type="button"
+                role="menuitem"
+                className={cls}
+                disabled={disabled}
+                onClick={() => {
+                  setOpen(false)
+                  onSelect?.()
+                }}
+              >
+                {content}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ---------- Pestañas ---------- */
+export function Tabs<T extends string>({
+  value,
+  options,
+  onChange,
+  label,
+  fill,
+}: {
+  value: T
+  options: readonly (readonly [T, string])[]
+  onChange: (v: T) => void
+  label: string
+  /** Ocupa todo el ancho, con pestañas del mismo tamaño. */
+  fill?: boolean
+}) {
+  return (
+    <div className={`tabs${fill ? ' tabs--fill' : ''}`} role="tablist" aria-label={label}>
+      {options.map(([v, text]) => (
+        <button key={v} type="button" role="tab" aria-selected={value === v} className={`tabs__tab${value === v ? ' tabs__tab--active' : ''}`} onClick={() => onChange(v)}>
+          {text}
+        </button>
+      ))}
+    </div>
   )
 }

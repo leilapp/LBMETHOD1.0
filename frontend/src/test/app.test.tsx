@@ -126,7 +126,8 @@ describe('experiencias separadas por rol', () => {
     })
     renderApp('/entrenadora/calendario')
     const nav = await screen.findByRole('navigation', { name: 'Navegación principal' })
-    for (const label of ['Inicio', 'Clientes', 'Biblioteca', 'Rutinas', 'Plantillas', 'Calendario', 'Seguimiento', 'Configuración'])
+    // Plantillas ya no es una sección aparte: es una pestaña dentro de Rutinas.
+    for (const label of ['Inicio', 'Clientes', 'Ejercicios', 'Rutinas', 'Calendario', 'Seguimiento', 'Configuración'])
       expect(within(nav).getByRole('link', { name: new RegExp(label) })).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'Calendario' })).toBeInTheDocument()
     // Con la Fase 9 ya no queda ningún módulo marcado como pendiente.
@@ -159,7 +160,11 @@ describe('experiencias separadas por rol', () => {
     expect(await screen.findByText('Clientes activos')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
     expect(screen.getByText('Clientes con programa vigente').previousElementSibling).toHaveTextContent('1')
-    expect(screen.getByText('1 activos sin rutina asignada')).toBeInTheDocument()
+    // El número de clientes sin rutina lleva directo a la lista ya filtrada.
+    const without = screen.getByText('Clientes activos sin rutina')
+    expect(without.previousElementSibling).toHaveTextContent('1')
+    expect(without.closest('a')).toHaveAttribute('href', '/entrenadora/clientes?filtro=sin-rutina')
+    expect(screen.getByRole('link', { name: /Nuevo cliente/ })).toHaveAttribute('href', '/entrenadora/clientes?nuevo=1')
     expect(await screen.findByRole('link', { name: 'A Uno' })).toHaveAttribute('href', '/entrenadora/clientes/1/seguimiento')
     expect(screen.getByText(/09:30/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'C Tres' })).toHaveAttribute('href', '/entrenadora/clientes/3/entrenamientos/9')
@@ -188,21 +193,22 @@ describe('clientes', () => {
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument()
   })
 
-  it('pide confirmación antes de desactivar y no llama a la API si se cancela', async () => {
-    const calls = mockApi({
+  it('desde el inicio, «sin rutina» abre la lista filtrada', async () => {
+    mockApi({
       'GET /api/auth/me': () => ({ status: 200, body: trainerSession }),
       'GET /api/trainer/clients': () => ({
         status: 200,
-        body: [{ id: 7, firstName: 'Ana', lastName: 'López', email: 'ana@t', status: 'Active', hasAccount: true }],
+        body: [
+          { id: 7, firstName: 'Ana', lastName: 'López', email: 'ana@t', status: 'Active', hasAccount: true, currentProgram: null },
+          { id: 8, firstName: 'Eva', lastName: 'Ruiz', email: 'eva@t', status: 'Active', hasAccount: true, currentProgram: 'Glúteo' },
+        ],
       }),
     })
-    renderApp('/entrenadora/clientes')
-    const user = userEvent.setup()
-    await user.click(await screen.findByRole('button', { name: 'Desactivar' }))
-    const dialog = screen.getByRole('dialog', { name: 'Desactivar cliente' })
-    expect(dialog).toHaveTextContent('No se borra ningún dato')
-    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
-    expect(calls.some((c) => c.key.includes('/access'))).toBe(false)
+    renderApp('/entrenadora/clientes?filtro=sin-rutina')
+    const list = await screen.findByRole('list', { name: 'Lista de clientes' })
+    expect(within(list).getAllByRole('listitem')).toHaveLength(1)
+    expect(within(list).getByText(/Ana López/)).toBeInTheDocument()
+    expect(screen.getByText('Mostrando solo clientes activos sin rutina.')).toBeInTheDocument()
   })
 
   it('valida el formulario de nuevo cliente y muestra la contraseña temporal al crearlo', async () => {
@@ -237,7 +243,7 @@ describe('estilo app de Android', () => {
     })
     renderApp('/entrenadora/calendario')
     const bar = await screen.findByRole('navigation', { name: 'Accesos rápidos' })
-    expect(within(bar).getAllByRole('link').map((a) => a.textContent)).toEqual(['Inicio', 'Clientes', 'Biblioteca', 'Rutinas'])
+    expect(within(bar).getAllByRole('link').map((a) => a.textContent)).toEqual(['Inicio', 'Clientes', 'Ejercicios', 'Rutinas'])
     const more = within(bar).getByRole('button', { name: 'Más' })
     // Calendario no está en la barra: «Más» se marca como activo.
     expect(more).toHaveClass('active')
@@ -260,6 +266,11 @@ describe('estilo app de Android', () => {
     const sheet = screen.getByRole('dialog', { name: 'Tu cuenta' })
     expect(within(sheet).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
     expect(within(sheet).getByRole('group', { name: 'Tema de la app' })).toBeInTheDocument()
+    // La clienta tiene su perfil en la hoja de su cuenta; su barra inferior no necesita «Más».
+    expect(within(sheet).getByRole('link', { name: 'Mi perfil' })).toHaveAttribute('href', '/portal/perfil')
+    const bar = screen.getByRole('navigation', { name: 'Accesos rápidos' })
+    expect(within(bar).getAllByRole('link').map((a) => a.textContent)).toEqual(['Inicio', 'Rutina', 'Historial', 'Progreso'])
+    expect(within(bar).queryByRole('button', { name: 'Más' })).not.toBeInTheDocument()
   })
 
   it('el tema sigue al sistema y se puede fijar en claro u oscuro', async () => {

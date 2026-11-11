@@ -135,6 +135,8 @@
 @media (max-width: 900px) {
   .shell {
     grid-template-columns: 1fr;
+    /* En pantallas con poco contenido, la barra superior no se estira: el espacio sobrante queda abajo. */
+    align-content: start;
   }
   .shell__topbar {
     position: sticky;

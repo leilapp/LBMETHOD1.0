@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { libraryApi, rowStatus, type ImportPreview, type ImportReport, type ImportRow } from '../../api/library'
-import { Alert, Button, ConfirmDialog, PageHeader, SelectField } from '../../components/ui'
+import { BackLink, Alert, Button, ConfirmDialog, PageHeader, SelectField } from '../../components/ui'
 import { libraryKeys } from './libraryQueries'
 import './library.css'
 
@@ -12,9 +12,7 @@ const statusBadge = { Valid: 'badge--success', Duplicate: 'badge--pending', Erro
 export function ImportExportPage() {
   return (
     <>
-      <p className="breadcrumb">
-        <Link to="/entrenadora/biblioteca">← Biblioteca</Link>
-      </p>
+      <BackLink to="/entrenadora/biblioteca" label="Ejercicios" />
       <PageHeader title="Importar y exportar" subtitle="Carga tu catálogo desde Excel o descárgalo completo." />
       <div className="stack">
         <ImportSection />

@@ -414,3 +414,82 @@ a.btn {
     height: 44px;
   }
 }
+
+/* Lista compacta: una fila por ejercicio (nombre y músculo); toda la fila abre la ficha */
+.exercise-grid {
+  gap: var(--lb-space-2);
+}
+.list-item.exercise-item {
+  align-items: center;
+  gap: var(--lb-space-2);
+  padding: var(--lb-space-2) var(--lb-space-2) var(--lb-space-2) var(--lb-space-3);
+}
+.exercise-item__open {
+  display: flex;
+  align-items: center;
+  gap: var(--lb-space-3);
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  color: var(--lb-text);
+  text-decoration: none;
+  border-radius: var(--lb-radius);
+}
+.exercise-item__open:focus-visible {
+  outline: none;
+  box-shadow: var(--lb-focus);
+}
+.exercise-item__open:hover .list-item__title {
+  color: var(--lb-lilac-soft);
+}
+.exercise-item__open .exercise-item__thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+}
+.exercise-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px var(--lb-space-2);
+}
+/* Chips de músculo en una sola fila que se desliza */
+@media (max-width: 700px) {
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: calc(var(--lb-space-4) * -1);
+    padding-inline: var(--lb-space-4);
+  }
+  .chips .chip {
+    flex: none;
+  }
+  /* Buscador fijo arriba mientras recorres la lista (cuando los filtros están cerrados) */
+  .filters:not(.filters--open) {
+    position: sticky;
+    top: calc(60px + env(safe-area-inset-top, 0px));
+    z-index: 10;
+  }
+  .filters__search .field__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .filters__search > .btn,
+  .filters .filters__toggle {
+    margin-top: 0;
+  }
+  .filters .filters__search > .field {
+    flex: 1 1 0;
+  }
+  .filters .filters__search > .btn {
+    flex: none;
+    width: var(--lb-touch);
+    min-width: var(--lb-touch);
+    padding: 0;
+  }
+}
